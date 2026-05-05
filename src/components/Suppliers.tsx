@@ -28,18 +28,18 @@ export const Suppliers: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full gap-8 animate-in fade-in duration-700">
-      <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6">
-        <div className="space-y-1">
-          <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">Fornecedores & Parceiros</h2>
-          <p className="text-xs font-bold uppercase tracking-widest opacity-60">Cadeia de suprimentos e compras</p>
+      <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
+        <div>
+          <h2 className="text-3xl font-extrabold tracking-tight">Fornecedores & Parceiros</h2>
+          <p className="text-sm font-semibold opacity-60">Cadeia de suprimentos e logística</p>
         </div>
 
-        <div className="flex gap-3 w-full lg:w-auto">
-          <div className={`flex items-center px-6 py-4 rounded-[2rem] border flex-1 lg:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
+        <div className="flex gap-3 w-full md:w-auto">
+          <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 md:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
             <Search className="w-5 h-5 mr-3 opacity-40" />
-            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar fornecedor..." className="bg-transparent border-none outline-none w-full text-sm font-bold placeholder:opacity-30" />
+            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar fornecedor..." className="bg-transparent border-none outline-none w-full text-sm font-semibold placeholder:opacity-30" />
           </div>
-          <button className="px-8 py-4 bg-[#E85D75] text-white rounded-[2rem] font-black uppercase tracking-widest text-[11px] shadow-lg shadow-[#E85D75]/20 flex items-center gap-2 hover:-translate-y-1 transition-all duration-300">
+          <button className="px-6 py-3 bg-[#E85D75] text-white rounded-2xl font-bold text-sm shadow-lg shadow-[#E85D75]/20 flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all">
             <Plus className="w-4 h-4" /> Novo Fornecedor
           </button>
         </div>
@@ -49,16 +49,16 @@ export const Suppliers: React.FC = () => {
         {mockSuppliers.filter(s => s.companyName.toLowerCase().includes(searchTerm.toLowerCase())).map(supplier => (
           <motion.div 
             key={supplier.id} 
-            className={`p-8 rounded-[2.5rem] border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-sm hover:shadow-gray-200/40'}`}
+            className={`p-8 rounded-3xl border transition-all duration-300 hover:shadow-xl hover:border-transparent ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-sm'}`}
           >
             <div className="flex justify-between items-start mb-8">
               <div className="flex items-center gap-4">
-                <div className={`w-16 h-16 rounded-[2rem] flex items-center justify-center text-2xl ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                  <Truck className="w-7 h-7 text-[#E85D75]" />
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                  <Truck className="w-6 h-6 text-[#E85D75]" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black uppercase tracking-tight">{supplier.companyName}</h3>
-                  <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>{supplier.category}</span>
+                  <h3 className="text-lg font-bold">{supplier.companyName}</h3>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full ${isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>{supplier.category}</span>
                 </div>
               </div>
               <div className="flex gap-2">

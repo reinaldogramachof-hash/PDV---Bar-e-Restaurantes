@@ -82,17 +82,17 @@ export const PDV: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
-            <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">Venda Rápida</h2>
+            <h2 className="text-4xl font-extrabold tracking-tighter uppercase leading-none">Venda Rápida</h2>
             <p className="text-xs font-bold uppercase tracking-widest opacity-60">Terminal de atendimento direto</p>
           </div>
           
-          <div className={`flex items-center px-6 py-4 rounded-[2rem] border w-full md:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
+          <div className={`flex items-center px-5 py-3 rounded-2xl border w-full md:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
             <Search className="w-5 h-5 mr-3 opacity-40" />
             <input
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               placeholder="Pesquisar produto..."
-              className="bg-transparent border-none outline-none w-full text-sm font-bold placeholder:opacity-30"
+              className="bg-transparent border-none outline-none w-full text-sm font-semibold placeholder:opacity-30"
             />
           </div>
         </div>
@@ -102,7 +102,7 @@ export const PDV: React.FC = () => {
             <button
               key={cat}
               onClick={() => setCategory(cat)}
-              className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] border transition-all duration-300
+              className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] border transition-all duration-300
                 ${category === cat
                   ? 'bg-[#E85D75] border-[#E85D75] text-white shadow-xl shadow-[#E85D75]/30 scale-105'
                   : isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] text-[#3A3A3C] hover:text-white hover:border-white/20' : 'bg-white border-gray-100 text-gray-400 hover:text-gray-900 shadow-sm'}`}
@@ -118,7 +118,7 @@ export const PDV: React.FC = () => {
       </div>
 
       {/* Right side: Cart */}
-      <div className={`w-full lg:w-[450px] flex flex-col rounded-[3rem] border overflow-hidden shrink-0 shadow-2xl relative
+      <div className={`w-full lg:w-[450px] flex flex-col rounded-3xl border overflow-hidden shrink-0 shadow-2xl relative
         ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
         
         {/* Cart Header */}
@@ -128,7 +128,7 @@ export const PDV: React.FC = () => {
                 <ShoppingBag className="w-6 h-6" />
              </div>
              <div>
-               <h3 className="font-black uppercase tracking-tighter text-xl">Carrinho</h3>
+               <h3 className="font-bold uppercase tracking-tighter text-xl">Carrinho</h3>
                <div className="flex items-center gap-2">
                  <span className="text-[10px] font-black uppercase text-[#E85D75]">{totalItems} Itens</span>
                  <span className="opacity-20 text-[10px]">|</span>

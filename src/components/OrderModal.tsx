@@ -139,43 +139,42 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                         </div>
                       </div>
                     </div>
-                 ) : isOpening ? (
-                    <div className={`w-full max-w-md rounded-[3rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                  ) : isOpening ? (
+                    <div className={`w-full max-w-md rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
                       <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
-                        <div><h3 className="font-black uppercase tracking-tight text-2xl">Mesa {tableNumber?.toString().padStart(2, '0')}</h3><p className="text-[10px] font-black uppercase tracking-widest opacity-30">Configuração de Abertura</p></div>
-                        <button onClick={onClose} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
+                         <div><h3 className="font-bold text-2xl">Mesa {tableNumber?.toString().padStart(2, '0')}</h3><p className="text-xs font-semibold opacity-40">Configuração de Abertura</p></div>
+                         <button onClick={onClose} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
                       </div>
                       <div className="p-10 space-y-8">
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Atendente</label><select value={selectedWaiterId} onChange={e => setSelectedWaiterId(e.target.value)} className={`w-full p-5 rounded-[2rem] border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] text-white focus:border-[#E85D75]' : 'bg-white border-gray-200 focus:border-[#E85D75]'}`}>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
-                          <div className="space-y-2"><label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-4">Identificação</label><input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Nome (opcional)" className={`w-full p-5 rounded-[2rem] border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] text-white focus:border-[#E85D75]' : 'bg-white border-gray-200 focus:border-[#E85D75]'}`} /></div>
+                          <div className="space-y-2"><label className="text-xs font-bold opacity-40 ml-4">Atendente</label><select value={selectedWaiterId} onChange={e => setSelectedWaiterId(e.target.value)} className={`w-full p-4 rounded-2xl border outline-none font-semibold text-sm transition-all focus:ring-4 focus:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] text-white focus:border-[#E85D75]' : 'bg-white border-gray-200 focus:border-[#E85D75]'}`}>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
+                          <div className="space-y-2"><label className="text-xs font-bold opacity-40 ml-4">Identificação</label><input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Nome (opcional)" className={`w-full p-4 rounded-2xl border outline-none font-semibold text-sm transition-all focus:ring-4 focus:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] text-white focus:border-[#E85D75]' : 'bg-white border-gray-200 focus:border-[#E85D75]'}`} /></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <CountInput label="Adultos" value={adultCount} onChange={setAdultCount} isDark={isDark} min={1} />
                           <CountInput label="Crianças" value={childrenCount} onChange={setChildrenCount} isDark={isDark} min={0} />
                         </div>
-                        <button onClick={handleOpenTable} className="w-full mt-6 py-6 bg-[#E85D75] rounded-[2.5rem] text-white font-black uppercase tracking-widest text-[12px] shadow-2xl shadow-[#E85D75]/40 hover:scale-105 active:scale-95 transition-all">Abrir Mesa</button>
+                        <button onClick={handleOpenTable} className="w-full mt-6 py-5 bg-[#E85D75] rounded-2xl text-white font-bold text-sm shadow-lg shadow-[#E85D75]/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Abrir Mesa</button>
                       </div>
                     </div>
-                 ) : isManaging ? (
-                    <div className={`w-full max-w-lg rounded-[3rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                  ) : isManaging ? (
+                    <div className={`w-full max-w-lg rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
                       <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
-                        <div><h3 className="font-black uppercase tracking-tight text-2xl">Gestão Operacional</h3><p className="text-[10px] font-black uppercase tracking-widest opacity-30">Mesa {tableNumber}</p></div>
-                        <button onClick={() => setIsManaging(false)} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
+                         <div><h3 className="font-bold text-2xl">Gestão Operacional</h3><p className="text-xs font-semibold opacity-40">Mesa {tableNumber}</p></div>
+                         <button onClick={() => setIsManaging(false)} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
                       </div>
                       <div className="p-10 space-y-10 overflow-y-auto max-h-[75vh] custom-scrollbar">
-                        <div><h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 opacity-40 flex items-center gap-3"><Users className="w-5 h-5" /> Pessoas na Mesa</h4><div className="grid grid-cols-2 gap-6"><CountInput label="Adultos" value={adultCount} onChange={(v:number) => { setAdultCount(v); handleUpdateCounts(v, childrenCount); }} isDark={isDark} min={1} /><CountInput label="Crianças" value={childrenCount} onChange={(v:number) => { setChildrenCount(v); handleUpdateCounts(adultCount, v); }} isDark={isDark} min={0} /></div></div>
-                        <div><h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-3 text-[#E85D75]"><MoveRight className="w-5 h-5" /> Transferir Mesa</h4><div className="grid grid-cols-6 gap-3">{tables.filter(t => t.status === 'livre' && t.number !== tableNumber).map(t => (<button key={t.number} onClick={() => { transferTable(tableNumber!, t.number); onClose(); }} className={`aspect-square rounded-2xl border flex items-center justify-center text-sm font-black transition-all hover:bg-[#E85D75] hover:text-white hover:border-[#E85D75] hover:scale-110 ${isDark ? 'bg-[#121214] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>{t.number}</button>))}</div></div>
-                        <div className="pt-8 border-t border-dashed border-current/10"><h4 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 flex items-center gap-3 text-blue-500"><Merge className="w-5 h-5" /> Juntar com Mesa</h4><div className="grid grid-cols-6 gap-3">{tables.filter(t => t.status === 'ocupada' && t.number !== tableNumber).map(t => (<button key={t.number} onClick={() => { mergeTables(tableNumber!, t.number); onClose(); }} className={`aspect-square rounded-2xl border flex items-center justify-center text-sm font-black transition-all hover:bg-blue-500 hover:text-white hover:border-blue-500 hover:scale-110 ${isDark ? 'bg-[#121214] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>{t.number}</button>))}</div></div>
+                        <div><h4 className="text-xs font-bold uppercase tracking-wider mb-6 opacity-40 flex items-center gap-3"><Users className="w-5 h-5" /> Pessoas na Mesa</h4><div className="grid grid-cols-2 gap-6"><CountInput label="Adultos" value={adultCount} onChange={(v:number) => { setAdultCount(v); handleUpdateCounts(v, childrenCount); }} isDark={isDark} min={1} /><CountInput label="Crianças" value={childrenCount} onChange={(v:number) => { setChildrenCount(v); handleUpdateCounts(adultCount, v); }} isDark={isDark} min={0} /></div></div>
+                        <div><h4 className="text-xs font-bold uppercase tracking-wider mb-6 flex items-center gap-3 text-[#E85D75]"><MoveRight className="w-5 h-5" /> Transferir Mesa</h4><div className="grid grid-cols-6 gap-3">{tables.filter(t => t.status === 'livre' && t.number !== tableNumber).map(t => (<button key={t.number} onClick={() => { transferTable(tableNumber!, t.number); onClose(); }} className={`aspect-square rounded-2xl border flex items-center justify-center text-sm font-bold transition-all hover:bg-[#E85D75] hover:text-white hover:border-[#E85D75] hover:scale-110 ${isDark ? 'bg-[#121214] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>{t.number}</button>))}</div></div>
                       </div>
                     </div>
-                 ) : (
-                    <div className={`w-full max-w-sm rounded-[3rem] border p-12 flex flex-col items-center text-center space-y-6 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl'}`}>
+                  ) : (
+                    <div className={`w-full max-w-sm rounded-3xl border p-12 flex flex-col items-center text-center space-y-6 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl'}`}>
                       <div className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center"><AlertTriangle className="w-10 h-10" /></div>
-                      <div className="space-y-2"><h3 className="text-xl font-black uppercase tracking-tighter">Erro de Sincronia</h3><p className="text-xs font-bold opacity-40 leading-relaxed px-4">Esta mesa está sem comanda ativa no sistema.</p></div>
-                      <div className="w-full pt-4 space-y-3"><button onClick={() => { clearTable(tableNumber!); setIsOpening(true); }} className="w-full py-5 bg-amber-500 text-white rounded-[2rem] font-black uppercase tracking-widest text-[10px] shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 hover:scale-105 transition-all"><RefreshCw className="w-4 h-4" /> Resetar Mesa</button><button onClick={onClose} className="w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[9px] opacity-40 hover:opacity-100 transition-opacity">Voltar</button></div>
+                      <div className="space-y-2"><h3 className="text-xl font-bold">Erro de Sincronia</h3><p className="text-sm font-medium opacity-40 leading-relaxed px-4">Esta mesa está sem comanda ativa no sistema.</p></div>
+                      <div className="w-full pt-4 space-y-3"><button onClick={() => { clearTable(tableNumber!); setIsOpening(true); }} className="w-full py-5 bg-amber-500 text-white rounded-2xl font-bold text-xs shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"><RefreshCw className="w-4 h-4" /> Resetar Mesa</button><button onClick={onClose} className="w-full py-4 rounded-2xl font-bold text-xs opacity-40 hover:opacity-100 transition-opacity">Voltar</button></div>
                     </div>
-                 )}
+                  )}
                </div>
              );
           }
@@ -185,20 +184,20 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
             return (
               <div className="flex w-full gap-6 h-full items-stretch">
                 {/* Product Selection (Left Side - Larger) */}
-                <div className={`flex-1 rounded-[3rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                <div className={`flex-1 rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
                   <div className="p-8 border-b space-y-6">
                     <div className="flex justify-between items-center">
-                       <h4 className="text-sm font-black uppercase tracking-[0.3em] opacity-40">Cardápio Digital</h4>
+                       <h4 className="text-sm font-bold uppercase tracking-wider opacity-40">Cardápio Digital</h4>
                        <div className="flex gap-2"><button className="p-2.5 rounded-xl bg-current/5"><LayoutGrid className="w-4 h-4" /></button><button className="p-2.5 opacity-20"><List className="w-4 h-4" /></button></div>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
-                      <div className={`flex items-center px-6 py-4 rounded-[2rem] border flex-1 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus-within:border-pink-300'}`}>
+                      <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus-within:border-pink-300'}`}>
                         <Search className="w-5 h-5 mr-4 opacity-40" />
-                        <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome ou categoria..." className="bg-transparent border-none outline-none w-full text-sm font-bold placeholder:opacity-20" />
+                        <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome ou categoria..." className="bg-transparent border-none outline-none w-full text-sm font-semibold placeholder:opacity-20" />
                       </div>
                       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                         {categories.map(cat => (
-                          <button key={cat} onClick={() => setCategory(cat)} className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest border transition-all ${category === cat ? 'bg-[#E85D75] border-[#E85D75] text-white shadow-lg shadow-[#E85D75]/30' : 'border-current/10 opacity-60 hover:opacity-100'}`}>{cat}</button>
+                          <button key={cat} onClick={() => setCategory(cat)} className={`shrink-0 px-5 py-2.5 rounded-2xl text-xs font-bold border transition-all ${category === cat ? 'bg-[#E85D75] border-[#E85D75] text-white shadow-lg shadow-[#E85D75]/20' : 'border-current/10 opacity-60 hover:opacity-100'}`}>{cat}</button>
                         ))}
                       </div>
                     </div>
@@ -209,7 +208,8 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                 </div>
 
                 {/* Active Order (Right Side - Sidebar style but taller) */}
-                <div className={`w-[450px] rounded-[3rem] border flex flex-col overflow-hidden shadow-2xl relative z-10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                <div className={`w-[450px] rounded-3xl border flex flex-col overflow-hidden shadow-2xl relative z-10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+100'}`}>
                   {/* Order Header */}
                   <div className={`p-8 border-b flex justify-between items-start ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="space-y-1">

@@ -38,12 +38,13 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Visão Geral</h1>
-          <p className={`${isDark ? 'text-[#A1A1A6]' : 'text-gray-500'} text-sm`}>Bem-vindo de volta! Aqui está o resumo de hoje.</p>
+          <h1 className="text-3xl font-extrabold tracking-tight">Visão Geral</h1>
+          <p className="text-sm font-semibold opacity-60">Bem-vindo de volta! Aqui está o resumo operacional de hoje.</p>
         </div>
-        <div className="flex items-center gap-2">
-           <span className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200'}`}>
+        <div className="flex items-center gap-3">
+           <span className={`px-4 py-2 rounded-2xl text-xs font-bold border ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200 shadow-sm'}`}>
              📅 05 de Maio, 2026
            </span>
         </div>
@@ -57,8 +58,8 @@ export const Dashboard: React.FC = () => {
              initial={{ opacity: 0, y: 20 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ delay: i * 0.1 }}
-             className={`p-6 rounded-2xl border transition-all hover:shadow-xl ${
-               isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] hover:border-[#3a3a3c]' : 'bg-white border-gray-200 hover:border-gray-300 shadow-sm'
+             className={`p-6 rounded-3xl border transition-all hover:shadow-xl hover:border-transparent ${
+               isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200 shadow-sm'
              }`}
            >
              <div className="flex justify-between items-start mb-4">
@@ -81,7 +82,7 @@ export const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
          {/* Sales by Category */}
-         <div className={`p-8 rounded-2xl border ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200 shadow-sm'}`}>
+         <div className={`p-8 rounded-3xl border ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200 shadow-sm'}`}>
             <div className="flex items-center justify-between mb-8">
               <h3 className="font-bold text-lg">Vendas por Categoria</h3>
               <button className="text-xs text-[#E85D75] font-semibold hover:underline">Ver tudo</button>
@@ -116,7 +117,7 @@ export const Dashboard: React.FC = () => {
          </div>
 
          {/* Recent Orders */}
-         <div className={`p-8 rounded-2xl border lg:col-span-2 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200 shadow-sm'}`}>
+         <div className={`p-8 rounded-3xl border lg:col-span-2 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200 shadow-sm'}`}>
              <div className="flex items-center justify-between mb-8">
                <h3 className="font-bold text-lg">Últimos Pedidos</h3>
                <div className="flex gap-2">

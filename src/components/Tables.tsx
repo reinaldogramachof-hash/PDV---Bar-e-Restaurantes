@@ -80,10 +80,10 @@ export const Tables: React.FC = () => {
   return (
     <div className="flex flex-col h-full gap-8 animate-in fade-in duration-700">
       <div className="space-y-6">
-        <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6">
-          <div className="space-y-1">
-            <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">Mapa de Mesas</h2>
-            <p className="text-xs font-bold uppercase tracking-widest opacity-60">Gestão operacional do salão</p>
+        <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
+          <div>
+            <h2 className="text-3xl font-extrabold tracking-tight">Mapa de Mesas</h2>
+            <p className="text-sm font-semibold opacity-60">Gestão operacional do salão</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 lg:max-w-3xl">
@@ -95,18 +95,18 @@ export const Tables: React.FC = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-current/5">
-          <div className="flex flex-wrap gap-2 p-1 rounded-[2rem] bg-black/5 dark:bg-white/5 border border-current/5">
+          <div className="flex flex-wrap gap-2 p-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-current/5">
             {['todos', 'livre', 'ocupada', 'aguardando', 'reservada'].map((f) => (
-              <button key={f} onClick={() => setFilter(f as any)} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-white dark:bg-[#2C2C2E] shadow-md text-[#E85D75]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}>{f}</button>
+              <button key={f} onClick={() => setFilter(f as any)} className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all ${filter === f ? 'bg-white dark:bg-[#2C2C2E] shadow-md text-[#E85D75]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}>{f}</button>
             ))}
           </div>
 
           <div className="flex gap-3 w-full sm:w-auto">
-            <div className={`flex items-center px-6 py-4 rounded-[2rem] border flex-1 sm:w-64 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
+            <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 sm:w-64 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
               <Search className="w-4 h-4 mr-3 opacity-40" />
-              <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar mesa..." className="bg-transparent border-none outline-none w-full text-sm font-bold placeholder:opacity-30" />
+              <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar mesa..." className="bg-transparent border-none outline-none w-full text-sm font-semibold placeholder:opacity-30" />
             </div>
-            <button onClick={() => { setIsSelecting(!isSelecting); setSelectedForReservation([]); }} className={`px-8 py-4 rounded-[2rem] font-black uppercase tracking-widest text-[11px] flex items-center gap-2 border transition-all ${isSelecting ? 'bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/30' : 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20'}`}>
+            <button onClick={() => { setIsSelecting(!isSelecting); setSelectedForReservation([]); }} className={`px-6 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 border transition-all ${isSelecting ? 'bg-red-500 text-white border-red-500 shadow-lg shadow-red-500/30' : 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20'}`}>
               {isSelecting ? <X className="w-4 h-4" /> : <CalendarCheck className="w-4 h-4" />}
               {isSelecting ? 'Cancelar' : 'Reservar'}
             </button>
@@ -138,7 +138,7 @@ export const Tables: React.FC = () => {
                 <button
                   onClick={() => handleTableClick(table.number)}
                   disabled={isSelecting && !isLivre && !isSelected}
-                  className={`relative w-full aspect-[1/1.1] flex flex-col items-center justify-center rounded-[2.5rem] transition-all duration-500 overflow-hidden
+                  className={`relative w-full aspect-[1/1.1] flex flex-col items-center justify-center rounded-3xl transition-all duration-500 overflow-hidden
                     ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-xl shadow-gray-200/40 border border-gray-100'}
                     ${isLivre ? `border-dashed hover:border-[#E85D75]/40` : ''}
                     ${isOcupada ? 'ring-4 ring-[#E85D75]/10 border-2 border-[#E85D75] scale-105 z-10 shadow-2xl shadow-[#E85D75]/10' : ''}
