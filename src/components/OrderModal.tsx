@@ -209,7 +209,6 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
 
                 {/* Active Order (Right Side - Sidebar style but taller) */}
                 <div className={`w-[450px] rounded-3xl border flex flex-col overflow-hidden shadow-2xl relative z-10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
-100'}`}>
                   {/* Order Header */}
                   <div className={`p-8 border-b flex justify-between items-start ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="space-y-1">
