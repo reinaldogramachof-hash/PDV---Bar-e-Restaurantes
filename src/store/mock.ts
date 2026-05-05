@@ -28,3 +28,22 @@ export const mockWaiters: Waiter[] = [
   { id: 'w2', name: 'Carlos' },
   { id: 'w3', name: 'Mariana' },
 ];
+
+export const mockCustomers = [
+  { id: '1', name: 'Ana Silva', email: 'ana.silva@email.com', phone: '(11) 98888-7777', totalSpent: 2250.50, lastVisit: '2026-05-01', loyaltyPoints: 225 },
+  { id: '2', name: 'Bruno Oliveira', email: 'bruno.o@email.com', phone: '(11) 97777-6666', totalSpent: 450.00, lastVisit: '2026-03-15', loyaltyPoints: 45 },
+  { id: '3', name: 'Carla Santos', email: 'carla.s@email.com', phone: '(11) 96666-5555', totalSpent: 3100.20, lastVisit: '2026-05-04', loyaltyPoints: 310 },
+  { id: '4', name: 'Diego Costa', email: 'diego.c@email.com', phone: '(11) 95555-4444', totalSpent: 89.90, lastVisit: '2026-05-05', loyaltyPoints: 9 },
+  { id: '5', name: 'Fernanda Lima', email: 'fernanda.l@email.com', phone: '(11) 94444-3333', totalSpent: 1200.00, lastVisit: '2026-05-02', loyaltyPoints: 120 },
+  { id: '6', name: 'Gabriel Souza', email: 'gabriel.s@email.com', phone: '(11) 93333-2222', totalSpent: 0, lastVisit: '2026-05-05', loyaltyPoints: 0 },
+];
+
+export const mockCollaborators = [
+  { id: '1', name: 'Reinaldo Silva', role: 'Administrador', email: 'reinaldo@barmanager.com', status: 'active', joinedAt: '2025-01-15', permissions: 'admin', totalSales: 12500 },
+  { id: '2', name: 'Maria Souza', role: 'Garçom Principal', email: 'maria.s@email.com', status: 'active', joinedAt: '2025-03-10', permissions: 'waiter', totalSales: 8400 },
+  { id: '3', name: 'João Santos', role: 'Chef de Cozinha', email: 'joao.s@email.com', status: 'active', joinedAt: '2025-02-20', permissions: 'staff', totalSales: 0 },
+  { id: '4', name: 'Pedro Lima', role: 'Garçom Noturno', email: 'pedro.l@email.com', status: 'break', joinedAt: '2025-04-05', permissions: 'waiter', totalSales: 2100 },
+  { id: '5', name: 'Luciana Ferraz', role: 'Caixa', email: 'lu.ferraz@email.com', status: 'active', joinedAt: '2025-05-01', permissions: 'staff', totalSales: 0 },
+];
+
+

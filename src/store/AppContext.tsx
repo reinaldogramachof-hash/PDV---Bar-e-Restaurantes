@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem } from '../types';
-import { mockProducts, mockTables, mockWaiters } from './mock';
+import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator } from '../types';
+import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators } from './mock';
 
 interface AppState {
   products: Product[];
@@ -10,6 +10,8 @@ interface AppState {
   expenses: Expense[];
   cashierSession: CashierSession | null;
   cashierHistory: CashierSession[];
+  customers: Customer[];
+  collaborators: Collaborator[];
   theme: 'dark' | 'light';
 }
 
@@ -21,12 +23,20 @@ interface AppContextType extends AppState {
   addOrder: (order: Order) => void;
   closeOrder: (order: Order, payments: PaymentItem[], serviceCharge: number) => void;
   addExpense: (expense: Expense) => void;
+  updateExpense: (expense: Expense) => void;
+  deleteExpense: (id: string) => void;
   openCashier: () => void;
   closeCashier: (tipsTotal: number) => void;
   transferTable: (from: number, to: number) => void;
   mergeTables: (source: number, target: number) => void;
   reserveTable: (numbers: number[], reason: string) => void;
   clearTable: (number: number) => void;
+  addCustomer: (customer: Customer) => void;
+  updateCustomer: (customer: Customer) => void;
+  deleteCustomer: (id: string) => void;
+  addCollaborator: (collaborator: Collaborator) => void;
+  updateCollaborator: (collaborator: Collaborator) => void;
+  deleteCollaborator: (id: string) => void;
 }
 
 const parseJSON = <T,>(key: string, fallback: T): T => {
@@ -52,6 +62,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [expenses, setExpenses] = useState<Expense[]>(() => parseJSON('expenses', []));
   const [cashierSession, setCashierSession] = useState<CashierSession | null>(() => parseJSON('cashierSession', null));
   const [cashierHistory, setCashierHistory] = useState<CashierSession[]>(() => parseJSON('cashierHistory', []));
+  const [customers, setCustomers] = useState<Customer[]>(() => parseJSON('customers', mockCustomers));
+  const [collaborators, setCollaborators] = useState<Collaborator[]>(() => parseJSON('collaborators', mockCollaborators));
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const th = localStorage.getItem('theme');
     return th === 'dark' || th === 'light' ? th : 'dark';
@@ -65,8 +77,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('expenses', JSON.stringify(expenses));
     localStorage.setItem('cashierSession', JSON.stringify(cashierSession));
     localStorage.setItem('cashierHistory', JSON.stringify(cashierHistory));
+    localStorage.setItem('customers', JSON.stringify(customers));
+    localStorage.setItem('collaborators', JSON.stringify(collaborators));
     localStorage.setItem('theme', theme);
-  }, [products, tables, waiters, orders, expenses, cashierSession, cashierHistory, theme]);
+  }, [products, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, theme]);
 
   const updateProduct = (updatedProduct: Product) => {
     setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
@@ -124,10 +138,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       return next;
     });
+
+    if (order.customerId) {
+      setCustomers(prev => prev.map(c => 
+        c.id === order.customerId 
+          ? { 
+              ...c, 
+              totalSpent: c.totalSpent + order.subtotal, 
+              loyaltyPoints: c.loyaltyPoints + Math.floor(order.subtotal / 10),
+              lastVisit: new Date().toISOString()
+            } 
+          : c
+      ));
+    }
   };
 
   const addExpense = (expense: Expense) => {
     setExpenses(prev => [...prev, expense]);
+  };
+
+  const updateExpense = (updatedExpense: Expense) => {
+    setExpenses(prev => prev.map(e => e.id === updatedExpense.id ? updatedExpense : e));
+  };
+
+  const deleteExpense = (id: string) => {
+    setExpenses(prev => prev.filter(e => e.id !== id));
   };
 
   const openCashier = () => {
@@ -245,11 +280,37 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ));
   };
 
+  const addCustomer = (customer: Customer) => {
+    setCustomers(prev => [...prev, customer]);
+  };
+
+  const updateCustomer = (updatedCustomer: Customer) => {
+    setCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
+  };
+
+  const deleteCustomer = (id: string) => {
+    setCustomers(prev => prev.filter(c => c.id !== id));
+  };
+
+  const addCollaborator = (collaborator: Collaborator) => {
+    setCollaborators(prev => [...prev, collaborator]);
+  };
+
+  const updateCollaborator = (updatedCollaborator: Collaborator) => {
+    setCollaborators(prev => prev.map(c => c.id === updatedCollaborator.id ? updatedCollaborator : c));
+  };
+
+  const deleteCollaborator = (id: string) => {
+    setCollaborators(prev => prev.filter(c => c.id !== id));
+  };
+
   return (
     <AppContext.Provider value={{
-      products, tables, waiters, orders, expenses, cashierSession, cashierHistory, theme,
+      products, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, theme,
       setTheme, updateProduct, updateTable, addOrder, updateOrder, closeOrder, addExpense, openCashier, closeCashier,
-      transferTable, mergeTables, reserveTable, clearTable
+      transferTable, mergeTables, reserveTable, clearTable,
+      addCustomer, updateCustomer, deleteCustomer,
+      addCollaborator, updateCollaborator, deleteCollaborator
     }}>
       {children}
     </AppContext.Provider>

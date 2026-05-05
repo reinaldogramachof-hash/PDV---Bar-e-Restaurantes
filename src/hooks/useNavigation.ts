@@ -11,7 +11,8 @@ export type View =
   | 'manual' 
   | 'clientes' 
   | 'colaboradores' 
-  | 'fornecedores';
+  | 'fornecedores'
+  | 'suporte';
 
 export function useNavigation() {
   const [currentView, setCurrentView] = useState<View>('dashboard');

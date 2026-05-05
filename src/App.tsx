@@ -12,6 +12,7 @@ import { Tables } from './components/Tables';
 import { Customers } from './components/Customers';
 import { Collaborators } from './components/Collaborators';
 import { Suppliers } from './components/Suppliers';
+import { Support } from './components/Support';
 
 const AppContent = () => {
   const { currentView, setCurrentView } = useNavigation();
@@ -28,6 +29,7 @@ const AppContent = () => {
       case 'clientes': return <Customers />;
       case 'colaboradores': return <Collaborators />;
       case 'fornecedores': return <Suppliers />;
+      case 'suporte': return <Support />;
       default: return (
         <div className="h-full flex flex-col items-center justify-center gap-4 opacity-50">
           <span className="text-5xl">🚧</span>

@@ -45,6 +45,7 @@ export interface Order {
   payments: PaymentItem[];
   status: 'open' | 'closed';
   waiterId: string;
+  customerId?: string;
   timestamp: string;
 }
 
@@ -64,6 +65,10 @@ export interface Expense {
   id: string;
   description: string;
   amount: number;
+  category: 'Insumos' | 'Pessoal' | 'Aluguel' | 'Utilidades' | 'Marketing' | 'Impostos' | 'Outros';
+  status: 'pago' | 'pendente';
+  paymentMethod?: PaymentMethod;
+  dueDate?: string;
   timestamp: string;
 }
 
@@ -79,4 +84,51 @@ export interface CashierSession {
   finalBalance?: number;
   ordersCount: number;
   status: 'open' | 'closed';
+}
+
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  totalSpent: number;
+  lastVisit: string;
+  loyaltyPoints: number;
+}
+
+export interface Collaborator {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  status: 'active' | 'inactive' | 'break';
+  joinedAt: string;
+  permissions: 'admin' | 'staff' | 'waiter';
+  totalSales?: number;
+  lastCheckIn?: string;
+  lastCheckOut?: string;
+  observations?: string;
+  contractType?: 'CLT' | 'PJ' | 'Diarista' | 'Freelancer';
+  salary?: number;
+  commissionRate?: number;
+  document?: string;
+  address?: string;
+  bankDetails?: string;
+}
+
+export interface Supplier {
+  id: string;
+  companyName: string;
+  category: string;
+  contactName: string;
+  phone: string;
+  email: string;
+  lastDelivery: string;
+  deliveryPerformance: number;
+  document?: string; // CNPJ/CPF
+  address?: string;
+  paymentTerms?: string; // ex: 15 dias, 30 dias, à vista
+  preferredPaymentMethod?: PaymentMethod;
+  observations?: string;
+  rating?: number; // 1-5 stars
 }

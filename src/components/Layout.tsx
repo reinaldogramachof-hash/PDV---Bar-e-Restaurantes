@@ -19,6 +19,7 @@ import {
   Users,
   UserCheck,
   Truck,
+  LifeBuoy,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -79,6 +80,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
       items: [
         { id: 'manual',        icon: BookOpen,        label: 'Manual de Uso' },
         { id: 'configuracoes', icon: Settings,        label: 'Configurações' },
+        { id: 'suporte',       icon: LifeBuoy,        label: 'Suporte'      },
       ]
     }
   ];

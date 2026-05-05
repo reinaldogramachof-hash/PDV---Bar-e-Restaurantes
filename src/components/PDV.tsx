@@ -82,11 +82,11 @@ export const PDV: React.FC = () => {
       <div className="flex-1 flex flex-col min-w-0">
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
-            <h2 className="text-4xl font-extrabold tracking-tighter uppercase leading-none">Venda Rápida</h2>
-            <p className="text-xs font-bold uppercase tracking-widest opacity-60">Terminal de atendimento direto</p>
+            <h2 className="text-3xl font-extrabold tracking-tighter uppercase leading-none">Venda Rápida</h2>
+            <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Atendimento Direto</p>
           </div>
           
-          <div className={`flex items-center px-5 py-3 rounded-2xl border w-full md:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
+          <div className={`flex items-center px-4 py-2.5 rounded-xl border w-full md:w-72 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-100 focus-within:border-pink-300 shadow-sm'}`}>
             <Search className="w-5 h-5 mr-3 opacity-40" />
             <input
               value={searchTerm}
@@ -97,15 +97,15 @@ export const PDV: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-none">
+        <div className="flex p-1 gap-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-current/5 w-fit mb-8 overflow-x-auto scrollbar-none">
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setCategory(cat)}
-              className={`shrink-0 px-6 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] border transition-all duration-300
+              className={`shrink-0 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300
                 ${category === cat
-                  ? 'bg-[#E85D75] border-[#E85D75] text-white shadow-xl shadow-[#E85D75]/30 scale-105'
-                  : isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] text-[#3A3A3C] hover:text-white hover:border-white/20' : 'bg-white border-gray-100 text-gray-400 hover:text-gray-900 shadow-sm'}`}
+                  ? 'bg-white dark:bg-[#2C2C2E] shadow-md text-[#E85D75]'
+                  : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}
             >
               {cat}
             </button>
@@ -122,13 +122,13 @@ export const PDV: React.FC = () => {
         ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
         
         {/* Cart Header */}
-        <div className={`p-8 border-b flex items-center justify-between ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
+        <div className={`p-6 border-b flex items-center justify-between ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
            <div className="flex items-center gap-4">
-             <div className="w-12 h-12 rounded-2xl bg-[#E85D75] flex items-center justify-center text-white shadow-lg shadow-[#E85D75]/30">
+             <div className="w-12 h-12 rounded-2xl bg-[#E85D75] flex items-center justify-center text-white">
                 <ShoppingBag className="w-6 h-6" />
              </div>
              <div>
-               <h3 className="font-bold uppercase tracking-tighter text-xl">Carrinho</h3>
+               <h3 className="font-bold uppercase tracking-tighter text-lg">Carrinho</h3>
                <div className="flex items-center gap-2">
                  <span className="text-[10px] font-black uppercase text-[#E85D75]">{totalItems} Itens</span>
                  <span className="opacity-20 text-[10px]">|</span>
@@ -161,34 +161,34 @@ export const PDV: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 key={item.id} 
-                className={`flex items-center gap-4 p-5 rounded-[2.5rem] transition-all group ${isDark ? 'bg-[#121214] hover:bg-[#121214]/80' : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-100/50'}`}
+                className={`flex items-center gap-3 p-3 rounded-2xl transition-all group ${isDark ? 'bg-[#121214] hover:bg-[#121214]/80' : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-100/50'}`}
               >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
                   {item.product.category === 'Drinks' ? '🍸' : item.product.category === 'Petiscos' ? '🍟' : '🍽️'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black uppercase truncate group-hover:text-[#E85D75] transition-colors">{item.product.name}</p>
-                  <p className={`text-[10px] font-black ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    UN. R$ {item.price.toFixed(2)}
+                  <p className="text-[11px] font-black uppercase truncate group-hover:text-[#E85D75] transition-colors leading-tight">{item.product.name}</p>
+                  <p className={`text-[9px] font-black ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    R$ {item.price.toFixed(2)}
                   </p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => changeItemQty(item.id, -1)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all active:scale-90
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all active:scale-90
                       ${item.quantity === 1
                         ? 'border-red-500/20 text-red-500 hover:bg-red-500/10 hover:border-red-500'
                         : isDark ? 'border-[#2C2C2E] hover:bg-white/5' : 'border-gray-200 hover:bg-white shadow-sm'}`}
                   >
-                    {item.quantity === 1 ? <Trash2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}
+                    {item.quantity === 1 ? <Trash2 className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
                   </button>
-                  <span className="w-5 text-center text-sm font-black tracking-tighter">{item.quantity}</span>
+                  <span className="w-4 text-center text-[11px] font-black tracking-tighter">{item.quantity}</span>
                   <button
                     onClick={() => addItemToOrder(item.product)}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all active:scale-90
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center border transition-all active:scale-90
                       ${isDark ? 'border-[#2C2C2E] hover:bg-[#E85D75]/10 hover:text-[#E85D75] hover:border-[#E85D75]' : 'border-gray-200 hover:bg-white shadow-sm hover:text-[#E85D75] hover:border-[#E85D75]'}`}
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3 h-3" />
                   </button>
                 </div>
               </motion.div>
@@ -197,7 +197,7 @@ export const PDV: React.FC = () => {
         </div>
 
         {/* Cart Footer */}
-        <div className={`p-8 border-t space-y-6 ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
+        <div className={`p-6 border-t space-y-4 ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
           <div className="flex justify-between items-end">
             <div className="space-y-1">
               <p className={`text-[10px] uppercase font-black tracking-widest opacity-40`}>Total do Pedido</p>
@@ -209,10 +209,10 @@ export const PDV: React.FC = () => {
             <button
               disabled={activeOrder.items.length === 0}
               onClick={() => setCheckoutOpen(true)}
-              className="flex items-center gap-3 px-10 py-5 bg-[#E85D75] text-white rounded-[2rem] font-black uppercase tracking-widest text-[11px] shadow-2xl shadow-[#E85D75]/40 hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:scale-100 disabled:shadow-none"
+              className="flex items-center gap-2 px-8 py-4 bg-[#E85D75] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:scale-105 active:scale-95 transition-all disabled:opacity-30 disabled:scale-100"
             >
               Finalizar Venda
-              <ArrowRight className="w-5 h-5 stroke-[3px]" />
+              <ArrowRight className="w-4 h-4 stroke-[3px]" />
             </button>
           </div>
         </div>
