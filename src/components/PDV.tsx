@@ -83,14 +83,11 @@ export const PDV: React.FC = () => {
         <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div className="space-y-1">
             <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">Venda Rápida</h2>
-            <div className="flex items-center gap-3">
-              <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>Terminal 01</span>
-              <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500`}>Direct Sales</span>
-            </div>
+            <p className="text-xs font-bold uppercase tracking-widest opacity-60">Terminal de atendimento direto</p>
           </div>
           
-          <div className={`flex items-center px-5 py-3 rounded-2xl border w-full md:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
-            <Search className={`w-5 h-5 mr-3 ${isDark ? 'text-[#3A3A3C]' : 'text-gray-400'}`} />
+          <div className={`flex items-center px-6 py-4 rounded-[2rem] border w-full md:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
+            <Search className="w-5 h-5 mr-3 opacity-40" />
             <input
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
@@ -164,7 +161,7 @@ export const PDV: React.FC = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 key={item.id} 
-                className={`flex items-center gap-4 p-5 rounded-[2rem] transition-all group ${isDark ? 'bg-[#121214] hover:bg-[#121214]/80' : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-100/50'}`}
+                className={`flex items-center gap-4 p-5 rounded-[2.5rem] transition-all group ${isDark ? 'bg-[#121214] hover:bg-[#121214]/80' : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-100/50'}`}
               >
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>
                   {item.product.category === 'Drinks' ? '🍸' : item.product.category === 'Petiscos' ? '🍟' : '🍽️'}

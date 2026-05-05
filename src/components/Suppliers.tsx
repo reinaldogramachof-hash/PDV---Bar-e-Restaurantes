@@ -31,15 +31,15 @@ export const Suppliers: React.FC = () => {
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6">
         <div className="space-y-1">
           <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">Fornecedores & Parceiros</h2>
-          <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-[#3A3A3C]' : 'text-gray-400'}`}>Cadeia de suprimentos e compras</p>
+          <p className="text-xs font-bold uppercase tracking-widest opacity-60">Cadeia de suprimentos e compras</p>
         </div>
 
         <div className="flex gap-3 w-full lg:w-auto">
-          <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 lg:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
-            <Search className={`w-5 h-5 mr-3 ${isDark ? 'text-[#3A3A3C]' : 'text-gray-400'}`} />
+          <div className={`flex items-center px-6 py-4 rounded-[2rem] border flex-1 lg:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
+            <Search className="w-5 h-5 mr-3 opacity-40" />
             <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar fornecedor..." className="bg-transparent border-none outline-none w-full text-sm font-bold placeholder:opacity-30" />
           </div>
-          <button className="px-6 py-3 bg-[#E85D75] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[#E85D75]/20 flex items-center gap-2 hover:scale-105 transition-all">
+          <button className="px-8 py-4 bg-[#E85D75] text-white rounded-[2rem] font-black uppercase tracking-widest text-[11px] shadow-lg shadow-[#E85D75]/20 flex items-center gap-2 hover:-translate-y-1 transition-all duration-300">
             <Plus className="w-4 h-4" /> Novo Fornecedor
           </button>
         </div>
@@ -48,9 +48,8 @@ export const Suppliers: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {mockSuppliers.filter(s => s.companyName.toLowerCase().includes(searchTerm.toLowerCase())).map(supplier => (
           <motion.div 
-            whileHover={{ scale: 1.01 }}
             key={supplier.id} 
-            className={`p-8 rounded-[3.5rem] border transition-all ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-sm hover:shadow-2xl shadow-gray-200/20'}`}
+            className={`p-8 rounded-[2.5rem] border transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-sm hover:shadow-gray-200/40'}`}
           >
             <div className="flex justify-between items-start mb-8">
               <div className="flex items-center gap-4">
@@ -59,11 +58,11 @@ export const Suppliers: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-xl font-black uppercase tracking-tight">{supplier.companyName}</h3>
-                  <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>{supplier.category}</span>
+                  <span className={`text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full ${isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>{supplier.category}</span>
                 </div>
               </div>
               <div className="flex gap-2">
-                 <button className="p-3 rounded-2xl border border-current/10 hover:bg-current/5 transition-all"><Edit3 className="w-4 h-4 opacity-40" /></button>
+                 <button className="p-3 rounded-xl border border-current/10 hover:bg-current/5 transition-all"><Edit3 className="w-4 h-4 opacity-40" /></button>
               </div>
             </div>
 

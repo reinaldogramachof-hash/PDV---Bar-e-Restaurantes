@@ -140,7 +140,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                       </div>
                     </div>
                  ) : isOpening ? (
-                    <div className={`w-full max-w-md rounded-[3.5rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                    <div className={`w-full max-w-md rounded-[3rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
                       <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
                         <div><h3 className="font-black uppercase tracking-tight text-2xl">Mesa {tableNumber?.toString().padStart(2, '0')}</h3><p className="text-[10px] font-black uppercase tracking-widest opacity-30">Configuração de Abertura</p></div>
                         <button onClick={onClose} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
@@ -158,7 +158,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                       </div>
                     </div>
                  ) : isManaging ? (
-                    <div className={`w-full max-w-lg rounded-[3.5rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                    <div className={`w-full max-w-lg rounded-[3rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
                       <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
                         <div><h3 className="font-black uppercase tracking-tight text-2xl">Gestão Operacional</h3><p className="text-[10px] font-black uppercase tracking-widest opacity-30">Mesa {tableNumber}</p></div>
                         <button onClick={() => setIsManaging(false)} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
@@ -185,7 +185,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
             return (
               <div className="flex w-full gap-6 h-full items-stretch">
                 {/* Product Selection (Left Side - Larger) */}
-                <div className={`flex-1 rounded-[3.5rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                <div className={`flex-1 rounded-[3rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
                   <div className="p-8 border-b space-y-6">
                     <div className="flex justify-between items-center">
                        <h4 className="text-sm font-black uppercase tracking-[0.3em] opacity-40">Cardápio Digital</h4>
@@ -209,7 +209,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                 </div>
 
                 {/* Active Order (Right Side - Sidebar style but taller) */}
-                <div className={`w-[450px] rounded-[3.5rem] border flex flex-col overflow-hidden shadow-2xl relative z-10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                <div className={`w-[450px] rounded-[3rem] border flex flex-col overflow-hidden shadow-2xl relative z-10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
                   {/* Order Header */}
                   <div className={`p-8 border-b flex justify-between items-start ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="space-y-1">

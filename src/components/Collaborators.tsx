@@ -30,15 +30,15 @@ export const Collaborators: React.FC = () => {
       <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6">
         <div className="space-y-1">
           <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">Equipe & Colaboradores</h2>
-          <p className={`text-xs font-bold uppercase tracking-widest ${isDark ? 'text-[#3A3A3C]' : 'text-gray-400'}`}>Gestão de acessos e cargos</p>
+          <p className="text-xs font-bold uppercase tracking-widest opacity-60">Gestão de acessos e cargos</p>
         </div>
 
         <div className="flex gap-3 w-full lg:w-auto">
-          <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 lg:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
-            <Search className={`w-5 h-5 mr-3 ${isDark ? 'text-[#3A3A3C]' : 'text-gray-400'}`} />
+          <div className={`flex items-center px-6 py-4 rounded-[2rem] border flex-1 lg:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
+            <Search className="w-5 h-5 mr-3 opacity-40" />
             <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome ou cargo..." className="bg-transparent border-none outline-none w-full text-sm font-bold placeholder:opacity-30" />
           </div>
-          <button className="px-6 py-3 bg-[#E85D75] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[#E85D75]/20 flex items-center gap-2 hover:scale-105 transition-all">
+          <button className="px-8 py-4 bg-[#E85D75] text-white rounded-[2rem] font-black uppercase tracking-widest text-[11px] shadow-lg shadow-[#E85D75]/20 flex items-center gap-2 hover:-translate-y-1 transition-all duration-300">
             <UserPlus className="w-4 h-4" /> Adicionar Membro
           </button>
         </div>
