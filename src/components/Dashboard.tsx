@@ -9,7 +9,7 @@ import {
   ArrowDownRight,
   Clock
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export const Dashboard: React.FC = () => {
   const { orders, tables, theme } = useApp();
@@ -37,7 +37,6 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight">Visão Geral</h1>
