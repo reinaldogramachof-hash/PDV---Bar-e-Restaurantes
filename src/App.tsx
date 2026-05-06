@@ -17,9 +17,47 @@ import { Support } from './components/Support';
 import { Kitchen } from './components/Kitchen';
 import { Settings } from './components/Settings';
 import { Security } from './components/Security';
+import { LicenseLock } from './components/LicenseLock';
 
 const AppContent = () => {
   const { currentView, setCurrentView } = useNavigation();
+  const [isAuthorized, setIsAuthorized] = React.useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    const checkLicense = async () => {
+      try {
+        // LINK DO CONTROLE DE LICENÇA (GITHUB RAW OU GIST)
+        const LICENSE_URL = 'https://raw.githubusercontent.com/reinaldogramachof-hash/PDV---Bar-e-Restaurantes/main/license.status';
+        
+        const response = await fetch(LICENSE_URL + '?t=' + Date.now());
+        const status = await response.text();
+        
+        if (status.trim().toUpperCase() === 'BLOQUEADO') {
+          setIsAuthorized(false);
+        } else {
+          setIsAuthorized(true);
+        }
+      } catch (error) {
+        // Se houver erro de rede (offline), permitimos o uso temporário ou bloqueamos.
+        // Por segurança em testes, vamos permitir se houver erro, mas você pode mudar para false.
+        setIsAuthorized(true);
+      }
+    };
+
+    checkLicense();
+  }, []);
+
+  if (isAuthorized === false) {
+    return <LicenseLock />;
+  }
+
+  if (isAuthorized === null) {
+    return (
+      <div className="h-screen w-full bg-[#121214] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[#E85D75] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   const renderContent = () => {
     switch(currentView) {

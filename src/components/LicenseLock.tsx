@@ -1,0 +1,76 @@
+import React from 'react';
+import { ShieldAlert, Lock, Phone, Mail, Globe } from 'lucide-react';
+import { motion } from 'motion/react';
+
+export const LicenseLock: React.FC = () => {
+  return (
+    <div className="fixed inset-0 z-[9999] bg-[#0A0A0B] flex items-center justify-center p-6 overflow-hidden font-sans">
+      {/* Background Effects */}
+      <div className="absolute top-0 left-0 w-full h-full">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#E85D75]/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[120px] rounded-full" />
+      </div>
+
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="max-w-md w-full bg-[#1C1C1E] border border-white/10 rounded-[3rem] p-10 relative z-10 shadow-2xl shadow-black/50 text-center space-y-8"
+      >
+        {/* Lock Icon */}
+        <div className="relative inline-block">
+          <div className="w-24 h-24 rounded-[2rem] bg-[#E85D75]/10 flex items-center justify-center text-[#E85D75]">
+            <Lock className="w-10 h-10" />
+          </div>
+          <motion.div 
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ repeat: Infinity, duration: 2 }}
+            className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#E85D75] flex items-center justify-center text-white border-4 border-[#1C1C1E]"
+          >
+            <ShieldAlert className="w-4 h-4" />
+          </motion.div>
+        </div>
+
+        {/* Text Content */}
+        <div className="space-y-4">
+          <h1 className="text-3xl font-black tracking-tighter uppercase italic text-white leading-tight">
+            Acesso <span className="text-[#E85D75]">Bloqueado</span>
+          </h1>
+          <p className="text-xs font-bold text-white/40 uppercase tracking-[0.2em] leading-relaxed">
+            O período de licenciamento para este terminal expirou ou foi suspenso pela administração.
+          </p>
+        </div>
+
+        {/* Info Card */}
+        <div className="p-6 rounded-[2rem] bg-white/5 border border-white/5 space-y-4 text-left">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-2">Entre em contato para liberar:</p>
+          
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 text-white/80">
+              <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center"><Phone className="w-4 h-4 text-[#E85D75]" /></div>
+              <span className="text-xs font-bold">(12) 99219-1018</span>
+            </div>
+            <div className="flex items-center gap-3 text-white/80">
+              <div className="w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center"><Mail className="w-4 h-4 text-[#E85D75]" /></div>
+              <span className="text-xs font-bold">tecnologia@plenainformatica.com.br</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="pt-4 border-t border-white/5 space-y-4">
+          <div className="flex items-center justify-center gap-3 opacity-30">
+             <div className="w-2 h-2 rounded-full bg-[#E85D75]" />
+             <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Plena Informática</span>
+          </div>
+          <a 
+            href="https://www.plenainformatica.com.br" 
+            target="_blank"
+            className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-widest text-[#E85D75] hover:underline"
+          >
+            <Globe className="w-3 h-3" /> Visitar site oficial
+          </a>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
