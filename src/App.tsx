@@ -12,7 +12,11 @@ import { Tables } from './components/Tables';
 import { Customers } from './components/Customers';
 import { Collaborators } from './components/Collaborators';
 import { Suppliers } from './components/Suppliers';
+import { Products } from './components/Products';
 import { Support } from './components/Support';
+import { Kitchen } from './components/Kitchen';
+import { Settings } from './components/Settings';
+import { Security } from './components/Security';
 
 const AppContent = () => {
   const { currentView, setCurrentView } = useNavigation();
@@ -22,6 +26,7 @@ const AppContent = () => {
       case 'dashboard': return <Dashboard />;
       case 'pdv': return <PDV />;
       case 'mesas': return <Tables />;
+      case 'cozinha': return <Kitchen />;
       case 'estoque': return <Stock />;
       case 'caixa': return <Cashier />;
       case 'relatorios': return <Reports />;
@@ -29,7 +34,10 @@ const AppContent = () => {
       case 'clientes': return <Customers />;
       case 'colaboradores': return <Collaborators />;
       case 'fornecedores': return <Suppliers />;
+      case 'produtos': return <Products />;
       case 'suporte': return <Support />;
+      case 'configuracoes': return <Settings />;
+      case 'seguranca': return <Security />;
       default: return (
         <div className="h-full flex flex-col items-center justify-center gap-4 opacity-50">
           <span className="text-5xl">🚧</span>

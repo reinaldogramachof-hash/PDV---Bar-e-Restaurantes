@@ -1,9 +1,39 @@
 @import "tailwindcss";
 
+@keyframes bounce-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-bounce-subtle {
+  animation: bounce-subtle 2s infinite ease-in-out;
+}
+
 @layer base {
   * {
     scrollbar-width: thin;
     scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+  }
+
+  body, 
+  div, 
+  aside, 
+  main, 
+  header, 
+  nav, 
+  section, 
+  button, 
+  input, 
+  select, 
+  textarea, 
+  span, 
+  p, 
+  h1, h2, h3, h4, h5, h6,
+  table, tr, td, th {
+    transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+                box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   *::-webkit-scrollbar {

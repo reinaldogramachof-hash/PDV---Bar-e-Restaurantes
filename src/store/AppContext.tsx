@@ -1,9 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator } from '../types';
-import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators } from './mock';
+import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings } from '../types';
+import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers, mockSettings } from './mock';
 
 interface AppState {
   products: Product[];
+  stockItems: StockItem[];
+  suppliers: Supplier[];
   tables: Table[];
   waiters: Waiter[];
   orders: Order[];
@@ -12,12 +14,23 @@ interface AppState {
   cashierHistory: CashierSession[];
   customers: Customer[];
   collaborators: Collaborator[];
+  stockMovements: StockMovement[];
+  settings: AppSettings;
+  readGuides: string[];
   theme: 'dark' | 'light';
 }
 
 interface AppContextType extends AppState {
   setTheme: (theme: 'dark' | 'light') => void;
   updateProduct: (product: Product) => void;
+  addProduct: (product: Product) => void;
+  deleteProduct: (id: string) => void;
+  updateStockItem: (item: StockItem) => void;
+  addStockItem: (item: StockItem) => void;
+  deleteStockItem: (id: string) => void;
+  updateSupplier: (supplier: Supplier) => void;
+  addSupplier: (supplier: Supplier) => void;
+  deleteSupplier: (id: string) => void;
   updateTable: (table: Table) => void;
   updateOrder: (order: Order) => void;
   addOrder: (order: Order) => void;
@@ -37,12 +50,23 @@ interface AppContextType extends AppState {
   addCollaborator: (collaborator: Collaborator) => void;
   updateCollaborator: (collaborator: Collaborator) => void;
   deleteCollaborator: (id: string) => void;
+  addStockMovement: (movement: StockMovement) => void;
+  updateSettings: (settings: AppSettings) => void;
+  toggleGuideRead: (guideId: string) => void;
+  importData: (json: string) => void;
+  exportData: () => string;
+  resetToMocks: () => void;
 }
 
 const parseJSON = <T,>(key: string, fallback: T): T => {
   try {
     const item = localStorage.getItem(key);
-    return item ? JSON.parse(item) : fallback;
+    if (!item) return fallback;
+    const parsed = JSON.parse(item);
+    if (Array.isArray(parsed) && parsed.length === 0 && Array.isArray(fallback) && fallback.length > 0) {
+      return fallback;
+    }
+    return parsed;
   } catch {
     return fallback;
   }
@@ -52,9 +76,10 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [products, setProducts] = useState<Product[]>(() => parseJSON('products', mockProducts));
+  const [stockItems, setStockItems] = useState<StockItem[]>(() => parseJSON('stockItems', mockStockItems));
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => parseJSON('suppliers', mockSuppliers));
   const [tables, setTables] = useState<Table[]>(() => {
     const saved = parseJSON<Table[]>('tables', mockTables);
-    // If table count changed in mock, prioritize mock to update floor plan
     return saved.length !== mockTables.length ? mockTables : saved;
   });
   const [waiters] = useState<Waiter[]>(() => parseJSON('waiters', mockWaiters));
@@ -64,6 +89,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [cashierHistory, setCashierHistory] = useState<CashierSession[]>(() => parseJSON('cashierHistory', []));
   const [customers, setCustomers] = useState<Customer[]>(() => parseJSON('customers', mockCustomers));
   const [collaborators, setCollaborators] = useState<Collaborator[]>(() => parseJSON('collaborators', mockCollaborators));
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => parseJSON('stockMovements', []));
+  const [settings, setSettings] = useState<AppSettings>(() => parseJSON('settings', mockSettings));
+  const [readGuides, setReadGuides] = useState<string[]>(() => parseJSON('readGuides', []));
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const th = localStorage.getItem('theme');
     return th === 'dark' || th === 'light' ? th : 'dark';
@@ -71,6 +99,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     localStorage.setItem('products', JSON.stringify(products));
+    localStorage.setItem('stockItems', JSON.stringify(stockItems));
+    localStorage.setItem('suppliers', JSON.stringify(suppliers));
     localStorage.setItem('tables', JSON.stringify(tables));
     localStorage.setItem('waiters', JSON.stringify(waiters));
     localStorage.setItem('orders', JSON.stringify(orders));
@@ -79,11 +109,87 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('cashierHistory', JSON.stringify(cashierHistory));
     localStorage.setItem('customers', JSON.stringify(customers));
     localStorage.setItem('collaborators', JSON.stringify(collaborators));
+    localStorage.setItem('stockMovements', JSON.stringify(stockMovements));
+    localStorage.setItem('settings', JSON.stringify(settings));
+    localStorage.setItem('readGuides', JSON.stringify(readGuides));
     localStorage.setItem('theme', theme);
-  }, [products, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, theme]);
+  }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme]);
+
+  const resetToMocks = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
+  const exportData = () => {
+    const data = {
+      products, stockItems, suppliers, tables, waiters, orders, expenses, 
+      cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides
+    };
+    return JSON.stringify(data, null, 2);
+  };
+
+  const importData = (json: string) => {
+    try {
+      const data = JSON.parse(json);
+      if (data.products) setProducts(data.products);
+      if (data.stockItems) setStockItems(data.stockItems);
+      if (data.suppliers) setSuppliers(data.suppliers);
+      if (data.tables) setTables(data.tables);
+      if (data.orders) setOrders(data.orders);
+      if (data.expenses) setExpenses(data.expenses);
+      if (data.customers) setCustomers(data.customers);
+      if (data.collaborators) setCollaborators(data.collaborators);
+      if (data.stockMovements) setStockMovements(data.stockMovements);
+      if (data.settings) setSettings(data.settings);
+      if (data.readGuides) setReadGuides(data.readGuides);
+      alert('Dados importados com sucesso!');
+    } catch (e) {
+      alert('Erro ao importar JSON. Verifique o formato.');
+    }
+  };
+
+  const updateSettings = (newSettings: AppSettings) => setSettings(newSettings);
+
+  const toggleGuideRead = (guideId: string) => {
+    setReadGuides(prev => 
+      prev.includes(guideId) ? prev.filter(id => id !== guideId) : [...prev, guideId]
+    );
+  };
 
   const updateProduct = (updatedProduct: Product) => {
     setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+  };
+
+  const addProduct = (product: Product) => {
+    setProducts(prev => [...prev, product]);
+  };
+
+  const deleteProduct = (id: string) => {
+    setProducts(prev => prev.filter(p => p.id !== id));
+  };
+
+  const updateStockItem = (updatedItem: StockItem) => {
+    setStockItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i));
+  };
+
+  const addStockItem = (item: StockItem) => {
+    setStockItems(prev => [...prev, item]);
+  };
+
+  const deleteStockItem = (id: string) => {
+    setStockItems(prev => prev.filter(i => i.id !== id));
+  };
+
+  const updateSupplier = (updatedSupplier: Supplier) => {
+    setSuppliers(prev => prev.map(s => s.id === updatedSupplier.id ? updatedSupplier : s));
+  };
+
+  const addSupplier = (supplier: Supplier) => {
+    setSuppliers(prev => [...prev, supplier]);
+  };
+
+  const deleteSupplier = (id: string) => {
+    setSuppliers(prev => prev.filter(s => s.id !== id));
   };
 
   const updateTable = (updatedTable: Table) => {
@@ -103,7 +209,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
   };
 
-  // Accepts the full order object to avoid stale closure issues
   const closeOrder = (order: Order, payments: PaymentItem[], serviceCharge: number) => {
     const closedOrder: Order = {
       ...order,
@@ -126,17 +231,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ));
     }
 
-    setProducts(prev => {
-      const next = [...prev];
+    setStockItems(prevStock => {
+      const nextStock = [...prevStock];
+      const newMovements: StockMovement[] = [];
+      
       order.items.forEach(item => {
-        if (item.product.controlsStock) {
-          const idx = next.findIndex(p => p.id === item.product.id);
-          if (idx !== -1) {
-            next[idx] = { ...next[idx], stock: Math.max(0, next[idx].stock - item.quantity) };
-          }
+        const recipe = item.product.recipe;
+        if (recipe && recipe.length > 0) {
+          recipe.forEach(recipeItem => {
+            const idx = nextStock.findIndex(si => si.id === recipeItem.stockItemId);
+            if (idx !== -1) {
+              const quantityToAbate = recipeItem.quantity * item.quantity;
+              nextStock[idx] = { 
+                ...nextStock[idx], 
+                currentStock: Math.max(0, nextStock[idx].currentStock - quantityToAbate) 
+              };
+              
+              newMovements.push({
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                stockItemId: recipeItem.stockItemId,
+                type: 'out',
+                quantity: quantityToAbate,
+                unitCost: nextStock[idx].costPrice,
+                reason: `Venda - ${item.product.name} (Ficha Técnica)`,
+                timestamp: new Date().toISOString()
+              });
+            }
+          });
         }
       });
-      return next;
+      
+      if (newMovements.length > 0) {
+        setStockMovements(prevMovements => [...prevMovements, ...newMovements]);
+      }
+      
+      return nextStock;
     });
 
     if (order.customerId) {
@@ -231,7 +360,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (!sourceOrder || !targetOrder) return;
 
-    // Combine items
     const combinedItems = [...targetOrder.items];
     sourceOrder.items.forEach(sItem => {
       const existingIdx = combinedItems.findIndex(tItem => tItem.product.id === sItem.product.id);
@@ -254,7 +382,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setOrders(prev => prev
-      .filter(o => o.id !== sourceOrder.id) // Remove source order
+      .filter(o => o.id !== sourceOrder.id)
       .map(o => o.id === targetOrder.id ? updatedTargetOrder : o)
     );
 
@@ -304,13 +432,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCollaborators(prev => prev.filter(c => c.id !== id));
   };
 
+  const addStockMovement = (movement: StockMovement) => {
+    setStockMovements(prev => [...prev, movement]);
+  };
+
   return (
     <AppContext.Provider value={{
-      products, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, theme,
-      setTheme, updateProduct, updateTable, addOrder, updateOrder, closeOrder, addExpense, openCashier, closeCashier,
+      products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme,
+      setTheme, updateProduct, addProduct, deleteProduct, 
+      updateStockItem, addStockItem, deleteStockItem,
+      updateSupplier, addSupplier, deleteSupplier,
+      updateTable, addOrder, updateOrder, closeOrder, addExpense, updateExpense, deleteExpense, openCashier, closeCashier,
       transferTable, mergeTables, reserveTable, clearTable,
       addCustomer, updateCustomer, deleteCustomer,
-      addCollaborator, updateCollaborator, deleteCollaborator
+      addCollaborator, updateCollaborator, deleteCollaborator,
+      addStockMovement, updateSettings, toggleGuideRead, importData, exportData, resetToMocks
     }}>
       {children}
     </AppContext.Provider>

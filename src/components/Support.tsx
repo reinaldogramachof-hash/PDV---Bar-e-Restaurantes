@@ -19,30 +19,30 @@ export const Support: React.FC = () => {
   const contactMethods = [
     {
       title: 'WhatsApp',
-      value: '(81) 98765-4321',
-      sub: 'Atendimento imediato',
+      value: '(12) 99219-1018',
+      sub: 'Atendimento via chat',
       icon: MessageCircle,
       color: 'text-emerald-500',
       bg: 'bg-emerald-500/10',
-      link: 'https://wa.me/5581987654321'
+      link: 'https://wa.me/5512992191018'
     },
     {
       title: 'E-mail',
-      value: 'suporte@plena.com.br',
-      sub: 'Tempo de resposta: 2h',
+      value: 'tecnologia@plenainformatica.com.br',
+      sub: 'Suporte técnico oficial',
       icon: Mail,
       color: 'text-blue-500',
       bg: 'bg-blue-500/10',
-      link: 'mailto:suporte@plena.com.br'
+      link: 'mailto:tecnologia@plenainformatica.com.br'
     },
     {
-      title: 'Telefone',
-      value: '0800 123 4567',
-      sub: 'Seg a Sex, 08h às 18h',
+      title: 'Horário',
+      value: 'Seg a Sex',
+      sub: 'Das 09h às 17h',
       icon: Phone,
       color: 'text-purple-500',
       bg: 'bg-purple-500/10',
-      link: 'tel:08001234567'
+      link: '#'
     }
   ];
 
@@ -77,13 +77,13 @@ export const Support: React.FC = () => {
               <method.icon className="w-7 h-7" />
             </div>
             <h3 className="text-sm font-black uppercase tracking-widest opacity-40 mb-1">{method.title}</h3>
-            <p className="text-xl font-black tracking-tight mb-2">{method.value}</p>
+            <p className={`${method.title === 'E-mail' ? 'text-sm' : 'text-xl'} font-black tracking-tight mb-2 break-all`}>{method.value}</p>
             <p className="text-[10px] font-bold opacity-30 uppercase tracking-widest">{method.sub}</p>
           </motion.a>
         ))}
       </div>
 
-      {/* Website and Socials Card */}
+      {/* Website Card */}
       <div className={`p-10 rounded-[3rem] border overflow-hidden relative
         ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/30'}`}>
         
@@ -93,15 +93,9 @@ export const Support: React.FC = () => {
           <div className="space-y-6 flex-1 text-center md:text-left">
             <div>
               <h2 className="text-2xl font-black tracking-tighter uppercase mb-2">Plena Informática</h2>
-              <p className="text-sm font-medium opacity-60 leading-relaxed max-w-md">
-                Desenvolvemos soluções inteligentes para o seu negócio. Siga-nos nas redes sociais e fique por dentro das novidades.
+              <p className="text-sm font-bold opacity-60 leading-relaxed max-w-md uppercase tracking-tight">
+                Acesse nosso site e conheça outras soluções.
               </p>
-            </div>
-            
-            <div className="flex items-center justify-center md:justify-start gap-4">
-              <a href="#" className={`p-3 rounded-2xl transition-all hover:bg-[#E85D75] hover:text-white ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}><Instagram className="w-5 h-5" /></a>
-              <a href="#" className={`p-3 rounded-2xl transition-all hover:bg-[#E85D75] hover:text-white ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}><Facebook className="w-5 h-5" /></a>
-              <a href="https://www.plenainformatica.com.br" target="_blank" className={`p-3 rounded-2xl transition-all hover:bg-[#E85D75] hover:text-white ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}><Globe className="w-5 h-5" /></a>
             </div>
           </div>
 

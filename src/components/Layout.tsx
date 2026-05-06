@@ -18,8 +18,12 @@ import {
   BookOpen,
   Users,
   UserCheck,
+  ChefHat,
+  Shield,
   Truck,
   LifeBuoy,
+  Monitor,
+  Download,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -52,34 +56,69 @@ const DateTimeDisplay = () => {
 export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }) => {
   const { theme, setTheme, cashierSession } = useApp();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBtn, setShowInstallBtn] = useState(false);
 
   const isDark = theme === 'dark';
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBtn(true);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+    // Monitor se já está instalado
+    window.addEventListener('appinstalled', () => {
+      setShowInstallBtn(false);
+      setDeferredPrompt(null);
+    });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+      setShowInstallBtn(false);
+    }
+  };
 
   const navGroups = [
     {
       title: 'Operacional',
       items: [
-        { id: 'pdv',           icon: MonitorPlay,     label: 'PDV (Balcão)' },
+        { id: 'pdv',           icon: MonitorPlay,     label: 'PDV (Balcão)', selected: true },
         { id: 'mesas',         icon: Table2,          label: 'Mesas'        },
+        { id: 'cozinha',       icon: ChefHat,         label: 'Cozinha'      },
         { id: 'caixa',         icon: Wallet,          label: 'Caixa'        },
       ]
     },
     {
       title: 'Gestão',
       items: [
-        { id: 'dashboard',     icon: LayoutDashboard, label: 'Dashboard'    },
+        { id: 'dashboard',     icon: LayoutDashboard, label: 'Dashboard',    selected: true },
         { id: 'clientes',      icon: Users,           label: 'Clientes'     },
         { id: 'colaboradores', icon: UserCheck,       label: 'Colaboradores'},
         { id: 'fornecedores',  icon: Truck,           label: 'Fornecedores' },
-        { id: 'relatorios',    icon: LineChart,       label: 'Financeiro'   },
+        { id: 'produtos',      icon: BookOpen,        label: 'Cardápio',     selected: true },
+        { id: 'relatorios',    icon: LineChart,       label: 'Financeiro',   selected: true },
         { id: 'estoque',       icon: Package,         label: 'Estoque'      },
       ]
     },
     {
       title: 'Sistema',
       items: [
-        { id: 'manual',        icon: BookOpen,        label: 'Manual de Uso' },
-        { id: 'configuracoes', icon: Settings,        label: 'Configurações' },
+        { id: 'manual',        icon: BookOpen,        label: 'Manual de Uso', selected: true },
+        { id: 'seguranca',     icon: Shield,          label: 'Segurança'    },
+        { id: 'configuracoes', icon: Settings,        label: 'Configurações', selected: true },
         { id: 'suporte',       icon: LifeBuoy,        label: 'Suporte'      },
       ]
     }
@@ -117,14 +156,14 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
             )}
           </div>
 
-          <nav className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-8 scrollbar-none">
+          <nav className="flex-1 overflow-y-auto overflow-x-hidden p-4 space-y-4 scrollbar-none">
             {navGroups.map((group, gIdx) => (
-              <div key={gIdx} className="space-y-2">
+              <div key={gIdx} className="space-y-1.5">
                 {!isCollapsed && (
                   <h3 className={`px-4 text-[10px] font-black uppercase tracking-[0.2em] opacity-30`}>{group.title}</h3>
                 )}
                 <div className="space-y-1">
-                  {group.items.map((item) => {
+                  {group.items.map((item: any) => {
                     const active = currentView === item.id;
                     const Icon = item.icon;
                     return (
@@ -132,7 +171,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
                         key={item.id}
                         onClick={() => setCurrentView(item.id as View)}
                         title={isCollapsed ? item.label : ''}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 transition-all rounded-xl group
+                        className={`w-full flex items-center gap-3 px-3 py-2 transition-all rounded-xl group relative
                           ${active 
                             ? 'bg-[#E85D75] text-white shadow-md shadow-[#E85D75]/20' 
                             : `${isDark ? 'text-[#A1A1A6] hover:bg-white/5 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`
@@ -140,9 +179,21 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
                           ${isCollapsed ? 'justify-center' : ''}
                         `}
                       >
-                        <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${active ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`} />
+                        <div className="relative">
+                          <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${active ? 'opacity-100' : 'opacity-60 group-hover:opacity-100'}`} />
+                          {item.selected && isCollapsed && (
+                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full border-2 border-white dark:border-[#1C1C1E]" />
+                          )}
+                        </div>
                         {!isCollapsed && (
-                          <span className="font-bold text-xs uppercase tracking-tight transition-opacity duration-300">{item.label}</span>
+                          <div className="flex-1 flex items-center justify-between overflow-hidden">
+                            <span className="font-bold text-xs uppercase tracking-tight transition-opacity duration-300 truncate">{item.label}</span>
+                            {item.selected && (
+                              <span className={`text-[7px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-tighter ${active ? 'bg-white/20 text-white' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                                Plano
+                              </span>
+                            )}
+                          </div>
                         )}
                       </button>
                     );
@@ -210,11 +261,29 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
               </div>
 
               <div className="flex items-center gap-2">
+                {showInstallBtn && (
+                  <button 
+                    onClick={handleInstallClick}
+                    className={`hidden sm:flex items-center gap-2 px-4 h-10 rounded-xl bg-[#E85D75] text-white text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#E85D75]/20 mr-2 animate-bounce-subtle`}
+                  >
+                    <Monitor className="w-4 h-4" /> Instalar no PC
+                  </button>
+                )}
                 <button 
                   onClick={() => setTheme(isDark ? 'light' : 'dark')}
                   className={`p-2.5 rounded-xl transition-all hover:scale-110 active:scale-95 ${isDark ? 'bg-white/5 text-yellow-400 hover:bg-white/10' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                 >
-                  {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={theme}
+                      initial={{ opacity: 0, rotate: -90, scale: 0.5 }}
+                      animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                      exit={{ opacity: 0, rotate: 90, scale: 0.5 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                    </motion.div>
+                  </AnimatePresence>
                 </button>
                 <div className={`flex items-center gap-3 px-4 py-2 rounded-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-100'}`}>
                   <div className="w-8 h-8 rounded-lg bg-[#E85D75] flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-[#E85D75]/20">R</div>

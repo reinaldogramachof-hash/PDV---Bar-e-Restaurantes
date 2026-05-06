@@ -22,7 +22,7 @@ const downloadCSV = (filename: string, rows: string[][]) => {
 };
 
 export const Reports: React.FC = () => {
-  const { orders, waiters, theme, expenses, addExpense, deleteExpense } = useApp();
+  const { orders, waiters, theme, expenses, addExpense, deleteExpense, stockItems } = useApp();
   const isDark = theme === 'dark';
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [period, setPeriod] = useState<Period>('mes');
@@ -75,7 +75,17 @@ export const Reports: React.FC = () => {
   const totalService = filteredOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
   const totalSalesAmount = totalRevenue + totalService;
   const totalExpensesAmount = filteredExpenses.reduce((acc, e) => acc + e.amount, 0);
-  const netProfit = totalSalesAmount - totalExpensesAmount;
+  
+  const cmvTotal = filteredOrders.flatMap(o => o.items).reduce((acc, item) => {
+    const productRecipe = item.product.recipe || [];
+    const itemCost = productRecipe.reduce((recipeAcc, recipeItem) => {
+      const stockItem = stockItems.find(si => si.id === recipeItem.stockItemId);
+      return recipeAcc + (stockItem ? stockItem.costPrice * recipeItem.quantity : 0);
+    }, 0);
+    return acc + (item.quantity * itemCost);
+  }, 0);
+
+  const netProfit = totalSalesAmount - totalExpensesAmount - cmvTotal;
 
   // Stats for products
   const productStats = filteredOrders.flatMap(o => o.items).reduce<Record<string, { qty: number; revenue: number; category: string }>>((acc, item) => {
@@ -228,10 +238,10 @@ export const Reports: React.FC = () => {
                         <div key={cat} className="space-y-2">
                           <div className="flex justify-between text-[11px] font-black uppercase tracking-widest">
                             <span>{cat}</span>
-                            <span className="opacity-40">R$ {rev.toLocaleString('pt-BR')}</span>
+                            <span className="opacity-40">R$ {Number(rev).toLocaleString('pt-BR')}</span>
                           </div>
                           <div className="h-3 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
-                            <motion.div initial={{ width: 0 }} animate={{ width: `${(rev / totalExpensesAmount) * 100}%` }} className="h-full bg-red-500/50 rounded-full" />
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${(Number(rev) / totalExpensesAmount) * 100}%` }} className="h-full bg-red-500/50 rounded-full" />
                           </div>
                         </div>
                       ))
@@ -250,12 +260,12 @@ export const Reports: React.FC = () => {
                          <span className="text-sm font-black">R$ {totalSalesAmount.toLocaleString('pt-BR')}</span>
                       </div>
                       <div className="flex justify-between items-center p-3 border-b border-current/5">
-                         <span className="text-[10px] font-black uppercase opacity-40">Custo (Insumos)</span>
-                         <span className="text-sm font-black text-red-400">-(R$ {(expenseCategoryStats['Insumos'] || 0).toLocaleString('pt-BR')})</span>
+                         <span className="text-[10px] font-black uppercase opacity-40">CMV (Custo Produtos)</span>
+                         <span className="text-sm font-black text-red-400">-(R$ {cmvTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>
                       </div>
                       <div className="flex justify-between items-center p-3 border-b border-current/5">
-                         <span className="text-[10px] font-black uppercase opacity-40">Pessoal/Gerais</span>
-                         <span className="text-sm font-black text-red-400">-(R$ {(totalExpensesAmount - (expenseCategoryStats['Insumos'] || 0)).toLocaleString('pt-BR')})</span>
+                         <span className="text-[10px] font-black uppercase opacity-40">Despesas (Insumos/Gerais)</span>
+                         <span className="text-sm font-black text-red-400">-(R$ {totalExpensesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>
                       </div>
                       <div className={`flex justify-between items-center p-4 rounded-2xl mt-4 ${netProfit >= 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
                          <span className="text-[11px] font-black uppercase">Resultado Final</span>

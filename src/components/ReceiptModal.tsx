@@ -10,7 +10,7 @@ interface ReceiptModalProps {
 }
 
 export const ReceiptModal: React.FC<ReceiptModalProps> = ({ order, onClose }) => {
-  const { theme, waiters } = useApp();
+  const { theme, waiters, settings } = useApp();
   const isDark = theme === 'dark';
   
   const waiter = waiters.find(w => w.id === order.waiterId)?.name || 'Balcão';
@@ -54,10 +54,11 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ order, onClose }) =>
            <div className="print-content-wrapper">
              <div className="text-center mb-6">
                <div className="text-xl mb-1 print:hidden">🍸</div>
-               <h2 className="text-lg font-bold tracking-tighter mb-0 uppercase print:text-[16px]">Bar Manager Pro</h2>
+               <h2 className="text-lg font-bold tracking-tighter mb-0 uppercase print:text-[16px]">{settings.establishment.name}</h2>
                <div className="w-full border-b border-dashed border-current my-3"></div>
-               <p className="text-[10px] print:text-[11px]">RUA DAS PALMEIRAS, 456 - VILA GASTRO</p>
-               <p className="text-[10px] print:text-[11px]">CNPJ: 12.345.678/0001-99</p>
+               <p className="text-[10px] print:text-[11px] uppercase">{settings.establishment.address}</p>
+               <p className="text-[10px] print:text-[11px]">DOCUMENTO: {settings.establishment.document}</p>
+               <p className="text-[10px] print:text-[11px]">TEL: {settings.establishment.phone}</p>
                <div className="w-full border-b border-dashed border-current my-3"></div>
              </div>
              

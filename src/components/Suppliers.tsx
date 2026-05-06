@@ -4,18 +4,16 @@ import { Supplier } from '../types';
 import { Search, Plus, Truck, Phone, Mail, Edit3, Trash2, Box, User, LayoutGrid, List, MapPin, CreditCard, FileText, Star, X, Check, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-const mockSuppliers: Supplier[] = [
-  { id: '1', companyName: 'Bebidas Prime Distribuidora', category: 'Bebidas', contactName: 'Ricardo L.', phone: '(11) 4004-9000', email: 'vendas@prime.com.br', lastDelivery: '2026-05-02', deliveryPerformance: 98, rating: 5, paymentTerms: '30 dias', document: '12.345.678/0001-90', address: 'Av. Industrial, 1500 - SP' },
-  { id: '2', companyName: 'Hortifruti da Fazenda', category: 'Perecíveis', contactName: 'Dona Maria', phone: '(11) 91234-5678', email: 'fazenda@email.com', lastDelivery: '2026-05-04', deliveryPerformance: 100, rating: 5, paymentTerms: 'À vista', document: '98.765.432/0001-10', address: 'Rua das Flores, 45 - Cotia/SP' },
-  { id: '3', companyName: 'Atacadão Carnes & Cia', category: 'Proteínas', contactName: 'Carlos M.', phone: '(11) 3322-1100', email: 'comercial@atacadao.com', lastDelivery: '2026-04-30', deliveryPerformance: 85, rating: 3, paymentTerms: '15 dias', document: '45.678.901/0001-22', address: 'Marginal Tietê, KM 12 - SP' },
-  { id: '4', companyName: 'Limpeza Express S/A', category: 'Limpeza', contactName: 'Felipe G.', phone: '(11) 2211-4433', email: 'contato@limpezaexpress.com', lastDelivery: '2026-04-15', deliveryPerformance: 92, rating: 4, paymentTerms: 'Boleto 21 dias', document: '33.221.100/0001-55', address: 'Rua Limpa, 100 - Barueri/SP' },
-];
-
 export const Suppliers: React.FC = () => {
-  const { theme } = useApp();
+  const { theme, suppliers, addSupplier, updateSupplier, deleteSupplier } = useApp();
   const isDark = theme === 'dark';
   const [searchTerm, setSearchTerm] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => (localStorage.getItem('viewMode_suppliers') as any) || 'list');
+
+  const toggleViewMode = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+    localStorage.setItem('viewMode_suppliers', mode);
+  };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'geral' | 'logistica'>('geral');
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
@@ -44,7 +42,32 @@ export const Suppliers: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const filteredSuppliers = mockSuppliers.filter(s => 
+  const handleSave = () => {
+    if (!formData.companyName) return;
+
+    const supplier: Supplier = {
+      id: editingSupplier?.id || Date.now().toString(),
+      companyName: formData.companyName,
+      category: formData.category || 'Geral',
+      contactName: formData.contactName || '',
+      phone: formData.phone || '',
+      email: formData.email || '',
+      document: formData.document || '',
+      address: formData.address || '',
+      paymentTerms: formData.paymentTerms || '',
+      observations: formData.observations || '',
+      rating: formData.rating || 5,
+      deliveryPerformance: formData.deliveryPerformance || 100,
+      lastDelivery: formData.lastDelivery || new Date().toISOString().split('T')[0]
+    };
+
+    if (editingSupplier) updateSupplier(supplier);
+    else addSupplier(supplier);
+    
+    setIsModalOpen(false);
+  };
+
+  const filteredSuppliers = suppliers.filter(s => 
     s.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
     s.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.contactName?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -61,8 +84,8 @@ export const Suppliers: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
           <div className="flex p-1.5 gap-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10 w-fit backdrop-blur-md">
-            <button onClick={() => setViewMode('grid')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[#2C2C2E] shadow-xl text-[#E85D75]' : 'opacity-30 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
-            <button onClick={() => setViewMode('list')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[#2C2C2E] shadow-xl text-[#E85D75]' : 'opacity-30 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
+            <button onClick={() => toggleViewMode('grid')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[#2C2C2E] shadow-xl text-[#E85D75]' : 'opacity-30 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
+            <button onClick={() => toggleViewMode('list')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[#2C2C2E] shadow-xl text-[#E85D75]' : 'opacity-30 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
           </div>
           <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 lg:w-96 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
             <Search className="w-4 h-4 mr-3 opacity-30" />
@@ -83,7 +106,6 @@ export const Suppliers: React.FC = () => {
               layout
               className={`p-10 rounded-[3rem] border transition-all duration-500 group hover:border-[#E85D75]/40 relative overflow-hidden ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/20'}`}
             >
-              {/* Background Accent */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#E85D75]/5 to-transparent rounded-bl-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
 
               <div className="flex justify-between items-start mb-10 relative z-10">
@@ -104,7 +126,7 @@ export const Suppliers: React.FC = () => {
                 </div>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
                    <button onClick={() => handleOpenModal(supplier)} className={`p-3 rounded-2xl transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}><Edit3 className="w-4 h-4 opacity-40" /></button>
-                   <button className="p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><Trash2 className="w-4 h-4" /></button>
+                   <button onClick={() => deleteSupplier(supplier.id)} className="p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
 
@@ -211,7 +233,7 @@ export const Suppliers: React.FC = () => {
                     <td className="px-10 py-6 text-right">
                       <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
                          <button onClick={() => handleOpenModal(supplier)} className={`p-2.5 rounded-xl transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}><Edit3 className="w-4 h-4 opacity-40" /></button>
-                         <button className="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><Trash2 className="w-4 h-4" /></button>
+                         <button onClick={() => deleteSupplier(supplier.id)} className="p-2.5 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -268,7 +290,7 @@ export const Suppliers: React.FC = () => {
 
               {/* Modal Body (Scrollable) */}
               <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
-                <form className="space-y-8">
+                <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                   {activeTab === 'geral' ? (
                     <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -350,7 +372,7 @@ export const Suppliers: React.FC = () => {
               {/* Modal Footer */}
               <div className="p-10 border-t border-current/5 bg-black/5 dark:bg-white/5 flex gap-6">
                 <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>Descartar</button>
-                <button onClick={() => setIsModalOpen(false)} className="flex-[2] py-5 bg-[#E85D75] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[#E85D75]/40 hover:scale-[1.02] active:scale-95 transition-all">Salvar Parceiro</button>
+                <button onClick={handleSave} className="flex-[2] py-5 bg-[#E85D75] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[#E85D75]/40 hover:scale-[1.02] active:scale-95 transition-all">Salvar Parceiro</button>
               </div>
             </motion.div>
           </div>
@@ -359,4 +381,3 @@ export const Suppliers: React.FC = () => {
     </div>
   );
 };
-

@@ -1,16 +1,30 @@
 export type OrderMode = 'mesa' | 'balcao';
 export type PaymentMethod = 'dinheiro' | 'credito' | 'debito' | 'pix' | 'vr' | 'va' | 'voucher';
 
+export interface StockItem {
+  id: string;
+  name: string;
+  category: string;
+  unit: string; // kg, L, un, g, ml
+  currentStock: number;
+  minStock: number;
+  costPrice: number;
+  supplierId?: string;
+}
+
+export interface RecipeItem {
+  stockItemId: string;
+  quantity: number; // quantidade do insumo consumida
+}
+
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number;
   category: string;
-  stock: number;
-  minStock: number;
-  unit: string;
-  controlsStock: boolean;
+  recipe?: RecipeItem[]; // Ficha técnica
+  image?: string;
 }
 
 export interface OrderItem {
@@ -131,4 +145,31 @@ export interface Supplier {
   preferredPaymentMethod?: PaymentMethod;
   observations?: string;
   rating?: number; // 1-5 stars
+}
+
+export interface StockMovement {
+  id: string;
+  stockItemId: string; // Aponta para o insumo
+  type: 'in' | 'out' | 'loss';
+  quantity: number;
+  unitCost?: number;
+  reason?: string;
+  timestamp: string;
+  collaboratorId?: string;
+}
+
+export interface AppSettings {
+  establishment: {
+    name: string;
+    address: string;
+    phone: string;
+    document: string;
+    website?: string;
+  };
+  thermalPrinter: {
+    enabled: boolean;
+    autoPrint: boolean;
+    showLogo: boolean;
+    paperWidth: '58mm' | '80mm';
+  };
 }

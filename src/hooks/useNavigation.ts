@@ -12,6 +12,9 @@ export type View =
   | 'clientes' 
   | 'colaboradores' 
   | 'fornecedores'
+  | 'produtos'
+  | 'cozinha'
+  | 'seguranca'
   | 'suporte';
 
 export function useNavigation() {

@@ -1,142 +1,283 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { 
-  BookOpen, 
-  MonitorPlay, 
-  Wallet, 
-  Package, 
-  LineChart, 
-  ChevronRight,
-  Info,
-  CheckCircle2,
-  AlertTriangle
+  BookOpen, MonitorPlay, LayoutDashboard, Utensils, 
+  LineChart, Settings, Database, Lightbulb, 
+  CheckCircle2, Star, Target, TrendingUp, UserCheck,
+  ChevronRight, Info, AlertTriangle, ShieldCheck,
+  Circle, CheckCircle, Award
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export const UserManual: React.FC = () => {
-  const { theme } = useApp();
+  const { theme, readGuides, toggleGuideRead } = useApp();
   const isDark = theme === 'dark';
+  const [activeTab, setActiveTab] = useState<'guides' | 'tips'>('guides');
 
-  const sections = [
+  const moduleGuides = [
     {
-      id: 'pdv',
-      title: 'PDV & Mesas',
+      id: 'guide_pdv',
+      title: 'PDV & Balcão',
       icon: MonitorPlay,
-      color: '#E85D75',
-      content: [
-        'Clique em uma mesa livre para iniciar uma comanda.',
-        'Selecione produtos do cardápio para adicionar ao pedido.',
-        'Use o "Venda Rápida" para pedidos de balcão sem mesa fixa.',
-        'Para fechar, clique em "Fechar Conta" e selecione as formas de pagamento.'
+      color: 'rose',
+      description: 'O coração da sua operação. Agilidade é a palavra-chave.',
+      steps: [
+        { t: 'Abertura Rápida', d: 'Inicie vendas em segundos clicando diretamente nos itens do cardápio.' },
+        { t: 'Gestão de Pagamentos', d: 'Suporta múltiplas formas de pagamento em uma única conta (Split).' },
+        { t: 'Impressão de Comanda', d: 'Envie o pedido para a cozinha ou balcão automaticamente após confirmar.' }
       ]
     },
     {
-      id: 'caixa',
-      title: 'Gestão de Caixa',
-      icon: Wallet,
-      color: '#F39C12',
-      content: [
-        'Abra o caixa no início do expediente com o valor de fundo.',
-        'Todas as vendas finalizadas entram automaticamente no saldo.',
-        'Realize sangrias (retiradas) ou suprimentos conforme necessário.',
-        'O fechamento detalha o saldo esperado vs. saldo informado.'
+      id: 'guide_dashboard',
+      title: 'Dashboard BI',
+      icon: LayoutDashboard,
+      color: 'blue',
+      description: 'Sua bússola estratégica. Decisões baseadas em dados reais.',
+      steps: [
+        { t: 'Ticket Médio', d: 'Acompanhe quanto cada cliente gasta em média no seu estabelecimento.' },
+        { t: 'Vendas por Hora', d: 'Identifique seus horários de pico e otimize sua equipe.' },
+        { t: 'Produtos Top 10', d: 'Saiba quais itens mais saem e quais precisam de promoção.' }
       ]
     },
     {
-      id: 'estoque',
-      title: 'Controle de Estoque',
-      icon: Package,
-      color: '#3498DB',
-      content: [
-        'Cadastre produtos com controle de estoque ativo.',
-        'O sistema abate automaticamente as quantidades a cada venda.',
-        'Receba alertas visuais quando o estoque estiver baixo.',
-        'Ajuste o saldo manualmente para correções ou perdas.'
+      id: 'guide_cardapio',
+      title: 'Cardápio Digital',
+      icon: Utensils,
+      color: 'amber',
+      description: 'Organize sua oferta de forma atraente e lucrativa.',
+      steps: [
+        { t: 'Categorização', d: 'Separe itens por tipos (Bebidas, Pratos, Entradas) para facilitar a busca.' },
+        { t: 'Ficha Técnica', d: 'Vincule ingredientes ao produto para controle automático de estoque.' },
+        { t: 'Precificação', d: 'Ajuste preços rapidamente conforme a flutuação dos custos de insumos.' }
       ]
     },
     {
-      id: 'financeiro',
-      title: 'Financeiro',
+      id: 'guide_financeiro',
+      title: 'Gestão Financeira',
       icon: LineChart,
-      color: '#27AE60',
-      content: [
-        'Visualize o faturamento bruto e líquido em tempo real.',
-        'Acompanhe o ticket médio e performance de vendas.',
-        'Filtre dados por períodos (dia, semana, mês).',
-        'Relatórios baseados apenas em vendas com pagamento confirmado.'
+      color: 'emerald',
+      description: 'Saúde financeira em dia. Controle cada centavo.',
+      steps: [
+        { t: 'Fluxo de Caixa', d: 'Registre todas as entradas e saídas (sangrias e suprimentos).' },
+        { t: 'Relatórios Mensais', d: 'Compare o desempenho de diferentes meses para prever tendências.' },
+        { t: 'Controle de Despesas', d: 'Categorize gastos fixos e variáveis para calcular o lucro líquido real.' }
+      ]
+    },
+    {
+      id: 'guide_config',
+      title: 'Backup & Segurança',
+      icon: Settings,
+      color: 'slate',
+      description: 'Proteja o patrimônio de dados da sua empresa.',
+      steps: [
+        { t: 'Dados do Cupom', d: 'Personalize o cabeçalho do recibo com CNPJ, Endereço e Telefone.' },
+        { t: 'Backup Semanal', d: 'Exporte o arquivo JSON toda semana e guarde em local seguro (nuvem/HD).' },
+        { t: 'Restauração', d: 'Em caso de troca de computador, importe o backup para continuar de onde parou.' }
       ]
     }
   ];
 
+  const proTips = [
+    { id: 'tip_1', title: 'Engenharia de Cardápio', icon: Target, content: 'Posicione os produtos com maior margem de lucro em locais de destaque visual no sistema. Use o Dashboard para identificar os "Estrelas" (muita saída, margem alta).' },
+    { id: 'tip_2', title: 'Controle de CMV', icon: TrendingUp, content: 'Mantenha o seu Custo de Mercadoria Vendida (CMV) entre 25% e 35%. Use a ficha técnica rigorosamente para que o estoque reflita a realidade.' },
+    { id: 'tip_3', title: 'Ticket Médio', icon: Star, content: 'Treine sua equipe para oferecer acompanhamentos ou bebidas premium. Um aumento de 10% no ticket médio pode representar até 30% de aumento no lucro líquido.' },
+    { id: 'tip_4', title: 'Fidelização', icon: UserCheck, content: 'Use o cadastro de clientes para registrar preferências e datas especiais. Um cliente que se sente reconhecido volta 3x mais.' }
+  ];
+
+  const totalItems = moduleGuides.length + proTips.length;
+  const completedItems = readGuides.length;
+  const progressPercent = Math.round((completedItems / totalItems) * 100);
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-dashed pb-8 border-current/20">
-        <div>
-          <h2 className="text-3xl font-black tracking-tighter uppercase">Manual do Usuário</h2>
-          <p className={`mt-2 ${isDark ? 'text-[#A1A1A6]' : 'text-gray-500'}`}>
-            Guia rápido para operação do Bar Manager Pro V1.0
+    <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-700 pb-24">
+      {/* Hero Header with Progress */}
+      <div className={`p-10 md:p-12 rounded-[3.5rem] border relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10
+        ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/20'}`}>
+        
+        <div className="absolute top-0 left-0 w-full h-1 bg-current opacity-5" />
+        
+        <div className="space-y-4 text-center md:text-left relative z-10 flex-1">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#E85D75]/10 text-[#E85D75] text-[10px] font-black uppercase tracking-widest">
+            <Award className="w-4 h-4" /> Academia de Gestão Gastro
+          </div>
+          <h1 className="text-5xl font-black tracking-tighter uppercase italic leading-none">Manual de <span className="text-[#E85D75]">Alta Performance</span></h1>
+          <p className="text-sm font-bold opacity-40 uppercase tracking-[0.2em] max-w-lg">
+            Domine as ferramentas do Bar Manager Pro e transforme sua gestão.
           </p>
         </div>
-        <div className={`flex items-center gap-2 p-4 rounded-2xl border ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200 shadow-sm'}`}>
-          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-            <Info className="w-5 h-5" />
+
+        <div className="w-full md:w-80 space-y-4 relative z-10">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Seu Progresso no Treinamento</span>
+            <span className="text-xl font-black text-[#E85D75]">{progressPercent}%</span>
           </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider opacity-60">Suporte Técnico</p>
-            <p className="text-sm font-bold">Plena Informática</p>
+          <div className={`h-4 w-full rounded-full overflow-hidden p-1 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercent}%` }}
+              className="h-full bg-[#E85D75] rounded-full shadow-lg shadow-[#E85D75]/40"
+            />
           </div>
+          <p className="text-[9px] font-bold opacity-30 text-center md:text-right uppercase tracking-widest">
+            {completedItems} de {totalItems} tópicos concluídos
+          </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {sections.map((section) => {
-          const Icon = section.icon;
-          return (
-            <div 
-              key={section.id}
-              className={`group p-6 rounded-3xl border transition-all duration-500 hover:scale-[1.02]
-                ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] hover:border-[#E85D75]/50' : 'bg-white border-gray-200 shadow-sm hover:shadow-xl hover:shadow-[#E85D75]/5'}`}
-            >
-              <div className="flex items-center gap-4 mb-6">
+      {/* Tab Switcher */}
+      <div className="flex justify-center">
+        <div className={`p-1.5 rounded-2xl flex gap-1 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+          <button
+            onClick={() => setActiveTab('guides')}
+            className={`px-10 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.1em] transition-all
+              ${activeTab === 'guides' 
+                ? 'bg-[#E85D75] text-white shadow-lg shadow-[#E85D75]/20' 
+                : 'opacity-40 hover:opacity-100'
+              }
+            `}
+          >
+            Módulos Contratados
+          </button>
+          <button
+            onClick={() => setActiveTab('tips')}
+            className={`px-10 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.1em] transition-all
+              ${activeTab === 'tips' 
+                ? 'bg-[#E85D75] text-white shadow-lg shadow-[#E85D75]/20' 
+                : 'opacity-40 hover:opacity-100'
+              }
+            `}
+          >
+            Dicas Profissionais
+          </button>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <AnimatePresence mode="wait">
+        {activeTab === 'guides' ? (
+          <motion.div 
+            key="guides"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          >
+            {moduleGuides.map((guide) => {
+              const isRead = readGuides.includes(guide.id);
+              const colorClass = 
+                guide.color === 'rose' ? 'bg-rose-500' :
+                guide.color === 'blue' ? 'bg-blue-500' :
+                guide.color === 'amber' ? 'bg-amber-500' :
+                guide.color === 'emerald' ? 'bg-emerald-500' : 'bg-slate-500';
+
+              return (
                 <div 
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg transition-transform group-hover:rotate-12"
-                  style={{ backgroundColor: section.color }}
+                  key={guide.id}
+                  className={`p-10 rounded-[3rem] border transition-all duration-500 group relative
+                    ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}
+                    ${isRead ? 'opacity-60 grayscale-[0.5]' : 'opacity-100'}
+                  `}
                 >
-                  <Icon className="w-6 h-6" />
+                  <div className="flex items-start justify-between mb-8">
+                    <div className={`w-16 h-16 rounded-3xl flex items-center justify-center text-white shadow-xl transition-transform group-hover:rotate-12 ${colorClass}`}>
+                      <guide.icon className="w-8 h-8" />
+                    </div>
+                    <button 
+                      onClick={() => toggleGuideRead(guide.id)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                        ${isRead 
+                          ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+                          : `${isDark ? 'bg-white/5 text-white/40 hover:bg-[#E85D75] hover:text-white' : 'bg-gray-100 text-gray-400 hover:bg-[#E85D75] hover:text-white'}`
+                        }
+                      `}
+                    >
+                      {isRead ? <CheckCircle className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
+                      {isRead ? 'Lido' : 'Marcar como Lido'}
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-black uppercase italic tracking-tighter">{guide.title}</h3>
+                    <p className="text-[12px] font-bold opacity-40 uppercase leading-relaxed tracking-wider mb-8">{guide.description}</p>
+                    
+                    <div className="space-y-6 pt-8 border-t border-dashed border-current/10">
+                      {guide.steps.map((step, sIdx) => (
+                        <div key={sIdx} className="flex gap-5">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0
+                            ${isRead ? 'bg-emerald-500/10 text-emerald-500' : 'bg-[#E85D75]/10 text-[#E85D75]'}`}>
+                            {sIdx + 1}
+                          </div>
+                          <div className="space-y-1.5">
+                            <h4 className="text-sm font-black uppercase tracking-tight">{step.t}</h4>
+                            <p className="text-[11px] font-bold opacity-50 leading-relaxed uppercase tracking-tighter">{step.d}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-lg font-bold uppercase tracking-tight">{section.title}</h3>
-              </div>
-              
-              <ul className="space-y-3">
-                {section.content.map((item, idx) => (
-                  <li key={idx} className="flex gap-3 text-sm leading-relaxed opacity-80">
-                    <ChevronRight className="w-4 h-4 mt-1 shrink-0 text-[#E85D75]" />
-                    <span>{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
-      </div>
+              );
+            })}
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="tips"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-8"
+          >
+            {proTips.map((tip) => {
+              const isRead = readGuides.includes(tip.id);
+              return (
+                <div 
+                  key={tip.id}
+                  className={`p-10 rounded-[3.5rem] border flex flex-col justify-between group transition-all duration-500
+                    ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}
+                    ${isRead ? 'opacity-60' : 'opacity-100'}
+                  `}
+                >
+                  <div className="space-y-8">
+                    <div className="flex items-center justify-between">
+                      <div className="w-16 h-16 rounded-3xl bg-[#E85D75]/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <tip.icon className="w-8 h-8 text-[#E85D75]" />
+                      </div>
+                      <button 
+                        onClick={() => toggleGuideRead(tip.id)}
+                        className={`p-2 rounded-full transition-all
+                          ${isRead ? 'text-emerald-500' : 'text-gray-300 hover:text-[#E85D75]'}
+                        `}
+                      >
+                        {isRead ? <CheckCircle className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
+                      </button>
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="text-2xl font-black uppercase italic tracking-tighter">{tip.title}</h3>
+                      <p className="text-sm font-bold opacity-60 leading-relaxed uppercase tracking-tight">
+                        "{tip.content}"
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-8 mt-8 border-t border-dashed border-current/10 flex items-center gap-3 text-emerald-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                    <ShieldCheck className="w-5 h-5" /> Estratégia Recomendada
+                  </div>
+                </div>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Footer Alert */}
-      <div className={`p-8 rounded-3xl border-2 border-dashed flex flex-col md:flex-row items-center gap-6 text-center md:text-left
-        ${isDark ? 'bg-amber-500/5 border-amber-500/20 text-amber-200/80' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
-        <AlertTriangle className="w-12 h-12 shrink-0 animate-pulse text-amber-500" />
-        <div>
-          <h4 className="font-bold text-lg uppercase mb-1">Dica de Segurança</h4>
-          <p className="text-sm">
-            Nunca compartilhe sua senha de administrador. O fechamento de caixa é uma etapa crítica e deve ser auditada regularmente para garantir a integridade dos dados financeiros.
-          </p>
+      {/* Final Call to Action */}
+      <div className={`p-10 rounded-[3rem] border border-[#E85D75]/20 bg-[#E85D75]/5 text-center space-y-6`}>
+        <div className="w-20 h-20 bg-[#E85D75] rounded-full mx-auto flex items-center justify-center text-white shadow-2xl shadow-[#E85D75]/40 mb-4">
+          <Lightbulb className="w-10 h-10" />
         </div>
-      </div>
-
-      <div className="pt-8 text-center border-t border-dashed border-current/10">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-          <span className="text-xs font-bold uppercase tracking-widest opacity-60">Sistema Atualizado e Seguro</span>
-        </div>
-        <p className="text-[10px] opacity-40 uppercase tracking-widest">© 2026 Bar Manager Pro | Plena Informática</p>
+        <h3 className="text-2xl font-black uppercase italic tracking-tighter">Pronto para o Próximo Nível?</h3>
+        <p className="text-[11px] font-bold opacity-40 uppercase tracking-[0.3em] max-w-xl mx-auto">
+          O domínio operacional é o primeiro passo para a expansão. Use o suporte da Plena Informática para qualquer dúvida técnica.
+        </p>
       </div>
     </div>
   );
