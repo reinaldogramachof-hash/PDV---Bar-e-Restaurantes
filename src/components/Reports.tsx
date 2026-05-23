@@ -176,13 +176,13 @@ export const Reports: React.FC = () => {
               <button 
                 key={p} 
                 onClick={() => setPeriod(p)}
-                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${period === p ? 'bg-white dark:bg-[#2C2C2E] shadow-xl text-[#E85D75]' : 'opacity-30 hover:opacity-100'}`}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${period === p ? 'bg-white dark:bg-[var(--color-border)] shadow-xl text-[var(--color-accent)]' : 'opacity-30 hover:opacity-100'}`}
               >
                 {p}
               </button>
             ))}
           </div>
-          <button onClick={() => setIsExpenseModalOpen(true)} className="px-6 py-3 bg-[#E85D75] text-white rounded-2xl flex items-center gap-3 hover:scale-105 transition-all shadow-lg shadow-[#E85D75]/20">
+          <button onClick={() => setIsExpenseModalOpen(true)} className="px-6 py-3 bg-[var(--color-accent)] text-white rounded-2xl flex items-center gap-3 hover:scale-105 transition-all shadow-lg shadow-[var(--color-accent)]/20">
              <Plus className="w-4 h-4" />
              <span className="text-[10px] font-black uppercase tracking-widest">Lançar Despesa</span>
           </button>
@@ -190,12 +190,12 @@ export const Reports: React.FC = () => {
       </div>
 
       {/* Tabs Selector */}
-      <div className="flex-shrink-0 flex p-1.5 gap-1.5 rounded-[1.5rem] bg-black/5 dark:bg-white/5 border border-white/10 w-fit backdrop-blur-md">
+      <div className="flex-shrink-0 flex p-1.5 gap-1.5 rounded-panel bg-black/5 dark:bg-white/5 border border-white/10 w-fit backdrop-blur-md">
         {(['dashboard', 'fluxo', 'vendas', 'produtos', 'atendentes'] as Tab[]).map((t) => (
           <button 
             key={t} 
             onClick={() => setActiveTab(t)} 
-            className={`px-6 py-3 rounded-[1.2rem] text-[11px] font-black uppercase tracking-widest transition-all duration-300 relative ${activeTab === t ? 'bg-white dark:bg-[#2C2C2E] shadow-xl text-[#E85D75]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/5 opacity-50'}`}
+            className={`px-6 py-3 rounded-control text-[11px] font-black uppercase tracking-widest transition-all duration-300 relative ${activeTab === t ? 'bg-white dark:bg-[var(--color-border)] shadow-xl text-[var(--color-accent)]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/5 opacity-50'}`}
           >
             {t === 'fluxo' ? 'Gestão de Caixa' : t}
           </button>
@@ -211,10 +211,10 @@ export const Reports: React.FC = () => {
                 {[
                   { label: 'Entradas (Vendas)', value: `R$ ${totalSalesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
                   { label: 'Saídas (Despesas)', value: `R$ ${totalExpensesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: 'text-red-500', bg: 'bg-red-500/10' },
-                  { label: 'Lucro Líquido Real', value: `R$ ${netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: netProfit >= 0 ? 'text-blue-500' : 'text-[#E85D75]', bg: netProfit >= 0 ? 'bg-blue-500/10' : 'bg-[#E85D75]/10' },
+                  { label: 'Lucro Líquido Real', value: `R$ ${netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: netProfit >= 0 ? 'text-blue-500' : 'text-[var(--color-accent)]', bg: netProfit >= 0 ? 'bg-blue-500/10' : 'bg-[var(--color-accent)]/10' },
                   { label: 'Margem Líquida', value: `${totalSalesAmount ? ((netProfit / totalSalesAmount) * 100).toFixed(1) : 0}%`, icon: Target, color: 'text-purple-500', bg: 'bg-purple-500/10' },
                 ].map((kpi, i) => (
-                  <div key={i} className={`p-8 rounded-[2.5rem] border ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20'}`}>
+                  <div key={i} className={`p-8 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20'}`}>
                     <div className={`w-12 h-12 rounded-2xl ${kpi.bg} ${kpi.color} flex items-center justify-center mb-4`}>
                       <kpi.icon className="w-6 h-6" />
                     </div>
@@ -226,7 +226,7 @@ export const Reports: React.FC = () => {
 
               {/* Advanced Views */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className={`lg:col-span-2 p-10 rounded-[3rem] border ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl'}`}>
+                <div className={`lg:col-span-2 p-10 rounded-section border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl'}`}>
                   <div className="flex justify-between items-center mb-8">
                     <h3 className="text-xl font-black tracking-tighter uppercase italic">Estrutura de Gastos</h3>
                     <PieChart className="w-5 h-5 opacity-20" />
@@ -250,9 +250,9 @@ export const Reports: React.FC = () => {
                   </div>
                 </div>
 
-                <div className={`p-10 rounded-[3rem] border ${isDark ? 'bg-gradient-to-br from-[#E85D75]/10 to-transparent border-[#E85D75]/20' : 'bg-pink-50/30 border-pink-100'}`}>
+                <div className={`p-10 rounded-section border ${isDark ? 'bg-gradient-to-br from-[var(--color-accent)]/10 to-transparent border-[var(--color-accent)]/20' : 'bg-pink-50/30 border-pink-100'}`}>
                    <div className="flex items-center gap-4 mb-8">
-                      <Clock className="w-6 h-6 text-[#E85D75]" />
+                      <Clock className="w-6 h-6 text-[var(--color-accent)]" />
                       <h3 className="text-xl font-black tracking-tighter uppercase italic">DRE Resumido</h3>
                    </div>
                    <div className="space-y-4">
@@ -280,7 +280,7 @@ export const Reports: React.FC = () => {
 
           {activeTab === 'fluxo' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <div className={`rounded-[3rem] border overflow-hidden ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl'}`}>
+              <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl'}`}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
@@ -327,7 +327,7 @@ export const Reports: React.FC = () => {
           )}
 
           {activeTab === 'vendas' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`rounded-[3rem] border overflow-hidden ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl'}`}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl'}`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -350,7 +350,7 @@ export const Reports: React.FC = () => {
                            </span>
                         </td>
                         <td className="px-10 py-6 text-[10px] font-bold opacity-60 uppercase tracking-widest">{o.payments.map(p => p.method).join(' + ')}</td>
-                        <td className="px-10 py-6 text-right font-black text-[#E85D75]">R$ {o.total.toFixed(2)}</td>
+                        <td className="px-10 py-6 text-right font-black text-[var(--color-accent)]">R$ {o.total.toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -362,9 +362,9 @@ export const Reports: React.FC = () => {
           {activeTab === 'produtos' && (
              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {productRanking.map((p, i) => (
-                  <div key={p.name} className={`p-8 rounded-[2.5rem] border relative overflow-hidden group ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl'}`}>
+                  <div key={p.name} className={`p-8 rounded-panel border relative overflow-hidden group ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl'}`}>
                     <div className="absolute top-0 right-0 p-4">
-                       <span className={`text-4xl font-black italic opacity-5 ${i < 3 ? 'text-[#E85D75]' : ''}`}>{i + 1}º</span>
+                       <span className={`text-4xl font-black italic opacity-5 ${i < 3 ? 'text-[var(--color-accent)]' : ''}`}>{i + 1}º</span>
                     </div>
                     <div className="space-y-1 mb-6">
                        <p className="text-[8px] font-black uppercase tracking-[0.3em] opacity-30">{p.category}</p>
@@ -375,9 +375,9 @@ export const Reports: React.FC = () => {
                           <p className="text-[8px] font-black uppercase opacity-30 mb-1">Volume</p>
                           <p className="text-xl font-black">{p.qty}</p>
                        </div>
-                       <div className="p-4 rounded-2xl bg-[#E85D75]/5 border border-[#E85D75]/10">
-                          <p className="text-[8px] font-black uppercase text-[#E85D75]/60 mb-1">Receita</p>
-                          <p className="text-xl font-black text-[#E85D75]">R$ {p.revenue.toFixed(0)}</p>
+                       <div className="p-4 rounded-2xl bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/10">
+                          <p className="text-[8px] font-black uppercase text-[var(--color-accent)]/60 mb-1">Receita</p>
+                          <p className="text-xl font-black text-[var(--color-accent)]">R$ {p.revenue.toFixed(0)}</p>
                        </div>
                     </div>
                   </div>
@@ -388,9 +388,9 @@ export const Reports: React.FC = () => {
           {activeTab === 'atendentes' && (
              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                 {waiterStats.map((w, i) => (
-                  <div key={w.id} className={`p-8 rounded-[2.5rem] border flex flex-col md:flex-row justify-between items-center gap-8 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl'}`}>
+                  <div key={w.id} className={`p-8 rounded-panel border flex flex-col md:flex-row justify-between items-center gap-8 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl'}`}>
                      <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-[1.5rem] bg-gradient-to-br from-[#E85D75] to-orange-400 flex items-center justify-center text-white text-xl font-black italic shadow-lg shadow-[#E85D75]/20">
+                        <div className="w-16 h-16 rounded-panel bg-gradient-to-br from-[var(--color-accent)] to-orange-400 flex items-center justify-center text-white text-xl font-black italic shadow-lg shadow-[var(--color-accent)]/20">
                            {w.name[0]}
                         </div>
                         <div>
@@ -409,7 +409,7 @@ export const Reports: React.FC = () => {
                            <p className="text-[8px] font-black uppercase text-emerald-500 mb-1">Comissão Acumulada</p>
                            <p className="text-xl font-black text-emerald-500 italic">R$ {w.commission.toFixed(2)}</p>
                         </div>
-                        <button className="w-12 h-12 rounded-2xl bg-[#E85D75]/10 text-[#E85D75] flex items-center justify-center hover:bg-[#E85D75] hover:text-white transition-all"><ChevronRight className="w-6 h-6" /></button>
+                        <button className="w-12 h-12 rounded-2xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent)] hover:text-white transition-all"><ChevronRight className="w-6 h-6" /></button>
                      </div>
                   </div>
                 ))}
@@ -423,7 +423,7 @@ export const Reports: React.FC = () => {
         {isExpenseModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsExpenseModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className={`relative w-full max-w-lg p-8 rounded-[3rem] border shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className={`relative w-full max-w-lg p-8 rounded-section border shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
                <div className="flex items-center gap-4 mb-8">
                   <motion.div 
                     layout
@@ -434,7 +434,7 @@ export const Reports: React.FC = () => {
                         newExpense.category === 'Utilidades' ? 'bg-cyan-500/20 text-cyan-500' :
                         newExpense.category === 'Marketing' ? 'bg-pink-500/20 text-pink-500' :
                         newExpense.category === 'Impostos' ? 'bg-amber-500/20 text-amber-500' :
-                        'bg-[#E85D75]/20 text-[#E85D75]'}`}
+                        'bg-[var(--color-accent)]/20 text-[var(--color-accent)]'}`}
                   >
                      <Receipt className="w-6 h-6" />
                   </motion.div>
@@ -461,7 +461,7 @@ export const Reports: React.FC = () => {
                                       cat === 'Utilidades' ? 'bg-cyan-500 border-cyan-500 text-white shadow-lg shadow-cyan-500/20' :
                                       cat === 'Marketing' ? 'bg-pink-500 border-pink-500 text-white shadow-lg shadow-pink-500/20' :
                                       cat === 'Impostos' ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20' :
-                                      'bg-[#E85D75] border-[#E85D75] text-white shadow-lg shadow-[#E85D75]/20'
+                                      'bg-[var(--color-accent)] border-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20'
                                     : isDark ? 'bg-white/5 border-white/5 opacity-40 hover:opacity-100' : 'bg-gray-50 border-gray-100 opacity-60 hover:opacity-100'}`}
                            >
                               {cat === 'Insumos' && <ShoppingBag className="w-4 h-4" />}
@@ -505,7 +505,7 @@ export const Reports: React.FC = () => {
                            value={newExpense.description} 
                            onChange={e => setNewExpense(prev => ({ ...prev, description: e.target.value }))}
                            placeholder="Ex: Aluguel Mensal, Pagamento Staff..."
-                           className={`w-full px-5 py-4 rounded-2xl border bg-transparent text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#E85D75]/20 ${isDark ? 'border-[#2C2C2E]' : 'border-gray-100'}`}
+                           className={`w-full px-5 py-4 rounded-2xl border bg-transparent text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'border-[var(--color-border)]' : 'border-gray-100'}`}
                         />
                      </div>
 
@@ -520,7 +520,7 @@ export const Reports: React.FC = () => {
                               value={newExpense.amount || ''} 
                               onChange={e => setNewExpense(prev => ({ ...prev, amount: Number(e.target.value) }))}
                               placeholder="0,00"
-                              className={`w-full pl-12 pr-5 py-4 rounded-2xl border bg-transparent text-xl font-black focus:outline-none focus:ring-2 focus:ring-[#E85D75]/20 ${isDark ? 'border-[#2C2C2E]' : 'border-gray-100'}`}
+                              className={`w-full pl-12 pr-5 py-4 rounded-2xl border bg-transparent text-xl font-black focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'border-[var(--color-border)]' : 'border-gray-100'}`}
                            />
                         </div>
                      </div>
@@ -528,7 +528,7 @@ export const Reports: React.FC = () => {
 
                   <div className="flex gap-3 pt-4">
                      <button type="button" onClick={() => setIsExpenseModalOpen(false)} className="flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] opacity-40 hover:opacity-100 transition-all">Cancelar</button>
-                     <button type="submit" className="flex-[2] py-4 rounded-2xl bg-[#E85D75] text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[#E85D75]/20 hover:scale-[1.02] transition-all">Confirmar Lançamento</button>
+                     <button type="submit" className="flex-[2] py-4 rounded-2xl bg-[var(--color-accent)] text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[var(--color-accent)]/20 hover:scale-[1.02] transition-all">Confirmar Lançamento</button>
                   </div>
                </form>
             </motion.div>

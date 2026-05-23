@@ -85,14 +85,14 @@ export const Suppliers: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
           <div className="flex p-1.5 gap-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10 w-fit backdrop-blur-md">
-            <button onClick={() => toggleViewMode('grid')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[#2C2C2E] shadow-xl text-[#E85D75]' : 'opacity-30 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
-            <button onClick={() => toggleViewMode('list')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[#2C2C2E] shadow-xl text-[#E85D75]' : 'opacity-30 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
+            <button onClick={() => toggleViewMode('grid')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[var(--color-border)] shadow-xl text-[var(--color-accent)]' : 'opacity-30 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
+            <button onClick={() => toggleViewMode('list')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[var(--color-border)] shadow-xl text-[var(--color-accent)]' : 'opacity-30 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
           </div>
-          <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 lg:w-96 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
+          <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 lg:w-96 transition-all focus-within:ring-4 focus-within:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus-within:border-[var(--color-accent)]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
             <Search className="w-4 h-4 mr-3 opacity-30" />
             <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar por empresa, categoria ou contato..." className="bg-transparent border-none outline-none w-full text-xs font-bold placeholder:opacity-20" />
           </div>
-          <button onClick={() => handleOpenModal()} className="px-8 py-3 bg-[#E85D75] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[#E85D75]/30 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all">
+          <button onClick={() => handleOpenModal()} className="px-8 py-3 bg-[var(--color-accent)] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[var(--color-accent)]/30 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all">
             <Plus className="w-4 h-4" /> Novo Fornecedor
           </button>
         </div>
@@ -105,14 +105,14 @@ export const Suppliers: React.FC = () => {
             <motion.div 
               key={supplier.id} 
               layout
-              className={`p-10 rounded-[3rem] border transition-all duration-500 group hover:border-[#E85D75]/40 relative overflow-hidden ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/20'}`}
+              className={`p-10 rounded-section border transition-all duration-500 group hover:border-[var(--color-accent)]/40 relative overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/20'}`}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#E85D75]/5 to-transparent rounded-bl-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[var(--color-accent)]/5 to-transparent rounded-bl-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
 
               <div className="flex justify-between items-start mb-10 relative z-10">
                 <div className="flex items-center gap-6">
-                  <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-2xl relative ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                    <Truck className="w-7 h-7 text-[#E85D75]" />
+                  <div className={`w-16 h-16 rounded-panel flex items-center justify-center text-2xl relative ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                    <Truck className="w-7 h-7 text-[var(--color-accent)]" />
                     <div className="absolute -top-2 -right-2 flex gap-0.5">
                        {[...Array(supplier.rating || 0)].map((_, i) => <Star key={i} className="w-3 h-3 fill-amber-500 text-amber-500" />)}
                     </div>
@@ -147,7 +147,7 @@ export const Suppliers: React.FC = () => {
                   </div>
                 </div>
 
-                <div className={`p-8 rounded-[2.5rem] flex flex-col justify-between border ${isDark ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                <div className={`p-8 rounded-panel flex flex-col justify-between border ${isDark ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
                    <div>
                       <div className="flex justify-between items-end mb-3">
                          <p className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30">Performance</p>
@@ -171,14 +171,14 @@ export const Suppliers: React.FC = () => {
               </div>
 
               <div className="mt-8 pt-6 border-t border-current/5 flex justify-between items-center relative z-10">
-                 <button className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest opacity-30 hover:opacity-100 hover:text-[#E85D75] transition-all"><Box className="w-4 h-4" /> Catálogo de Produtos</button>
+                 <button className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest opacity-30 hover:opacity-100 hover:text-[var(--color-accent)] transition-all"><Box className="w-4 h-4" /> Catálogo de Produtos</button>
                  {supplier.observations && <div className="flex items-center gap-1.5 text-[9px] font-bold text-amber-500/60 bg-amber-500/5 px-3 py-1.5 rounded-full"><AlertCircle className="w-3 h-3" /> Ver Notas</div>}
               </div>
             </motion.div>
           ))}
         </div>
       ) : (
-        <div className={`rounded-[3rem] border overflow-hidden ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/10'}`}>
+        <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/10'}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -255,13 +255,13 @@ export const Suppliers: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0, y: 30 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 30 }} 
-              className={`relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-[3rem] shadow-2xl ${isDark ? 'bg-[#1C1C1E] border border-[#2C2C2E]' : 'bg-white border border-gray-100'}`}
+              className={`relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-section shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white border border-gray-100'}`}
             >
               {/* Modal Header */}
               <div className="p-10 pb-6 flex justify-between items-start">
                 <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-[1.5rem] bg-[#E85D75]/10 flex items-center justify-center">
-                    <Truck className="w-8 h-8 text-[#E85D75]" />
+                  <div className="w-16 h-16 rounded-panel bg-[var(--color-accent)]/10 flex items-center justify-center">
+                    <Truck className="w-8 h-8 text-[var(--color-accent)]" />
                   </div>
                   <div>
                     <h3 className="text-3xl font-black tracking-tighter uppercase leading-tight italic">{editingSupplier ? 'Ficha do Parceiro' : 'Novo Fornecedor'}</h3>
@@ -280,11 +280,11 @@ export const Suppliers: React.FC = () => {
                   <button 
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`pb-4 px-2 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === tab.id ? 'text-[#E85D75]' : 'opacity-30 hover:opacity-100'}`}
+                    className={`pb-4 px-2 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === tab.id ? 'text-[var(--color-accent)]' : 'opacity-30 hover:opacity-100'}`}
                   >
                     <tab.icon className="w-4 h-4" />
                     {tab.label}
-                    {activeTab === tab.id && <motion.div layoutId="tab-underline-supplier" className="absolute bottom-0 left-0 right-0 h-1 bg-[#E85D75] rounded-t-full" />}
+                    {activeTab === tab.id && <motion.div layoutId="tab-underline-supplier" className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--color-accent)] rounded-t-full" />}
                   </button>
                 ))}
               </div>
@@ -298,24 +298,24 @@ export const Suppliers: React.FC = () => {
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Razão Social / Nome Fantasia</label>
                           <div className="relative group">
-                             <input required value={formData.companyName} onChange={e => setFormData({ ...formData, companyName: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-8 focus:ring-[#E85D75]/5 ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
-                             <Box className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-10 group-focus-within:opacity-100 group-focus-within:text-[#E85D75] transition-all" />
+                             <input required value={formData.companyName} onChange={e => setFormData({ ...formData, companyName: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-8 focus:ring-[var(--color-accent)]/5 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                             <Box className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-10 group-focus-within:opacity-100 group-focus-within:text-[var(--color-accent)] transition-all" />
                           </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">CNPJ / CPF</label>
-                          <input value={formData.document} onChange={e => setFormData({ ...formData, document: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                          <input value={formData.document} onChange={e => setFormData({ ...formData, document: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Representante / Contato</label>
-                          <input value={formData.contactName} onChange={e => setFormData({ ...formData, contactName: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                          <input value={formData.contactName} onChange={e => setFormData({ ...formData, contactName: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Categoria</label>
-                          <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm appearance-none transition-all ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40 text-white' : 'bg-gray-50 border-gray-200 focus:border-pink-300 text-gray-900'}`}>
+                          <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm appearance-none transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40 text-white' : 'bg-gray-50 border-gray-200 focus:border-pink-300 text-gray-900'}`}>
                             <option>Bebidas</option>
                             <option>Perecíveis</option>
                             <option>Proteínas</option>
@@ -329,11 +329,11 @@ export const Suppliers: React.FC = () => {
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">WhatsApp / Telefone</label>
-                          <input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                          <input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">E-mail Comercial</label>
-                          <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                          <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                         </div>
                       </div>
                     </div>
@@ -341,17 +341,17 @@ export const Suppliers: React.FC = () => {
                     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
                       <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Endereço de Retirada / Depósito</label>
-                        <textarea value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} rows={2} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                        <textarea value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} rows={2} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                       </div>
 
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Condição de Pagamento</label>
-                          <input value={formData.paymentTerms} onChange={e => setFormData({ ...formData, paymentTerms: e.target.value })} placeholder="Ex: 15 dias, À vista, Boleto 30" className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                          <input value={formData.paymentTerms} onChange={e => setFormData({ ...formData, paymentTerms: e.target.value })} placeholder="Ex: 15 dias, À vista, Boleto 30" className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Classificação Interna (Rating)</label>
-                          <div className="flex gap-2 p-5 rounded-2xl border dark:bg-[#121214] dark:border-[#2C2C2E]">
+                          <div className="flex gap-2 p-5 rounded-2xl border dark:bg-[var(--color-app-base)] dark:border-[var(--color-border)]">
                              {[1, 2, 3, 4, 5].map(r => (
                                <button type="button" key={r} onClick={() => setFormData({ ...formData, rating: r })} className={`transition-all ${formData.rating && formData.rating >= r ? 'text-amber-500 scale-110' : 'text-gray-300 opacity-30 hover:opacity-100'}`}>
                                  <Star className={`w-6 h-6 ${formData.rating && formData.rating >= r ? 'fill-current' : ''}`} />
@@ -363,7 +363,7 @@ export const Suppliers: React.FC = () => {
 
                       <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Observações & Notas Logísticas</label>
-                        <textarea value={formData.observations} onChange={e => setFormData({ ...formData, observations: e.target.value })} rows={4} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                        <textarea value={formData.observations} onChange={e => setFormData({ ...formData, observations: e.target.value })} rows={4} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                       </div>
                     </div>
                   )}
@@ -373,7 +373,7 @@ export const Suppliers: React.FC = () => {
               {/* Modal Footer */}
               <div className="p-10 border-t border-current/5 bg-black/5 dark:bg-white/5 flex gap-6">
                 <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>Descartar</button>
-                <button onClick={handleSave} className="flex-[2] py-5 bg-[#E85D75] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[#E85D75]/40 hover:scale-[1.02] active:scale-95 transition-all">Salvar Parceiro</button>
+                <button onClick={handleSave} className="flex-[2] py-5 bg-[var(--color-accent)] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-[1.02] active:scale-95 transition-all">Salvar Parceiro</button>
               </div>
             </motion.div>
           </div>

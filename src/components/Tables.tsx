@@ -1,120 +1,127 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { OrderModal } from './OrderModal';
-import { 
-  Users, 
-  Clock, 
-  Search,
-  CheckCircle2,
-  CalendarCheck,
-  Check,
-  X
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { CalendarCheck, Check, CheckCircle2, Clock, Search, Users, X } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 
-const TableTimer: React.FC<{ timestamp: string; isDark: boolean; status: string }> = ({ timestamp, isDark, status }) => {
+const TableTimer: React.FC<{ timestamp: string; status: string }> = ({ timestamp, status }) => {
   const [now, setNow] = useState(Date.now());
-  
+
   useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), 60000); // Update every minute
+    const interval = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(interval);
   }, []);
 
   const diffMin = Math.floor((now - new Date(timestamp).getTime()) / 60000);
   const hours = Math.floor(diffMin / 60);
   const minutes = diffMin % 60;
-  
   const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
-  const color = status === 'ocupada' ? 'text-[#E85D75]' : 'text-amber-500';
+  const color = status === 'ocupada' ? 'text-accent' : 'text-warning';
 
   return (
-    <div className="flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-500">
-      <Clock className={`w-3 h-3 ${color} opacity-60`} />
-      <span className={`text-[10px] font-black uppercase tracking-[0.1em] ${color}`}>
-        {timeStr}
-      </span>
+    <div className={`flex items-center gap-1.5 ${color}`}>
+      <Clock className="w-3 h-3 opacity-70" />
+      <span className="text-xs font-medium">{timeStr}</span>
     </div>
   );
 };
 
 export const Tables: React.FC = () => {
-  const { tables, theme, orders, reserveTable, clearTable } = useApp();
+  const { tables, theme, orders, reserveTable } = useApp();
   const isDark = theme === 'dark';
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'todos' | 'livre' | 'ocupada' | 'aguardando' | 'reservada'>('todos');
-  
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedForReservation, setSelectedForReservation] = useState<number[]>([]);
   const [reservationReason, setReservationReason] = useState('');
 
-  const closedOrders = orders.filter(o => o.status === 'closed');
-  const salesToday = closedOrders.reduce((acc, o) => acc + o.total, 0);
-  const occupiedCount = tables.filter(t => t.status === 'ocupada').length;
-  const waitingCount = tables.filter(t => t.status === 'aguardando').length;
-  const reservedCount = tables.filter(t => t.status === 'reservada').length;
+  const closedOrders = orders.filter(order => order.status === 'closed');
+  const salesToday = closedOrders.reduce((acc, order) => acc + order.total, 0);
+  const occupiedCount = tables.filter(table => table.status === 'ocupada').length;
+  const waitingCount = tables.filter(table => table.status === 'aguardando').length;
+  const reservedCount = tables.filter(table => table.status === 'reservada').length;
+  const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
+  const fieldClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
 
-  const filteredTables = tables.filter(t => {
-    const matchesSearch = t.number.toString().includes(searchTerm);
-    const matchesFilter = filter === 'todos' || t.status === filter;
+  const filteredTables = tables.filter(table => {
+    const matchesSearch = table.number.toString().includes(searchTerm);
+    const matchesFilter = filter === 'todos' || table.status === filter;
     return matchesSearch && matchesFilter;
   });
 
-  const handleTableClick = (num: number) => {
+  const handleTableClick = (number: number) => {
     if (isSelecting) {
-      const table = tables.find(t => t.number === num);
+      const table = tables.find(item => item.number === number);
       if (table?.status !== 'livre') return;
-      setSelectedForReservation(prev => prev.includes(num) ? prev.filter(n => n !== num) : [...prev, num]);
-    } else {
-      setSelectedTable(num);
+      setSelectedForReservation(prev => prev.includes(number) ? prev.filter(item => item !== number) : [...prev, number]);
+      return;
     }
+
+    setSelectedTable(number);
   };
 
   const handleConfirmReservation = () => {
-    reserveTable(selectedForReservation, reservationReason || 'Reserva de Mesa');
+    reserveTable(selectedForReservation, reservationReason || 'Reserva de mesa');
     setIsSelecting(false);
     setSelectedForReservation([]);
     setReservationReason('');
   };
 
   return (
-    <div className="flex flex-col h-full gap-8 animate-in fade-in duration-700">
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between md:items-end gap-6">
+    <div className="flex flex-col h-full gap-6 animate-in fade-in duration-500">
+      <div className="space-y-5">
+        <div className="flex flex-col md:flex-row justify-between md:items-end gap-5">
           <div className="space-y-1">
-            <h2 className="text-3xl font-extrabold tracking-tighter uppercase leading-none">Mapa de Mesas</h2>
-            <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Gestão de Salão</p>
+            <h2 className="text-2xl font-semibold leading-none">Mapa de mesas</h2>
+            <p className="text-sm text-muted">Gestão do salão em tempo real</p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1 lg:max-w-3xl">
-            <StatCard label="Ocupação" value={`${occupiedCount}/${tables.length}`} subValue={`${((occupiedCount/tables.length)*100).toFixed(0)}%`} icon={Users} color="emerald" isDark={isDark} />
-            <StatCard label="Aguardando" value={waitingCount.toString()} subValue="Pedidos" icon={Clock} color="amber" isDark={isDark} />
-            <StatCard label="Reservas" value={reservedCount.toString()} subValue="Bloqueadas" icon={CalendarCheck} color="purple" isDark={isDark} />
-            <StatCard label="Vendas" value={`R$ ${salesToday.toFixed(0)}`} subValue="Hoje" icon={CheckCircle2} color="rose" isDark={isDark} />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1 lg:max-w-3xl">
+            <StatCard label="Ocupação" value={`${occupiedCount}/${tables.length}`} subValue={`${((occupiedCount / tables.length) * 100).toFixed(0)}%`} icon={Users} tone="success" panelClass={panelClass} />
+            <StatCard label="Aguardando" value={waitingCount.toString()} subValue="Pedidos" icon={Clock} tone="warning" panelClass={panelClass} />
+            <StatCard label="Reservas" value={reservedCount.toString()} subValue="Bloqueadas" icon={CalendarCheck} tone="purple" panelClass={panelClass} />
+            <StatCard label="Vendas" value={`R$ ${salesToday.toFixed(0)}`} subValue="Hoje" icon={CheckCircle2} tone="accent" panelClass={panelClass} />
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-6 pt-6 border-t border-current/5">
-          <div className="flex p-1 gap-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-current/5 w-full lg:w-fit overflow-x-auto scrollbar-none">
-            {['todos', 'livre', 'ocupada', 'aguardando', 'reservada'].map((f) => (
-              <button key={f} onClick={() => setFilter(f as any)} className={`flex-1 lg:flex-none px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${filter === f ? 'bg-white dark:bg-[#2C2C2E] shadow-md text-[#E85D75]' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'}`}>{f}</button>
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-4 pt-5 border-t border-current/5">
+          <div className={`flex p-1 gap-1 rounded-panel border w-full lg:w-fit overflow-x-auto scrollbar-none ${fieldClass}`}>
+            {['todos', 'livre', 'ocupada', 'aguardando', 'reservada'].map(item => (
+              <button
+                key={item}
+                onClick={() => setFilter(item as any)}
+                className={`flex-1 lg:flex-none px-4 py-2 rounded-control text-sm font-medium transition-all ${filter === item ? 'bg-accent text-white' : isDark ? 'text-muted hover:bg-surface hover:text-text' : 'text-muted-light hover:bg-surface-light hover:text-text-light'}`}
+              >
+                {item}
+              </button>
             ))}
           </div>
 
           <div className="flex gap-3 w-full lg:w-auto">
-            <div className={`flex items-center px-4 py-2.5 rounded-xl border flex-1 lg:w-64 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
-              <Search className="w-4 h-4 mr-3 opacity-40" />
-              <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar mesa..." className="bg-transparent border-none outline-none w-full text-sm font-semibold placeholder:opacity-30" />
+            <div className={`flex items-center px-3 h-10 rounded-control border flex-1 lg:w-64 transition-all focus-within:ring-2 focus-within:ring-accent/20 ${fieldClass}`}>
+              <Search className="w-4 h-4 mr-3 text-muted" />
+              <input
+                value={searchTerm}
+                onChange={event => setSearchTerm(event.target.value)}
+                placeholder="Pesquisar mesa..."
+                className="bg-transparent border-none outline-none w-full text-sm font-medium placeholder:text-muted"
+              />
             </div>
-            <button onClick={() => { setIsSelecting(!isSelecting); setSelectedForReservation([]); }} className={`px-6 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center gap-2 border transition-all ${isSelecting ? 'bg-red-500 text-white border-red-500' : 'bg-purple-500 text-white border-purple-500 shadow-lg shadow-purple-500/20'}`}>
-              {isSelecting ? <X className="w-4 h-4 stroke-[3px]" /> : <CalendarCheck className="w-4 h-4 stroke-[3px]" />}
+            <button
+              onClick={() => { setIsSelecting(!isSelecting); setSelectedForReservation([]); }}
+              className={`px-4 h-10 rounded-control font-medium text-sm flex items-center gap-2 border transition-all ${
+                isSelecting ? 'bg-danger text-white border-danger' : 'bg-accent text-white border-accent hover:bg-accent-hover'
+              }`}
+            >
+              {isSelecting ? <X className="w-4 h-4" /> : <CalendarCheck className="w-4 h-4" />}
               {isSelecting ? 'Cancelar' : 'Reservar'}
             </button>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         <AnimatePresence mode="popLayout">
           {filteredTables.map(table => {
             const isLivre = table.status === 'livre';
@@ -122,54 +129,41 @@ export const Tables: React.FC = () => {
             const isAguardando = table.status === 'aguardando';
             const isReservada = table.status === 'reservada';
             const isSelected = selectedForReservation.includes(table.number);
-            
-            let orderTimestamp = '';
-            if(!isLivre && table.activeOrderId) {
-               const order = orders.find(o => o.id === table.activeOrderId);
-               if(order) orderTimestamp = order.timestamp;
-            }
+            const order = table.activeOrderId ? orders.find(item => item.id === table.activeOrderId) : undefined;
+            const statusClass = isOcupada
+              ? 'border-accent text-accent'
+              : isAguardando
+                ? 'border-warning text-warning'
+                : isReservada
+                  ? 'border-purple-500 text-purple-500'
+                  : isDark ? 'border-border text-muted' : 'border-border-light text-muted-light';
 
             return (
               <motion.div
-                layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+                layout
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
                 key={table.number}
-                className="relative"
               >
                 <button
                   onClick={() => handleTableClick(table.number)}
                   disabled={isSelecting && !isLivre && !isSelected}
-                  className={`relative w-full aspect-[1/1.1] flex flex-col items-center justify-center rounded-3xl transition-all duration-500 overflow-hidden
-                    ${isDark ? 'bg-[#1C1C1E]' : 'bg-white shadow-xl shadow-gray-200/40 border border-gray-100'}
-                    ${isLivre ? `border-dashed hover:border-[#E85D75]/40` : ''}
-                    ${isOcupada ? 'ring-4 ring-[#E85D75]/10 border-2 border-[#E85D75] scale-105 z-10 shadow-2xl shadow-[#E85D75]/10' : ''}
-                    ${isAguardando ? 'ring-4 ring-amber-500/10 border-2 border-amber-500' : ''}
-                    ${isReservada ? 'ring-4 ring-purple-500/10 border-2 border-purple-500' : ''}
-                    ${isSelected ? 'ring-8 ring-purple-500/30 border-4 border-purple-500 scale-110 z-20 shadow-2xl' : ''}
-                    ${isSelecting && !isLivre && !isSelected ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer active:scale-95'}
-                  `}
+                  className={`relative w-full aspect-[1/1.05] flex flex-col items-center justify-center rounded-panel border transition-all overflow-hidden ${panelClass} ${statusClass} ${
+                    isSelected ? 'ring-2 ring-accent/40 border-accent' : ''
+                  } ${isSelecting && !isLivre && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer hover:bg-elevated active:scale-95'}`}
                 >
-                  <div className={`absolute top-0 right-0 w-24 h-24 blur-[60px] opacity-20 rounded-full transition-transform duration-700 group-hover:scale-150
-                    ${isLivre ? 'bg-gray-500' : isOcupada ? 'bg-[#E85D75]' : isReservada ? 'bg-purple-500' : 'bg-amber-500'}`} />
-
-                  <span className={`text-6xl font-black mb-2 transition-all duration-500 tracking-tighter
-                    ${isDark ? 'text-white' : 'text-[#1A1A2E]'}`}>
-                    {table.number.toString().padStart(2, '0')}
-                  </span>
-
-                  {(isOcupada || isAguardando) && orderTimestamp && (
-                    <TableTimer timestamp={orderTimestamp} isDark={isDark} status={table.status} />
-                  )}
-
+                  <span className="text-4xl font-semibold tracking-tight">{table.number.toString().padStart(2, '0')}</span>
+                  {order && (isOcupada || isAguardando) && <TableTimer timestamp={order.timestamp} status={table.status} />}
                   {isReservada && (
-                    <div className="flex flex-col items-center text-purple-500 animate-in fade-in duration-500 max-w-[80%] text-center">
-                      <CalendarCheck className="w-5 h-5 mb-1" />
-                      <span className="text-[10px] font-black uppercase tracking-tight truncate w-full">{table.reservationReason}</span>
+                    <div className="flex flex-col items-center text-purple-500 max-w-[80%] text-center mt-1">
+                      <CalendarCheck className="w-4 h-4 mb-1" />
+                      <span className="text-xs font-medium truncate w-full">{table.reservationReason}</span>
                     </div>
                   )}
-
                   {isSelected && (
-                    <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center backdrop-blur-[2px]">
-                      <Check className="w-16 h-16 text-purple-500 stroke-[5px]" />
+                    <div className="absolute inset-0 bg-accent/15 flex items-center justify-center">
+                      <Check className="w-10 h-10 text-accent stroke-[3px]" />
                     </div>
                   )}
                 </button>
@@ -181,13 +175,21 @@ export const Tables: React.FC = () => {
 
       <AnimatePresence>
         {isSelecting && selectedForReservation.length > 0 && (
-          <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }} className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[200] w-full max-w-xl px-4">
-            <div className={`p-5 rounded-[2.5rem] border shadow-2xl flex items-center gap-6 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
-              <div className="flex-1 pl-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#E85D75] mb-1">{selectedForReservation.length} Mesas Selecionadas</p>
-                <input autoFocus value={reservationReason} onChange={e => setReservationReason(e.target.value)} placeholder="Motivo da reserva..." className="bg-transparent border-none outline-none w-full font-black text-sm placeholder:opacity-20" />
+          <motion.div initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }} className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200] w-full max-w-xl px-4">
+            <div className={`p-4 rounded-panel border shadow-elevated flex items-center gap-4 ${panelClass}`}>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-accent mb-1">{selectedForReservation.length} mesas selecionadas</p>
+                <input
+                  autoFocus
+                  value={reservationReason}
+                  onChange={event => setReservationReason(event.target.value)}
+                  placeholder="Motivo da reserva..."
+                  className="bg-transparent border-none outline-none w-full font-medium text-sm placeholder:text-muted"
+                />
               </div>
-              <button onClick={handleConfirmReservation} className="px-8 py-4 bg-purple-500 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] shadow-xl shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all">Confirmar</button>
+              <button onClick={handleConfirmReservation} className="px-5 h-10 bg-accent text-white rounded-control font-medium text-sm hover:bg-accent-hover active:scale-95 transition-all">
+                Confirmar
+              </button>
             </div>
           </motion.div>
         )}
@@ -200,25 +202,24 @@ export const Tables: React.FC = () => {
   );
 };
 
-const StatCard = ({ label, value, subValue, icon: Icon, color, isDark }: any) => {
-  const colors = {
-    emerald: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
-    amber: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
-    blue: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
-    rose: 'text-[#E85D75] bg-[#E85D75]/10 border-[#E85D75]/20',
+const StatCard = ({ label, value, subValue, icon: Icon, tone, panelClass }: any) => {
+  const tones = {
+    success: 'text-success bg-success/10 border-success/20',
+    warning: 'text-warning bg-warning/10 border-warning/20',
+    accent: 'text-accent bg-accent/10 border-accent/20',
     purple: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
-  }[color as 'emerald' | 'amber' | 'blue' | 'rose' | 'purple'];
+  }[tone as 'success' | 'warning' | 'accent' | 'purple'];
 
   return (
-    <div className={`p-5 rounded-[2rem] border transition-all hover:scale-[1.02] ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-sm'}`}>
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-2.5 rounded-xl border ${colors}`}><Icon className="w-4 h-4" /></div>
+    <div className={`p-4 rounded-panel border ${panelClass}`}>
+      <div className="flex justify-between items-start mb-3">
+        <div className={`p-2 rounded-panel border ${tones}`}><Icon className="w-4 h-4" /></div>
         <div className="text-right">
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-40 mb-1">{label}</p>
-          <p className="text-2xl font-black tracking-tighter">{value}</p>
+          <p className="text-xs text-muted mb-1">{label}</p>
+          <p className="text-xl font-semibold">{value}</p>
         </div>
       </div>
-      <p className="text-[9px] font-bold opacity-30 uppercase tracking-widest">{subValue}</p>
+      <p className="text-xs text-muted">{subValue}</p>
     </div>
   );
 };

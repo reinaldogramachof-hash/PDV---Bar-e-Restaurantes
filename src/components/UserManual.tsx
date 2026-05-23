@@ -91,16 +91,16 @@ export const UserManual: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in duration-700 pb-24">
       {/* Hero Header with Progress */}
-      <div className={`p-10 md:p-12 rounded-[3.5rem] border relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10
-        ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/20'}`}>
+      <div className={`p-10 md:p-12 rounded-section border relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-10
+        ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/20'}`}>
         
         <div className="absolute top-0 left-0 w-full h-1 bg-current opacity-5" />
         
         <div className="space-y-4 text-center md:text-left relative z-10 flex-1">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#E85D75]/10 text-[#E85D75] text-[10px] font-black uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-[10px] font-black uppercase tracking-widest">
             <Award className="w-4 h-4" /> Academia de Gestão Gastro
           </div>
-          <h1 className="text-5xl font-black tracking-tighter uppercase italic leading-none">Manual de <span className="text-[#E85D75]">Alta Performance</span></h1>
+          <h1 className="text-5xl font-black tracking-tighter uppercase italic leading-none">Manual de <span className="text-[var(--color-accent)]">Alta Performance</span></h1>
           <p className="text-sm font-bold opacity-40 uppercase tracking-[0.2em] max-w-lg">
             Domine as ferramentas do Gestão Gastro e transforme sua gestão.
           </p>
@@ -109,13 +109,13 @@ export const UserManual: React.FC = () => {
         <div className="w-full md:w-80 space-y-4 relative z-10">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Seu Progresso no Treinamento</span>
-            <span className="text-xl font-black text-[#E85D75]">{progressPercent}%</span>
+            <span className="text-xl font-black text-[var(--color-accent)]">{progressPercent}%</span>
           </div>
           <div className={`h-4 w-full rounded-full overflow-hidden p-1 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
             <motion.div 
               initial={{ width: 0 }}
               animate={{ width: `${progressPercent}%` }}
-              className="h-full bg-[#E85D75] rounded-full shadow-lg shadow-[#E85D75]/40"
+              className="h-full bg-[var(--color-accent)] rounded-full shadow-lg shadow-[var(--color-accent)]/40"
             />
           </div>
           <p className="text-[9px] font-bold opacity-30 text-center md:text-right uppercase tracking-widest">
@@ -131,7 +131,7 @@ export const UserManual: React.FC = () => {
             onClick={() => setActiveTab('guides')}
             className={`px-10 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.1em] transition-all
               ${activeTab === 'guides' 
-                ? 'bg-[#E85D75] text-white shadow-lg shadow-[#E85D75]/20' 
+                ? 'bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20' 
                 : 'opacity-40 hover:opacity-100'
               }
             `}
@@ -142,7 +142,7 @@ export const UserManual: React.FC = () => {
             onClick={() => setActiveTab('tips')}
             className={`px-10 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.1em] transition-all
               ${activeTab === 'tips' 
-                ? 'bg-[#E85D75] text-white shadow-lg shadow-[#E85D75]/20' 
+                ? 'bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20' 
                 : 'opacity-40 hover:opacity-100'
               }
             `}
@@ -173,8 +173,8 @@ export const UserManual: React.FC = () => {
               return (
                 <div 
                   key={guide.id}
-                  className={`p-10 rounded-[3rem] border transition-all duration-500 group relative
-                    ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}
+                  className={`p-10 rounded-section border transition-all duration-500 group relative
+                    ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}
                     ${isRead ? 'opacity-60 grayscale-[0.5]' : 'opacity-100'}
                   `}
                 >
@@ -187,7 +187,7 @@ export const UserManual: React.FC = () => {
                       className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
                         ${isRead 
                           ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
-                          : `${isDark ? 'bg-white/5 text-white/40 hover:bg-[#E85D75] hover:text-white' : 'bg-gray-100 text-gray-400 hover:bg-[#E85D75] hover:text-white'}`
+                          : `${isDark ? 'bg-white/5 text-white/40 hover:bg-[var(--color-accent)] hover:text-white' : 'bg-gray-100 text-gray-400 hover:bg-[var(--color-accent)] hover:text-white'}`
                         }
                       `}
                     >
@@ -204,7 +204,7 @@ export const UserManual: React.FC = () => {
                       {guide.steps.map((step, sIdx) => (
                         <div key={sIdx} className="flex gap-5">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0
-                            ${isRead ? 'bg-emerald-500/10 text-emerald-500' : 'bg-[#E85D75]/10 text-[#E85D75]'}`}>
+                            ${isRead ? 'bg-emerald-500/10 text-emerald-500' : 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'}`}>
                             {sIdx + 1}
                           </div>
                           <div className="space-y-1.5">
@@ -232,20 +232,20 @@ export const UserManual: React.FC = () => {
               return (
                 <div 
                   key={tip.id}
-                  className={`p-10 rounded-[3.5rem] border flex flex-col justify-between group transition-all duration-500
-                    ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}
+                  className={`p-10 rounded-section border flex flex-col justify-between group transition-all duration-500
+                    ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}
                     ${isRead ? 'opacity-60' : 'opacity-100'}
                   `}
                 >
                   <div className="space-y-8">
                     <div className="flex items-center justify-between">
-                      <div className="w-16 h-16 rounded-3xl bg-[#E85D75]/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                        <tip.icon className="w-8 h-8 text-[#E85D75]" />
+                      <div className="w-16 h-16 rounded-3xl bg-[var(--color-accent)]/10 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                        <tip.icon className="w-8 h-8 text-[var(--color-accent)]" />
                       </div>
                       <button 
                         onClick={() => toggleGuideRead(tip.id)}
                         className={`p-2 rounded-full transition-all
-                          ${isRead ? 'text-emerald-500' : 'text-gray-300 hover:text-[#E85D75]'}
+                          ${isRead ? 'text-emerald-500' : 'text-gray-300 hover:text-[var(--color-accent)]'}
                         `}
                       >
                         {isRead ? <CheckCircle className="w-6 h-6" /> : <Circle className="w-6 h-6" />}
@@ -270,8 +270,8 @@ export const UserManual: React.FC = () => {
       </AnimatePresence>
 
       {/* Final Call to Action */}
-      <div className={`p-10 rounded-[3rem] border border-[#E85D75]/20 bg-[#E85D75]/5 text-center space-y-6`}>
-        <div className="w-20 h-20 bg-[#E85D75] rounded-full mx-auto flex items-center justify-center text-white shadow-2xl shadow-[#E85D75]/40 mb-4">
+      <div className={`p-10 rounded-section border border-[var(--color-accent)]/20 bg-[var(--color-accent)]/5 text-center space-y-6`}>
+        <div className="w-20 h-20 bg-[var(--color-accent)] rounded-full mx-auto flex items-center justify-center text-white shadow-2xl shadow-[var(--color-accent)]/40 mb-4">
           <Lightbulb className="w-10 h-10" />
         </div>
         <h3 className="text-2xl font-black uppercase italic tracking-tighter">Pronto para o Próximo Nível?</h3>

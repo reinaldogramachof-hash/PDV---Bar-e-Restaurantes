@@ -16,8 +16,8 @@ export default defineConfig(() => {
           name: 'Gestão Gastro',
           short_name: 'GestaoGastro',
           description: 'Plataforma de gestão operacional para bares e restaurantes',
-          theme_color: '#121214',
-          background_color: '#121214',
+          theme_color: '#0F0F11',
+          background_color: '#0F0F11',
           display: 'standalone',
           orientation: 'portrait',
           icons: [

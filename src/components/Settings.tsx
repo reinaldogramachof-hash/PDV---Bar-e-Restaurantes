@@ -65,7 +65,7 @@ export const Settings: React.FC = () => {
           className={`px-8 h-12 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg flex items-center gap-2
             ${isSaving 
               ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
-              : 'bg-[#E85D75] text-white shadow-[#E85D75]/20 hover:scale-105 active:scale-95'
+              : 'bg-[var(--color-accent)] text-white shadow-[var(--color-accent)]/20 hover:scale-105 active:scale-95'
             }
           `}
         >
@@ -83,7 +83,7 @@ export const Settings: React.FC = () => {
               onClick={() => setActiveTab(tab.id as any)}
               className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all font-bold text-xs uppercase tracking-tight
                 ${activeTab === tab.id 
-                  ? 'bg-[#E85D75] text-white shadow-lg shadow-[#E85D75]/20' 
+                  ? 'bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20' 
                   : `${isDark ? 'bg-white/5 text-white/40 hover:bg-white/10' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100 shadow-sm'}`
                 }
               `}
@@ -95,7 +95,7 @@ export const Settings: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        <div className={`flex-1 rounded-[2.5rem] border p-8 md:p-10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
+        <div className={`flex-1 rounded-panel border p-8 md:p-10 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
           {activeTab === 'store' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center gap-4 border-b border-dashed border-current/10 pb-6 mb-8">
@@ -116,7 +116,7 @@ export const Settings: React.FC = () => {
                     <input 
                       value={formData.establishment.name}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, name: e.target.value } })}
-                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[#2C2C2E] focus:border-[#E85D75]' : 'bg-gray-50 border-gray-100 focus:border-[#E85D75]'}`} 
+                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
@@ -128,7 +128,7 @@ export const Settings: React.FC = () => {
                     <input 
                       value={formData.establishment.document}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, document: e.target.value } })}
-                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[#2C2C2E] focus:border-[#E85D75]' : 'bg-gray-50 border-gray-100 focus:border-[#E85D75]'}`} 
+                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
@@ -140,7 +140,7 @@ export const Settings: React.FC = () => {
                     <input 
                       value={formData.establishment.phone}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, phone: e.target.value } })}
-                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[#2C2C2E] focus:border-[#E85D75]' : 'bg-gray-50 border-gray-100 focus:border-[#E85D75]'}`} 
+                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
@@ -152,7 +152,7 @@ export const Settings: React.FC = () => {
                     <input 
                       value={formData.establishment.website}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, website: e.target.value } })}
-                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[#2C2C2E] focus:border-[#E85D75]' : 'bg-gray-50 border-gray-100 focus:border-[#E85D75]'}`} 
+                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export const Settings: React.FC = () => {
                       rows={2}
                       value={formData.establishment.address}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, address: e.target.value } })}
-                      className={`w-full p-5 pl-12 rounded-2xl border outline-none font-bold text-sm resize-none transition-all ${isDark ? 'bg-transparent border-[#2C2C2E] focus:border-[#E85D75]' : 'bg-gray-50 border-gray-100 focus:border-[#E85D75]'}`} 
+                      className={`w-full p-5 pl-12 rounded-2xl border outline-none font-bold text-sm resize-none transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
@@ -228,7 +228,7 @@ export const Settings: React.FC = () => {
                       <select 
                         value={formData.thermalPrinter.paperWidth}
                         onChange={e => setFormData({ ...formData, thermalPrinter: { ...formData.thermalPrinter, paperWidth: e.target.value as any } })}
-                        className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}
+                        className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}
                       >
                         <option value="80mm">80mm (Padrão)</option>
                         <option value="58mm">58mm (Portátil)</option>
@@ -252,7 +252,7 @@ export const Settings: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className={`p-8 rounded-[2rem] border space-y-6 flex flex-col justify-between ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                <div className={`p-8 rounded-section border space-y-6 flex flex-col justify-between ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
                   <div className="space-y-2">
                     <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-2">
                       <Download className="w-5 h-5" />
@@ -268,7 +268,7 @@ export const Settings: React.FC = () => {
                   </button>
                 </div>
 
-                <div className={`p-8 rounded-[2rem] border space-y-6 flex flex-col justify-between ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                <div className={`p-8 rounded-section border space-y-6 flex flex-col justify-between ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
                   <div className="space-y-2">
                     <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-2">
                       <Upload className="w-5 h-5" />
@@ -282,7 +282,7 @@ export const Settings: React.FC = () => {
                   </label>
                 </div>
 
-                <div className="md:col-span-2 p-8 rounded-[2rem] border border-red-500/20 bg-red-500/5 space-y-4">
+                <div className="md:col-span-2 p-8 rounded-section border border-red-500/20 bg-red-500/5 space-y-4">
                   <div className="flex items-center gap-3 text-red-500">
                     <AlertTriangle className="w-5 h-5" />
                     <h4 className="text-sm font-black uppercase tracking-tight">Zona de Perigo</h4>

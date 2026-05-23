@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../store/AppContext';
 import { Order } from '../types';
-import { X, Printer, CheckCircle2 } from 'lucide-react';
+import { X, Printer, Utensils } from 'lucide-react';
 import { motion } from 'motion/react';
 
 interface ReceiptModalProps {
@@ -30,7 +30,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ order, onClose }) =>
         animate={{ opacity: 1, scale: 1, y: 0 }}
         id="receipt-print-area"
         className={`relative w-full max-w-sm rounded-3xl border flex flex-col overflow-hidden shadow-2xl print:shadow-none print:border-none print:w-full print:max-w-none my-auto
-        ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-[#fffdfa] border-gray-200'} print:bg-white`}
+        ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-[#fffdfa] border-gray-200'} print:bg-white`}
       >
         
         <div className="flex justify-end p-4 border-b border-dashed print:hidden">
@@ -53,7 +53,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ order, onClose }) =>
         <div className={`p-6 font-mono text-[12px] leading-[1.4] ${isDark ? 'text-gray-300' : 'text-gray-800'} print:text-black print:p-0 print:w-full print:text-[12px]`}>
            <div className="print-content-wrapper">
              <div className="text-center mb-6">
-               <div className="text-xl mb-1 print:hidden">🍸</div>
+               <Utensils className="w-5 h-5 mx-auto mb-2 print:hidden text-[var(--color-accent)]" />
                <h2 className="text-lg font-bold tracking-tighter mb-0 uppercase print:text-[16px]">{settings.establishment.name}</h2>
                <div className="w-full border-b border-dashed border-current my-3"></div>
                <p className="text-[10px] print:text-[11px] uppercase">{settings.establishment.address}</p>

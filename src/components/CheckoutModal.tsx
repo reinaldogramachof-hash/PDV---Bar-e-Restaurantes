@@ -75,12 +75,12 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <div className={`w-full max-w-2xl rounded-2xl border shadow-2xl flex flex-col max-h-[92vh] overflow-hidden
-        ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200'}`}>
+        ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200'}`}>
 
-        <div className={`p-5 flex justify-between items-center border-b ${isDark ? 'border-[#2C2C2E]' : 'border-gray-200'}`}>
+        <div className={`p-5 flex justify-between items-center border-b ${isDark ? 'border-[var(--color-border)]' : 'border-gray-200'}`}>
           <div>
             <h2 className="text-lg font-bold">Fechamento de Conta</h2>
-            <p className={`text-xs mt-0.5 ${isDark ? 'text-[#A1A1A6]' : 'text-gray-500'}`}>
+            <p className={`text-xs mt-0.5 ${isDark ? 'text-[var(--color-muted)]' : 'text-gray-500'}`}>
               {order.mode === 'mesa' ? `Mesa ${order.tableNumber?.toString().padStart(2, '0')}` : 'Balcão'} · Atendente: {waiterName}
             </p>
           </div>
@@ -92,17 +92,17 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
           {/* Left: summary + split */}
           <div className="space-y-6">
             <div>
-              <h3 className={`text-xs uppercase font-bold mb-3 tracking-wider ${isDark ? 'text-[#A1A1A6]' : 'text-gray-500'}`}>Resumo</h3>
-              <div className={`space-y-2 p-4 rounded-xl border text-sm ${isDark ? 'bg-[#121214] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
+              <h3 className={`text-xs uppercase font-bold mb-3 tracking-wider ${isDark ? 'text-[var(--color-muted)]' : 'text-gray-500'}`}>Resumo</h3>
+              <div className={`space-y-2 p-4 rounded-xl border text-sm ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
                 {order.items.map(item => (
                   <div key={item.id} className="flex justify-between">
-                    <span className={isDark ? 'text-[#A1A1A6]' : 'text-gray-600'}>
+                    <span className={isDark ? 'text-[var(--color-muted)]' : 'text-gray-600'}>
                       {item.quantity}× {item.product.name}
                     </span>
                     <span>R$ {(item.price * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
-                <div className={`flex justify-between pt-2 mt-2 border-t ${isDark ? 'border-[#2C2C2E]' : 'border-gray-200'}`}>
+                <div className={`flex justify-between pt-2 mt-2 border-t ${isDark ? 'border-[var(--color-border)]' : 'border-gray-200'}`}>
                   <span>Subtotal</span>
                   <span className="font-medium">R$ {order.subtotal.toFixed(2)}</span>
                 </div>
@@ -112,48 +112,48 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
                       type="checkbox"
                       checked={includeService}
                       onChange={e => setIncludeService(e.target.checked)}
-                      className="accent-[#E85D75]"
+                      className="accent-[var(--color-accent)]"
                     />
                     <span>Taxa de serviço (10%)</span>
                     <span className="ml-auto">R$ {(order.subtotal * 0.1).toFixed(2)}</span>
                   </label>
                 )}
-                <div className={`flex justify-between text-lg font-bold pt-3 mt-1 border-t ${isDark ? 'border-[#2C2C2E]' : 'border-gray-200'}`}>
+                <div className={`flex justify-between text-lg font-bold pt-3 mt-1 border-t ${isDark ? 'border-[var(--color-border)]' : 'border-gray-200'}`}>
                   <span>Total</span>
-                  <span className="text-[#E85D75]">R$ {totalAmount.toFixed(2)}</span>
+                  <span className="text-[var(--color-accent)]">R$ {totalAmount.toFixed(2)}</span>
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className={`text-xs uppercase font-bold mb-3 tracking-wider ${isDark ? 'text-[#A1A1A6]' : 'text-gray-500'}`}>Divisão de Conta</h3>
+              <h3 className={`text-xs uppercase font-bold mb-3 tracking-wider ${isDark ? 'text-[var(--color-muted)]' : 'text-gray-500'}`}>Divisão de Conta</h3>
               <div className="flex gap-2 mb-3">
                 <button
                   onClick={() => setSplitMode('nenhum')}
                   className={`flex-1 py-1.5 text-xs rounded-lg border transition-colors
-                    ${splitMode === 'nenhum' ? 'bg-[#E85D75] text-white border-[#E85D75]' : isDark ? 'border-[#2C2C2E] hover:bg-white/5' : 'border-gray-300 hover:bg-gray-50'}`}
+                    ${splitMode === 'nenhum' ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]' : isDark ? 'border-[var(--color-border)] hover:bg-white/5' : 'border-gray-300 hover:bg-gray-50'}`}
                 >
                   Não dividir
                 </button>
                 <button
                   onClick={() => setSplitMode('pessoas')}
                   className={`flex-1 py-1.5 text-xs rounded-lg border transition-colors
-                    ${splitMode === 'pessoas' ? 'bg-[#E85D75] text-white border-[#E85D75]' : isDark ? 'border-[#2C2C2E] hover:bg-white/5' : 'border-gray-300 hover:bg-gray-50'}`}
+                    ${splitMode === 'pessoas' ? 'bg-[var(--color-accent)] text-white border-[var(--color-accent)]' : isDark ? 'border-[var(--color-border)] hover:bg-white/5' : 'border-gray-300 hover:bg-gray-50'}`}
                 >
                   Por pessoa
                 </button>
               </div>
               {splitMode === 'pessoas' && (
-                <div className={`flex items-center gap-3 p-3 rounded-xl border ${isDark ? 'bg-[#121214] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
+                <div className={`flex items-center gap-3 p-3 rounded-xl border ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
                   <span className="text-sm">Dividir entre</span>
                   <input
                     type="number"
                     min="2"
                     value={splitCount}
                     onChange={e => setSplitCount(Number(e.target.value))}
-                    className={`w-14 p-1.5 text-center rounded-lg border text-sm outline-none ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] text-white' : 'bg-white border-gray-300'}`}
+                    className={`w-14 p-1.5 text-center rounded-lg border text-sm outline-none ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-white' : 'bg-white border-gray-300'}`}
                   />
-                  <span className="text-sm ml-auto font-bold text-[#E85D75]">
+                  <span className="text-sm ml-auto font-bold text-[var(--color-accent)]">
                     R$ {(totalAmount / splitCount).toFixed(2)} / cada
                   </span>
                 </div>
@@ -164,7 +164,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
           {/* Right: payments */}
           <div className="space-y-5">
             <div>
-              <h3 className={`text-xs uppercase font-bold mb-3 tracking-wider ${isDark ? 'text-[#A1A1A6]' : 'text-gray-500'}`}>Forma de Pagamento</h3>
+              <h3 className={`text-xs uppercase font-bold mb-3 tracking-wider ${isDark ? 'text-[var(--color-muted)]' : 'text-gray-500'}`}>Forma de Pagamento</h3>
               <div className="grid grid-cols-3 gap-2 mb-3">
                 {PAYMENT_METHODS.map(pm => (
                   <button
@@ -172,8 +172,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
                     onClick={() => setCurrentMethod(pm.id)}
                     className={`py-2 text-sm rounded-lg border transition-colors
                       ${currentMethod === pm.id
-                        ? 'bg-[#E85D75]/15 text-[#E85D75] border-[#E85D75]'
-                        : isDark ? 'bg-[#121214] border-[#2C2C2E] hover:border-[#4A4A4D]' : 'bg-white border-gray-200 hover:border-gray-300'}`}
+                        ? 'bg-[var(--color-accent)]/15 text-[var(--color-accent)] border-[var(--color-accent)]'
+                        : isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] hover:border-[var(--color-border)]' : 'bg-white border-gray-200 hover:border-gray-300'}`}
                   >
                     {pm.label}
                   </button>
@@ -181,18 +181,18 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
               </div>
               <div className="flex gap-2">
                 <div className="relative flex-1">
-                  <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm ${isDark ? 'text-[#A1A1A6]' : 'text-gray-500'}`}>R$</span>
+                  <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm ${isDark ? 'text-[var(--color-muted)]' : 'text-gray-500'}`}>R$</span>
                   <input
                     type="text"
                     value={amountInput}
                     onChange={e => setAmountInput(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleAddPayment()}
-                    className={`w-full pl-9 pr-3 py-2.5 rounded-lg border outline-none ${isDark ? 'bg-[#121214] border-[#2C2C2E] text-white focus:border-[#E85D75]' : 'bg-white border-gray-300 focus:border-[#E85D75]'}`}
+                    className={`w-full pl-9 pr-3 py-2.5 rounded-lg border outline-none ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] text-white focus:border-[var(--color-accent)]' : 'bg-white border-gray-300 focus:border-[var(--color-accent)]'}`}
                   />
                 </div>
                 <button
                   onClick={handleAddPayment}
-                  className="px-4 py-2.5 bg-[#E85D75] text-white rounded-lg text-sm font-bold hover:brightness-110"
+                  className="px-4 py-2.5 bg-[var(--color-accent)] text-white rounded-lg text-sm font-bold hover:brightness-110"
                 >
                   Adicionar
                 </button>
@@ -200,7 +200,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
             </div>
 
             {payments.length > 0 && (
-              <div className={`p-4 rounded-xl border space-y-2 text-sm ${isDark ? 'bg-[#121214] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
+              <div className={`p-4 rounded-xl border space-y-2 text-sm ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
                 {payments.map((p, idx) => (
                   <div key={idx} className="flex justify-between items-center">
                     <span className="capitalize">{p.method}</span>
@@ -208,21 +208,21 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
                       <span className="font-medium">R$ {p.amount.toFixed(2)}</span>
                       <button
                         onClick={() => handleRemovePayment(idx)}
-                        className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${isDark ? 'border-[#2C2C2E] text-[#A1A1A6] hover:border-red-800 hover:text-red-500' : 'border-gray-300 text-gray-400 hover:border-red-300 hover:text-red-500'}`}
+                        className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${isDark ? 'border-[var(--color-border)] text-[var(--color-muted)] hover:border-red-800 hover:text-red-500' : 'border-gray-300 text-gray-400 hover:border-red-300 hover:text-red-500'}`}
                       >
                         remover
                       </button>
                     </div>
                   </div>
                 ))}
-                <div className={`border-t pt-3 mt-2 space-y-1.5 ${isDark ? 'border-[#2C2C2E]' : 'border-gray-200'}`}>
+                <div className={`border-t pt-3 mt-2 space-y-1.5 ${isDark ? 'border-[var(--color-border)]' : 'border-gray-200'}`}>
                   <div className="flex justify-between">
-                    <span className={isDark ? 'text-[#A1A1A6]' : 'text-gray-500'}>Total pago</span>
+                    <span className={isDark ? 'text-[var(--color-muted)]' : 'text-gray-500'}>Total pago</span>
                     <span className="font-bold text-green-500">R$ {amountPaid.toFixed(2)}</span>
                   </div>
                   {amountRemaining > 0.01 && (
                     <div className="flex justify-between">
-                      <span className={isDark ? 'text-[#A1A1A6]' : 'text-gray-500'}>Falta</span>
+                      <span className={isDark ? 'text-[var(--color-muted)]' : 'text-gray-500'}>Falta</span>
                       <span className="font-bold text-red-500">R$ {amountRemaining.toFixed(2)}</span>
                     </div>
                   )}
@@ -238,10 +238,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
           </div>
         </div>
 
-        <div className={`p-5 border-t flex justify-end gap-3 ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
+        <div className={`p-5 border-t flex justify-end gap-3 ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
           <button
             onClick={onClose}
-            className={`px-6 py-2.5 rounded-xl text-sm font-medium border transition-colors ${isDark ? 'border-[#2C2C2E] hover:bg-white/5' : 'border-gray-300 hover:bg-gray-100'}`}
+            className={`px-6 py-2.5 rounded-xl text-sm font-medium border transition-colors ${isDark ? 'border-[var(--color-border)] hover:bg-white/5' : 'border-gray-300 hover:bg-gray-100'}`}
           >
             Cancelar
           </button>

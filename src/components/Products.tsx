@@ -110,12 +110,12 @@ export const Products: React.FC = () => {
 
         <div className="flex gap-4">
           <div className={`flex p-1 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-            <button onClick={() => toggleViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm text-[#E85D75]' : 'opacity-40 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
-            <button onClick={() => toggleViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm text-[#E85D75]' : 'opacity-40 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
+            <button onClick={() => toggleViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
+            <button onClick={() => toggleViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
           </div>
           <button
             onClick={() => openModal()}
-            className="px-8 h-12 rounded-xl bg-[#E85D75] text-white font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#E85D75]/20 flex items-center gap-2"
+            className="px-8 h-12 rounded-xl bg-[var(--color-accent)] text-white font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[var(--color-accent)]/20 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" /> Novo Produto
           </button>
@@ -131,7 +131,7 @@ export const Products: React.FC = () => {
             placeholder="Buscar no cardápio..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full h-12 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus:border-[#E85D75]' : 'bg-white border-gray-200 focus:border-[#E85D75]'}`}
+            className={`w-full h-12 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)]'}`}
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
@@ -141,7 +141,7 @@ export const Products: React.FC = () => {
               onClick={() => setSelectedCategory(cat)}
               className={`px-6 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
                 selectedCategory === cat
-                  ? 'bg-white dark:bg-[#2C2C2E] text-[#E85D75] shadow-lg border border-current/10'
+                  ? 'bg-white dark:bg-[var(--color-border)] text-[var(--color-accent)] shadow-lg border border-current/10'
                   : 'opacity-40 hover:opacity-100'
               }`}
             >
@@ -162,8 +162,8 @@ export const Products: React.FC = () => {
               <motion.div
                 layout
                 key={p.id}
-                className={`group relative flex flex-col p-6 rounded-[2.5rem] border transition-all duration-500
-                  ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] hover:border-[#E85D75]/40' : 'bg-white border-gray-100 hover:border-[#E85D75]/40 shadow-xl shadow-gray-200/10'}
+                className={`group relative flex flex-col p-6 rounded-panel border transition-all duration-500
+                  ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-accent)]/40' : 'bg-white border-gray-100 hover:border-[var(--color-accent)]/40 shadow-xl shadow-gray-200/10'}
                 `}
               >
                 <div className="flex justify-between items-start mb-6">
@@ -171,7 +171,7 @@ export const Products: React.FC = () => {
                     {getIcon(p.category)}
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                    <button onClick={() => openModal(p)} className="p-2.5 rounded-xl hover:bg-[#E85D75]/10 hover:text-[#E85D75] transition-all"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={() => openModal(p)} className="p-2.5 rounded-xl hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] transition-all"><Edit2 className="w-4 h-4" /></button>
                     <button onClick={() => deleteProduct(p.id)} className="p-2.5 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
@@ -209,7 +209,7 @@ export const Products: React.FC = () => {
           })}
         </div>
       ) : (
-        <div className={`rounded-[2.5rem] border overflow-hidden ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
+        <div className={`rounded-panel border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
           <table className="w-full text-left">
             <thead className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-50 text-gray-400'}`}>
               <tr>
@@ -242,11 +242,11 @@ export const Products: React.FC = () => {
                        <span className="font-mono text-[11px] font-bold opacity-60">R$ {cost.toFixed(2)}</span>
                     </td>
                     <td className="px-8 py-5">
-                       <span className="font-black text-[#E85D75]">R$ {p.price.toFixed(2)}</span>
+                       <span className="font-black text-[var(--color-accent)]">R$ {p.price.toFixed(2)}</span>
                     </td>
                     <td className="px-8 py-5 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                          <button onClick={() => openModal(p)} className="p-2 rounded-lg hover:bg-[#E85D75]/10 hover:text-[#E85D75]"><Edit2 className="w-4 h-4" /></button>
+                          <button onClick={() => openModal(p)} className="p-2 rounded-lg hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)]"><Edit2 className="w-4 h-4" /></button>
                           <button onClick={() => deleteProduct(p.id)} className="p-2 rounded-lg hover:bg-red-500/10 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                        </div>
                     </td>
@@ -267,7 +267,7 @@ export const Products: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0, y: 20 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 20 }} 
-              className={`relative w-full max-w-2xl rounded-[3rem] overflow-hidden shadow-2xl flex flex-col max-h-[90vh] ${isDark ? 'bg-[#1C1C1E] border border-[#2C2C2E]' : 'bg-white'}`}
+              className={`relative w-full max-w-2xl rounded-section overflow-hidden shadow-2xl flex flex-col max-h-[90vh] ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white'}`}
             >
               <div className="p-8 md:p-10 border-b flex justify-between items-center">
                 <div>
@@ -280,25 +280,25 @@ export const Products: React.FC = () => {
               <form onSubmit={handleProductSubmit} className="flex-1 overflow-y-auto p-8 md:p-10 space-y-8 custom-scrollbar">
                 {/* Basic Info */}
                 <div className="space-y-6">
-                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#E85D75]">Informações Básicas</h4>
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-accent)]">Informações Básicas</h4>
                   <div className="space-y-4">
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Nome do Produto</label>
-                      <input required name="name" defaultValue={editingProduct?.name} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                      <input required name="name" defaultValue={editingProduct?.name} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Categoria</label>
-                        <input required name="category" defaultValue={editingProduct?.category} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                        <input required name="category" defaultValue={editingProduct?.category} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                       </div>
                       <div className="space-y-1">
                         <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Preço de Venda (R$)</label>
-                        <input required type="number" step="0.01" name="price" defaultValue={editingProduct?.price} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                        <input required type="number" step="0.01" name="price" defaultValue={editingProduct?.price} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                       </div>
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Descrição (opcional)</label>
-                      <textarea name="description" defaultValue={editingProduct?.description} rows={2} className={`w-full p-6 rounded-2xl border outline-none font-bold text-sm resize-none ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                      <textarea name="description" defaultValue={editingProduct?.description} rows={2} className={`w-full p-6 rounded-2xl border outline-none font-bold text-sm resize-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                     </div>
                   </div>
                 </div>
@@ -306,7 +306,7 @@ export const Products: React.FC = () => {
                 {/* Technical Sheet */}
                 <div className="space-y-6 pt-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[#E85D75]">Ficha Técnica (Ingredientes)</h4>
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-accent)]">Ficha Técnica (Ingredientes)</h4>
                     <button type="button" onClick={addRecipeItem} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-all">
                       <PlusCircle className="w-4 h-4" /> Adicionar Insumo
                     </button>
@@ -317,7 +317,7 @@ export const Products: React.FC = () => {
                       <div className={`p-10 rounded-3xl border border-dashed text-center space-y-2 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                         <Package className="w-8 h-8 mx-auto opacity-20" />
                         <p className="text-[10px] font-bold uppercase tracking-widest opacity-30">Nenhum insumo vinculado a este produto.</p>
-                        <button type="button" onClick={addRecipeItem} className="text-[9px] font-black uppercase text-[#E85D75]">Vincular agora</button>
+                        <button type="button" onClick={addRecipeItem} className="text-[9px] font-black uppercase text-[var(--color-accent)]">Vincular agora</button>
                       </div>
                     )}
                     {recipeItems.map((item, idx) => (
@@ -328,7 +328,7 @@ export const Products: React.FC = () => {
                             required 
                             value={item.stockItemId} 
                             onChange={e => updateRecipeItem(idx, 'stockItemId', e.target.value)}
-                            className={`w-full h-12 px-4 rounded-xl border outline-none font-bold text-xs appearance-none ${isDark ? 'bg-transparent border-[#2C2C2E] text-white' : 'bg-gray-50 border-gray-100'}`}
+                            className={`w-full h-12 px-4 rounded-xl border outline-none font-bold text-xs appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-100'}`}
                           >
                             <option value="">Selecione...</option>
                             {stockItems.map(si => <option key={si.id} value={si.id}>{si.name} ({si.unit})</option>)}
@@ -342,7 +342,7 @@ export const Products: React.FC = () => {
                             step="0.001" 
                             value={item.quantity} 
                             onChange={e => updateRecipeItem(idx, 'quantity', e.target.value)}
-                            className={`w-full h-12 px-4 rounded-xl border outline-none font-bold text-xs ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} 
+                            className={`w-full h-12 px-4 rounded-xl border outline-none font-bold text-xs ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} 
                           />
                         </div>
                         <button type="button" onClick={() => removeRecipeItem(idx)} className="h-12 w-12 rounded-xl flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all mb-0.5"><MinusCircle className="w-4 h-4" /></button>
@@ -360,7 +360,7 @@ export const Products: React.FC = () => {
 
                 <div className="pt-4 flex gap-4">
                   <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-[10px] ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>Cancelar</button>
-                  <button type="submit" className="flex-[2] h-16 rounded-2xl bg-[#E85D75] text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[#E85D75]/20">Salvar Produto</button>
+                  <button type="submit" className="flex-[2] h-16 rounded-2xl bg-[var(--color-accent)] text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[var(--color-accent)]/20">Salvar Produto</button>
                 </div>
               </form>
             </motion.div>

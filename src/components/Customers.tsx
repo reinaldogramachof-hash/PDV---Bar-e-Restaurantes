@@ -118,14 +118,14 @@ export const Customers: React.FC = () => {
 
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
           <div className="flex p-1 gap-1 rounded-xl bg-black/5 dark:bg-white/5 border border-current/5 mr-2">
-            <button onClick={() => toggleViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm text-[#E85D75]' : 'opacity-40 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
-            <button onClick={() => toggleViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[#2C2C2E] shadow-sm text-[#E85D75]' : 'opacity-40 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
+            <button onClick={() => toggleViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
+            <button onClick={() => toggleViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
           </div>
-          <div className={`flex items-center px-4 py-2.5 rounded-xl border flex-1 lg:w-80 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
+          <div className={`flex items-center px-4 py-2.5 rounded-xl border flex-1 lg:w-80 transition-all focus-within:ring-4 focus-within:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus-within:border-[var(--color-accent)]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
             <Search className="w-4 h-4 mr-3 opacity-40" />
             <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome ou telefone..." className="bg-transparent border-none outline-none w-full text-sm font-semibold placeholder:opacity-30" />
           </div>
-          <button onClick={() => handleOpenModal()} className="px-6 py-2.5 bg-[#E85D75] text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[#E85D75]/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all">
+          <button onClick={() => handleOpenModal()} className="px-6 py-2.5 bg-[var(--color-accent)] text-white rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[var(--color-accent)]/20 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all">
             <UserPlus className="w-4 h-4" /> Novo Cliente
           </button>
         </div>
@@ -139,7 +139,7 @@ export const Customers: React.FC = () => {
               const filterMap: any = { 'Total Clientes': 'todos', 'VIPs (R$ 1.5k+)': 'vips', 'Frequentes': 'frequentes', 'Inativos': 'inativos' };
               setActiveFilter(filterMap[s.label]);
             }}
-            className={`p-6 rounded-[2.5rem] border text-left transition-all hover:scale-[1.02] active:scale-[0.98] ${activeFilter === (['todos', 'vips', 'frequentes', 'inativos'][i]) ? 'ring-2 ring-[#E85D75]/20 border-[#E85D75]/30' : ''} ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-sm'}`}
+            className={`p-6 rounded-panel border text-left transition-all hover:scale-[1.02] active:scale-[0.98] ${activeFilter === (['todos', 'vips', 'frequentes', 'inativos'][i]) ? 'ring-2 ring-[var(--color-accent)]/20 border-[var(--color-accent)]/30' : ''} ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-sm'}`}
           >
             <div className="flex items-center gap-4">
               <div className={`w-12 h-12 rounded-2xl ${s.bg} ${s.color} flex items-center justify-center`}>
@@ -154,12 +154,12 @@ export const Customers: React.FC = () => {
         ))}
       </div>
 
-      <div className="flex-shrink-0 flex p-1.5 gap-1.5 rounded-[1.5rem] bg-black/5 dark:bg-white/5 border border-white/10 w-fit backdrop-blur-md overflow-hidden">
+      <div className="flex-shrink-0 flex p-1.5 gap-1.5 rounded-panel bg-black/5 dark:bg-white/5 border border-white/10 w-fit backdrop-blur-md overflow-hidden">
         {['todos', 'vips', 'frequentes', 'inativos'].map((f) => (
           <button 
             key={f} 
             onClick={() => setActiveFilter(f)} 
-            className={`px-8 py-3 rounded-[1.2rem] text-[11px] font-black uppercase tracking-widest transition-all duration-300 relative ${activeFilter === f ? 'bg-white dark:bg-[#2C2C2E] shadow-xl text-[#E85D75] scale-100' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/5 scale-95 opacity-50'}`}
+            className={`px-8 py-3 rounded-control text-[11px] font-black uppercase tracking-widest transition-all duration-300 relative ${activeFilter === f ? 'bg-white dark:bg-[var(--color-border)] shadow-xl text-[var(--color-accent)] scale-100' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/5 scale-95 opacity-50'}`}
           >
             {f}
           </button>
@@ -172,13 +172,13 @@ export const Customers: React.FC = () => {
           <motion.div 
             key={customer.id} 
             layout
-            className={`p-8 rounded-[2.5rem] border transition-all duration-300 group hover:border-[#E85D75]/30 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20'}`}
+            className={`p-8 rounded-panel border transition-all duration-300 group hover:border-[var(--color-accent)]/30 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20'}`}
           >
             <div className="flex justify-between items-start mb-6">
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl relative ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                 <User className="w-6 h-6 opacity-40" />
                 {customer.totalSpent >= 2000 && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center text-[10px] text-white shadow-lg border-2 border-white dark:border-[#1C1C1E]">
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center text-[10px] text-white shadow-lg border-2 border-white dark:border-[var(--color-surface)]">
                     <Star className="w-3 h-3 fill-white" />
                   </div>
                 )}
@@ -209,7 +209,7 @@ export const Customers: React.FC = () => {
             <div className="mt-8 pt-6 border-t border-dashed border-current/10 grid grid-cols-2 gap-4">
               <div>
                 <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30 mb-1">Total Gasto</p>
-                <p className="text-xl font-black text-[#E85D75] tracking-tighter">R$ {customer.totalSpent.toFixed(0)}</p>
+                <p className="text-xl font-black text-[var(--color-accent)] tracking-tighter">R$ {customer.totalSpent.toFixed(0)}</p>
               </div>
               <div className="text-right">
                 <p className="text-[9px] font-black uppercase tracking-[0.2em] opacity-30 mb-1">Fidelidade</p>
@@ -225,7 +225,7 @@ export const Customers: React.FC = () => {
         ))}
         </div>
       ) : (
-        <div className={`rounded-[2.5rem] border overflow-hidden ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
+        <div className={`rounded-panel border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -266,7 +266,7 @@ export const Customers: React.FC = () => {
                        <span className="text-[11px] font-black opacity-60 tracking-tighter">{customer.loyaltyPoints} pts</span>
                     </td>
                     <td className="px-8 py-4 text-right">
-                       <span className="text-[11px] font-black text-[#E85D75] tracking-tighter">R$ {customer.totalSpent.toFixed(0)}</span>
+                       <span className="text-[11px] font-black text-[var(--color-accent)] tracking-tighter">R$ {customer.totalSpent.toFixed(0)}</span>
                     </td>
                     <td className="px-8 py-4 text-right">
                       <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
@@ -287,7 +287,7 @@ export const Customers: React.FC = () => {
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className={`relative w-full max-w-lg p-8 rounded-[3rem] shadow-2xl ${isDark ? 'bg-[#1C1C1E] border border-[#2C2C2E]' : 'bg-white border border-gray-100'}`}>
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className={`relative w-full max-w-lg p-8 rounded-section shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white border border-gray-100'}`}>
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-2xl font-black tracking-tighter uppercase">{editingCustomer ? 'Editar Cliente' : 'Novo Cliente'}</h3>
                 <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-xl hover:bg-current/5 opacity-40"><X className="w-5 h-5" /></button>
@@ -295,21 +295,21 @@ export const Customers: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Nome Completo</label>
-                  <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className={`w-full p-4 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                  <input required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className={`w-full p-4 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Telefone</label>
-                    <input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className={`w-full p-4 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                    <input required value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className={`w-full p-4 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">E-mail</label>
-                    <input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className={`w-full p-4 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                    <input type="email" required value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className={`w-full p-4 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
                   </div>
                 </div>
                 <div className="pt-4 flex gap-4">
                   <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>Cancelar</button>
-                  <button type="submit" className="flex-1 py-4 bg-[#E85D75] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[#E85D75]/20 hover:scale-[1.02] active:scale-95 transition-all">{editingCustomer ? 'Salvar Alterações' : 'Cadastrar Cliente'}</button>
+                  <button type="submit" className="flex-1 py-4 bg-[var(--color-accent)] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[var(--color-accent)]/20 hover:scale-[1.02] active:scale-95 transition-all">{editingCustomer ? 'Salvar Alterações' : 'Cadastrar Cliente'}</button>
                 </div>
               </form>
             </motion.div>

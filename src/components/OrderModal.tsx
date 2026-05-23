@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../store/AppContext';
 import { Product, Order } from '../types';
 import { MenuList } from './MenuList';
-import { X, Search, Minus, Trash2, Plus, MoveRight, Merge, Clock, Settings, Users, Baby, User, CalendarCheck, PlayCircle, Loader2, AlertTriangle, RefreshCw, ShoppingBag, ChevronRight, LayoutGrid, List } from 'lucide-react';
+import { X, Search, Minus, Trash2, Plus, MoveRight, Merge, Clock, Settings, Users, Baby, User, CalendarCheck, PlayCircle, Loader2, AlertTriangle, RefreshCw, ShoppingBag, ChevronRight, LayoutGrid, List, Package } from 'lucide-react';
 import { CheckoutModal } from './CheckoutModal';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -126,51 +126,51 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
              return (
                <div className="w-full h-full flex items-center justify-center">
                  {isReservada ? (
-                    <div className={`w-full max-w-sm rounded-[3rem] border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
-                      <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
+                    <div className={`w-full max-w-sm rounded-section border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
+                      <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>
                         <h3 className="font-black uppercase tracking-tight text-lg text-purple-500">Mesa Reservada</h3>
                         <button onClick={onClose} className="p-2 rounded-xl hover:bg-black/5"><X className="w-5 h-5 opacity-40" /></button>
                       </div>
                       <div className="p-10 space-y-8 text-center">
-                        <div className="w-24 h-24 bg-purple-500/10 text-purple-500 rounded-[2rem] flex items-center justify-center mx-auto shadow-xl shadow-purple-500/5"><CalendarCheck className="w-12 h-12" /></div>
+                        <div className="w-24 h-24 bg-purple-500/10 text-purple-500 rounded-section flex items-center justify-center mx-auto shadow-xl shadow-purple-500/5"><CalendarCheck className="w-12 h-12" /></div>
                         <div className="space-y-1"><h4 className="text-4xl font-black uppercase tracking-tighter">Mesa {tableNumber}</h4><p className="text-xs font-bold opacity-40 uppercase tracking-[0.2em]">{table?.reservationReason || 'Reserva Especial'}</p></div>
                         <div className="pt-6 space-y-4">
-                          <button onClick={() => { clearTable(tableNumber!); setIsOpening(true); }} className="w-full py-6 bg-purple-500 text-white rounded-[2rem] font-black uppercase tracking-widest text-[11px] shadow-2xl shadow-purple-500/40 flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all"><PlayCircle className="w-6 h-6" /> Iniciar Atendimento</button>
+                          <button onClick={() => { clearTable(tableNumber!); setIsOpening(true); }} className="w-full py-6 bg-purple-500 text-white rounded-section font-black uppercase tracking-widest text-[11px] shadow-2xl shadow-purple-500/40 flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all"><PlayCircle className="w-6 h-6" /> Iniciar Atendimento</button>
                           <button onClick={() => { clearTable(tableNumber!); onClose(); }} className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-[9px] opacity-40 hover:opacity-100 hover:text-red-500 transition-all`}>Remover Reserva</button>
                         </div>
                       </div>
                     </div>
                   ) : isOpening ? (
-                    <div className={`w-full max-w-md rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
-                      <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className={`w-full max-w-md rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
+                      <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
                          <div><h3 className="font-bold text-2xl">Mesa {tableNumber?.toString().padStart(2, '0')}</h3><p className="text-xs font-semibold opacity-40">Configuração de Abertura</p></div>
                          <button onClick={onClose} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
                       </div>
                       <div className="p-10 space-y-8">
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2"><label className="text-xs font-bold opacity-40 ml-4">Atendente</label><select value={selectedWaiterId} onChange={e => setSelectedWaiterId(e.target.value)} className={`w-full p-4 rounded-2xl border outline-none font-semibold text-sm transition-all focus:ring-4 focus:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] text-white focus:border-[#E85D75]' : 'bg-white border-gray-200 focus:border-[#E85D75]'}`}>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
-                          <div className="space-y-2"><label className="text-xs font-bold opacity-40 ml-4">Identificação</label><input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Nome (opcional)" className={`w-full p-4 rounded-2xl border outline-none font-semibold text-sm transition-all focus:ring-4 focus:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] text-white focus:border-[#E85D75]' : 'bg-white border-gray-200 focus:border-[#E85D75]'}`} /></div>
+                          <div className="space-y-2"><label className="text-xs font-bold opacity-40 ml-4">Atendente</label><select value={selectedWaiterId} onChange={e => setSelectedWaiterId(e.target.value)} className={`w-full p-4 rounded-2xl border outline-none font-semibold text-sm transition-all focus:ring-4 focus:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] text-white focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)]'}`}>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
+                          <div className="space-y-2"><label className="text-xs font-bold opacity-40 ml-4">Identificação</label><input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Nome (opcional)" className={`w-full p-4 rounded-2xl border outline-none font-semibold text-sm transition-all focus:ring-4 focus:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] text-white focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)]'}`} /></div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <CountInput label="Adultos" value={adultCount} onChange={setAdultCount} isDark={isDark} min={1} />
                           <CountInput label="Crianças" value={childrenCount} onChange={setChildrenCount} isDark={isDark} min={0} />
                         </div>
-                        <button onClick={handleOpenTable} className="w-full mt-6 py-5 bg-[#E85D75] rounded-2xl text-white font-bold text-sm shadow-lg shadow-[#E85D75]/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Abrir Mesa</button>
+                        <button onClick={handleOpenTable} className="w-full mt-6 py-5 bg-[var(--color-accent)] rounded-2xl text-white font-bold text-sm shadow-lg shadow-[var(--color-accent)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Abrir Mesa</button>
                       </div>
                     </div>
                   ) : isManaging ? (
-                    <div className={`w-full max-w-lg rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
-                      <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-200'}`}>
+                    <div className={`w-full max-w-lg rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
+                      <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
                          <div><h3 className="font-bold text-2xl">Gestão Operacional</h3><p className="text-xs font-semibold opacity-40">Mesa {tableNumber}</p></div>
                          <button onClick={() => setIsManaging(false)} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
                       </div>
                       <div className="p-10 space-y-10 overflow-y-auto max-h-[75vh] custom-scrollbar">
                         <div><h4 className="text-xs font-bold uppercase tracking-wider mb-6 opacity-40 flex items-center gap-3"><Users className="w-5 h-5" /> Pessoas na Mesa</h4><div className="grid grid-cols-2 gap-6"><CountInput label="Adultos" value={adultCount} onChange={(v:number) => { setAdultCount(v); handleUpdateCounts(v, childrenCount); }} isDark={isDark} min={1} /><CountInput label="Crianças" value={childrenCount} onChange={(v:number) => { setChildrenCount(v); handleUpdateCounts(adultCount, v); }} isDark={isDark} min={0} /></div></div>
-                        <div><h4 className="text-xs font-bold uppercase tracking-wider mb-6 flex items-center gap-3 text-[#E85D75]"><MoveRight className="w-5 h-5" /> Transferir Mesa</h4><div className="grid grid-cols-6 gap-3">{tables.filter(t => t.status === 'livre' && t.number !== tableNumber).map(t => (<button key={t.number} onClick={() => { transferTable(tableNumber!, t.number); onClose(); }} className={`aspect-square rounded-2xl border flex items-center justify-center text-sm font-bold transition-all hover:bg-[#E85D75] hover:text-white hover:border-[#E85D75] hover:scale-110 ${isDark ? 'bg-[#121214] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>{t.number}</button>))}</div></div>
+                        <div><h4 className="text-xs font-bold uppercase tracking-wider mb-6 flex items-center gap-3 text-[var(--color-accent)]"><MoveRight className="w-5 h-5" /> Transferir Mesa</h4><div className="grid grid-cols-6 gap-3">{tables.filter(t => t.status === 'livre' && t.number !== tableNumber).map(t => (<button key={t.number} onClick={() => { transferTable(tableNumber!, t.number); onClose(); }} className={`aspect-square rounded-2xl border flex items-center justify-center text-sm font-bold transition-all hover:bg-[var(--color-accent)] hover:text-white hover:border-[var(--color-accent)] hover:scale-110 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>{t.number}</button>))}</div></div>
                       </div>
                     </div>
                   ) : (
-                    <div className={`w-full max-w-sm rounded-3xl border p-12 flex flex-col items-center text-center space-y-6 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl'}`}>
+                    <div className={`w-full max-w-sm rounded-3xl border p-12 flex flex-col items-center text-center space-y-6 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl'}`}>
                       <div className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center"><AlertTriangle className="w-10 h-10" /></div>
                       <div className="space-y-2"><h3 className="text-xl font-bold">Erro de Sincronia</h3><p className="text-sm font-medium opacity-40 leading-relaxed px-4">Esta mesa está sem comanda ativa no sistema.</p></div>
                       <div className="w-full pt-4 space-y-3"><button onClick={() => { clearTable(tableNumber!); setIsOpening(true); }} className="w-full py-5 bg-amber-500 text-white rounded-2xl font-bold text-xs shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"><RefreshCw className="w-4 h-4" /> Resetar Mesa</button><button onClick={onClose} className="w-full py-4 rounded-2xl font-bold text-xs opacity-40 hover:opacity-100 transition-opacity">Voltar</button></div>
@@ -185,20 +185,20 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
             return (
               <div className="flex w-full gap-6 h-full items-stretch">
                 {/* Product Selection (Left Side - Larger) */}
-                <div className={`flex-1 rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                <div className={`flex-1 rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
                   <div className="p-8 border-b space-y-6">
                     <div className="flex justify-between items-center">
                        <h4 className="text-sm font-bold uppercase tracking-wider opacity-40">Cardápio Digital</h4>
                        <div className="flex gap-2"><button className="p-2.5 rounded-xl bg-current/5"><LayoutGrid className="w-4 h-4" /></button><button className="p-2.5 opacity-20"><List className="w-4 h-4" /></button></div>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
-                      <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 transition-all focus-within:ring-4 focus-within:ring-[#E85D75]/10 ${isDark ? 'bg-[#121214] border-[#2C2C2E] focus-within:border-[#E85D75]/40' : 'bg-gray-50 border-gray-200 focus-within:border-pink-300'}`}>
+                      <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 transition-all focus-within:ring-4 focus-within:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus-within:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus-within:border-pink-300'}`}>
                         <Search className="w-5 h-5 mr-4 opacity-40" />
                         <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome ou categoria..." className="bg-transparent border-none outline-none w-full text-sm font-semibold placeholder:opacity-20" />
                       </div>
                       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                         {categories.map(cat => (
-                          <button key={cat} onClick={() => setCategory(cat)} className={`shrink-0 px-5 py-2.5 rounded-2xl text-xs font-bold border transition-all ${category === cat ? 'bg-[#E85D75] border-[#E85D75] text-white shadow-lg shadow-[#E85D75]/20' : 'border-current/10 opacity-60 hover:opacity-100'}`}>{cat}</button>
+                          <button key={cat} onClick={() => setCategory(cat)} className={`shrink-0 px-5 py-2.5 rounded-2xl text-xs font-bold border transition-all ${category === cat ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20' : 'border-current/10 opacity-60 hover:opacity-100'}`}>{cat}</button>
                         ))}
                       </div>
                     </div>
@@ -209,9 +209,9 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                 </div>
 
                 {/* Active Order (Right Side - Sidebar style but taller) */}
-                <div className={`w-[450px] rounded-3xl border flex flex-col overflow-hidden shadow-2xl relative z-10 ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100'}`}>
+                <div className={`w-[450px] rounded-3xl border flex flex-col overflow-hidden shadow-2xl relative z-10 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
                   {/* Order Header */}
-                  <div className={`p-8 border-b flex justify-between items-start ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
+                  <div className={`p-8 border-b flex justify-between items-start ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="space-y-1">
                       <h3 className="font-black uppercase tracking-tighter text-3xl leading-none">Mesa {tableNumber?.toString().padStart(2, '0')}</h3>
                       <div className="flex flex-wrap items-center gap-2 pt-3">
@@ -235,13 +235,13 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                           <p className="text-[12px] font-black uppercase tracking-[0.3em]">Comanda Vazia</p>
                         </motion.div>
                       ) : activeOrder.items.map(item => (
-                        <motion.div layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} key={item.id} className={`flex items-center gap-4 p-5 rounded-[2.5rem] group transition-all ${isDark ? 'bg-[#121214] hover:bg-[#121214]/80' : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-100/50'}`}>
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-xl ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}>{item.product.category === 'Drinks' ? '🍸' : item.product.category === 'Petiscos' ? '🍟' : '🍽️'}</div>
-                          <div className="flex-1 min-w-0"><p className="text-sm font-black uppercase truncate group-hover:text-[#E85D75] transition-colors">{item.product.name}</p><p className="text-[10px] font-black opacity-40">R$ {item.price.toFixed(2)}</p></div>
+                        <motion.div layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} key={item.id} className={`flex items-center gap-4 p-5 rounded-panel group transition-all ${isDark ? 'bg-[var(--color-app-base)] hover:bg-[var(--color-app-base)]/80' : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-100/50'}`}>
+                          <div className={`w-12 h-12 rounded-panel flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}><Package className="w-5 h-5 text-[var(--color-accent)]" /></div>
+                          <div className="flex-1 min-w-0"><p className="text-sm font-black uppercase truncate group-hover:text-[var(--color-accent)] transition-colors">{item.product.name}</p><p className="text-[10px] font-black opacity-40">R$ {item.price.toFixed(2)}</p></div>
                           <div className="flex items-center gap-3">
                             <button onClick={() => changeItemQty(item.id, -1)} className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all ${item.quantity === 1 ? 'text-red-500 border-red-500/20' : 'border-current/10'}`}>{item.quantity === 1 ? <Trash2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}</button>
                             <span className="w-5 text-center font-black text-sm tracking-tighter">{item.quantity}</span>
-                            <button onClick={() => addItemToOrder(item.product)} className="w-9 h-9 rounded-xl flex items-center justify-center border border-current/10 hover:border-[#E85D75] hover:text-[#E85D75] transition-all"><Plus className="w-4 h-4" /></button>
+                            <button onClick={() => addItemToOrder(item.product)} className="w-9 h-9 rounded-xl flex items-center justify-center border border-current/10 hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-all"><Plus className="w-4 h-4" /></button>
                           </div>
                         </motion.div>
                       ))}
@@ -249,13 +249,13 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                   </div>
 
                   {/* Order Footer */}
-                  <div className={`p-10 border-t space-y-8 ${isDark ? 'bg-[#252527] border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`}>
+                  <div className={`p-10 border-t space-y-8 ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>
                     <div className="flex justify-between items-end">
                       <div className="space-y-1">
                         <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Total da Mesa</p>
-                        <div className="flex items-baseline gap-1.5"><span className="text-2xl font-black text-[#E85D75] opacity-50">R$</span><span className="text-5xl font-black text-[#E85D75] tracking-tighter">{activeOrder.total.toFixed(2)}</span></div>
+                        <div className="flex items-baseline gap-1.5"><span className="text-2xl font-black text-[var(--color-accent)] opacity-50">R$</span><span className="text-5xl font-black text-[var(--color-accent)] tracking-tighter">{activeOrder.total.toFixed(2)}</span></div>
                       </div>
-                      <button disabled={activeOrder.items.length === 0} onClick={() => setCheckoutOpen(true)} className="px-10 py-6 bg-[#E85D75] text-white rounded-[2rem] font-black uppercase tracking-widest text-[12px] shadow-2xl shadow-[#E85D75]/40 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:scale-100 disabled:shadow-none transition-all">Pagar Conta</button>
+                      <button disabled={activeOrder.items.length === 0} onClick={() => setCheckoutOpen(true)} className="px-10 py-6 bg-[var(--color-accent)] text-white rounded-section font-black uppercase tracking-widest text-[12px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:scale-100 disabled:shadow-none transition-all">Pagar Conta</button>
                     </div>
                   </div>
                 </div>
@@ -273,5 +273,5 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
 };
 
 const CountInput = ({ label, value, onChange, isDark, min }: any) => (
-  <div className={`p-6 rounded-[2.5rem] border transition-all ${isDark ? 'bg-[#121214] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-sm'}`}><p className="text-[10px] uppercase font-black mb-5 opacity-40 text-center tracking-widest">{label}</p><div className="flex items-center justify-between px-2"><button onClick={() => onChange(Math.max(min, value - 1))} className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl transition-all ${value === min ? 'opacity-10' : 'bg-current/5 hover:bg-current/10'}`}>-</button><span className="text-2xl font-black tracking-tighter">{value}</span><button onClick={() => onChange(value + 1)} className="w-12 h-12 rounded-2xl bg-current/5 hover:bg-current/10 flex items-center justify-center font-black text-xl transition-all">+</button></div></div>
+  <div className={`p-6 rounded-panel border transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-sm'}`}><p className="text-[10px] uppercase font-black mb-5 opacity-40 text-center tracking-widest">{label}</p><div className="flex items-center justify-between px-2"><button onClick={() => onChange(Math.max(min, value - 1))} className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl transition-all ${value === min ? 'opacity-10' : 'bg-current/5 hover:bg-current/10'}`}>-</button><span className="text-2xl font-black tracking-tighter">{value}</span><button onClick={() => onChange(value + 1)} className="w-12 h-12 rounded-2xl bg-current/5 hover:bg-current/10 flex items-center justify-center font-black text-xl transition-all">+</button></div></div>
 );

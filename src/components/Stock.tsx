@@ -170,7 +170,7 @@ export const Stock: React.FC = () => {
               onClick={() => setActiveTab(tab.id as TabType)}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                 activeTab === tab.id
-                  ? 'bg-[#E85D75] text-white shadow-lg shadow-[#E85D75]/20'
+                  ? 'bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20'
                   : `opacity-40 hover:opacity-100 ${isDark ? 'text-white' : 'text-gray-900'}`
               }`}
             >
@@ -186,19 +186,19 @@ export const Stock: React.FC = () => {
           {/* Controls */}
           <div className="flex flex-col lg:flex-row gap-4">
             <div className={`relative flex-1 group`}>
-              <Search className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${isDark ? 'text-white/20 group-focus-within:text-[#E85D75]' : 'text-gray-400 group-focus-within:text-[#E85D75]'}`} />
+              <Search className={`absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${isDark ? 'text-white/20 group-focus-within:text-[var(--color-accent)]' : 'text-gray-400 group-focus-within:text-[var(--color-accent)]'}`} />
               <input
                 type="text"
                 placeholder="Buscar por nome ou categoria..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full h-14 pl-14 pr-6 rounded-2xl border transition-all outline-none text-sm font-bold
-                  ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] focus:border-[#E85D75]' : 'bg-white border-gray-200 focus:border-[#E85D75] shadow-sm'}
+                  ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)] shadow-sm'}
                 `}
               />
             </div>
 
-            <div className={`relative flex items-center px-5 rounded-2xl border ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200 shadow-sm'}`}>
+            <div className={`relative flex items-center px-5 rounded-2xl border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200 shadow-sm'}`}>
               <Filter className="w-4 h-4 mr-3 opacity-30" />
               <select 
                 value={selectedCategory} 
@@ -211,7 +211,7 @@ export const Stock: React.FC = () => {
             
             <button
               onClick={() => handleOpenModal()}
-              className="flex items-center justify-center gap-3 px-10 h-14 rounded-2xl bg-[#E85D75] text-white font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-[#E85D75]/30"
+              className="flex items-center justify-center gap-3 px-10 h-14 rounded-2xl bg-[var(--color-accent)] text-white font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-[var(--color-accent)]/30"
             >
               <Plus className="w-5 h-5" /> Novo Insumo / Entrada
             </button>
@@ -221,7 +221,7 @@ export const Stock: React.FC = () => {
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex items-center gap-5 p-6 rounded-[2rem] bg-amber-500/5 border border-amber-500/20 text-amber-600"
+              className="flex items-center gap-5 p-6 rounded-section bg-amber-500/5 border border-amber-500/20 text-amber-600"
             >
               <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-6 h-6 shadow-lg shadow-amber-500/20" />
@@ -234,7 +234,7 @@ export const Stock: React.FC = () => {
           )}
 
           {/* Insumos Table */}
-          <div className={`rounded-[3rem] border overflow-hidden ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/10'}`}>
+          <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/10'}`}>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className={`text-[9px] font-black uppercase tracking-[0.2em] ${isDark ? 'bg-white/5 text-white/30' : 'bg-gray-50 text-gray-400'}`}>
@@ -312,7 +312,7 @@ export const Stock: React.FC = () => {
       {/* Movements Tab */}
       {activeTab === 'movements' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <div className={`rounded-[3rem] border overflow-hidden ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-200 shadow-2xl shadow-gray-200/10'}`}>
+          <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200 shadow-2xl shadow-gray-200/10'}`}>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className={`text-[9px] font-black uppercase tracking-[0.2em] ${isDark ? 'bg-white/5 text-white/30' : 'bg-gray-50 text-gray-400'}`}>
@@ -354,7 +354,7 @@ export const Stock: React.FC = () => {
           {stockMovements.filter(m => m.type === 'loss').map(m => {
              const item = stockItems.find(si => si.id === m.stockItemId);
              return (
-               <div key={m.id} className={`p-8 rounded-[2.5rem] border ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-xl'}`}>
+               <div key={m.id} className={`p-8 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl'}`}>
                   <div className="flex justify-between items-start mb-6">
                      <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center"><AlertTriangle className="w-6 h-6" /></div>
                      <span className="text-[10px] font-bold opacity-30">{new Date(m.timestamp).toLocaleDateString('pt-BR')}</span>
@@ -381,12 +381,12 @@ export const Stock: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0, y: 30 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 30 }} 
-              className={`relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-[3rem] shadow-2xl ${isDark ? 'bg-[#1C1C1E] border border-[#2C2C2E]' : 'bg-white'}`}
+              className={`relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-section shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white'}`}
             >
               <div className="p-10 border-b flex justify-between items-center">
                 <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-[1.5rem] bg-[#E85D75]/10 flex items-center justify-center">
-                    <Package className="w-8 h-8 text-[#E85D75]" />
+                  <div className="w-16 h-16 rounded-panel bg-[var(--color-accent)]/10 flex items-center justify-center">
+                    <Package className="w-8 h-8 text-[var(--color-accent)]" />
                   </div>
                   <div>
                     <h3 className="text-3xl font-black tracking-tighter uppercase leading-tight italic">{editingItem ? 'Gestão de Insumo' : 'Novo Insumo / Entrada'}</h3>
@@ -400,22 +400,22 @@ export const Stock: React.FC = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                   {/* Left Column: Cadastro */}
                   <div className="space-y-8">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[#E85D75] flex items-center gap-3">
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--color-accent)] flex items-center gap-3">
                        <Tag className="w-4 h-4" /> Dados Cadastrais
                     </h4>
                     <div className="space-y-5">
                       <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Nome do Insumo</label>
-                        <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                        <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Categoria</label>
-                          <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                          <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                         </div>
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Unidade</label>
-                          <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[#2C2C2E] text-white' : 'bg-gray-50 border-gray-100'}`}>
+                          <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-100'}`}>
                             <option value="kg">Quilograma (kg)</option>
                             <option value="g">Grama (g)</option>
                             <option value="L">Litro (L)</option>
@@ -426,20 +426,20 @@ export const Stock: React.FC = () => {
                       </div>
                       <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Estoque de Alerta (Mínimo)</label>
-                        <input required type="number" step="0.001" value={formData.minStock} onChange={e => setFormData({...formData, minStock: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                        <input required type="number" step="0.001" value={formData.minStock} onChange={e => setFormData({...formData, minStock: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                       </div>
                     </div>
                   </div>
 
                   {/* Right Column: Entrada e Fornecedor */}
                   <div className="space-y-8">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[#E85D75] flex items-center gap-3">
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--color-accent)] flex items-center gap-3">
                        <Truck className="w-4 h-4" /> Entrada & Supply
                     </h4>
                     <div className="space-y-5">
                       <div className="space-y-2">
                         <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Fornecedor Preferencial</label>
-                        <select value={formData.supplierId} onChange={e => setFormData({...formData, supplierId: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[#2C2C2E] text-white' : 'bg-gray-50 border-gray-100 text-gray-900'}`}>
+                        <select value={formData.supplierId} onChange={e => setFormData({...formData, supplierId: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-100 text-gray-900'}`}>
                           <option value="">Selecione um parceiro...</option>
                           {suppliers.map(s => <option key={s.id} value={s.id}>{s.companyName}</option>)}
                         </select>
@@ -449,12 +449,12 @@ export const Stock: React.FC = () => {
                           <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Custo de Aquisição (R$)</label>
                           <div className="relative">
                             <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-20" />
-                            <input required type="number" step="0.01" value={formData.costPrice} onChange={e => setFormData({...formData, costPrice: Number(e.target.value)})} className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                            <input required type="number" step="0.01" value={formData.costPrice} onChange={e => setFormData({...formData, costPrice: Number(e.target.value)})} className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                           </div>
                         </div>
                         <div className="space-y-2">
                           <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">{editingItem ? 'Somar ao Estoque' : 'Estoque Inicial'}</label>
-                          <input required type="number" step="0.001" value={formData.addQuantity} onChange={e => setFormData({...formData, addQuantity: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm bg-[#E85D75]/5 border-[#E85D75]/20 text-[#E85D75] placeholder:text-[#E85D75]/30`} />
+                          <input required type="number" step="0.001" value={formData.addQuantity} onChange={e => setFormData({...formData, addQuantity: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm bg-[var(--color-accent)]/5 border-[var(--color-accent)]/20 text-[var(--color-accent)] placeholder:text-[var(--color-accent)]/30`} />
                         </div>
                       </div>
                       
@@ -475,7 +475,7 @@ export const Stock: React.FC = () => {
 
                 <div className="pt-6 flex gap-6">
                   <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-[10px] ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>Cancelar</button>
-                  <button type="submit" className="flex-[2] h-16 rounded-2xl bg-[#E85D75] text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[#E85D75]/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <button type="submit" className="flex-[2] h-16 rounded-2xl bg-[var(--color-accent)] text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
                     Finalizar Lançamento
                   </button>
                 </div>
@@ -488,7 +488,7 @@ export const Stock: React.FC = () => {
         {isLossModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsLossModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className={`relative w-full max-w-md rounded-[3rem] overflow-hidden shadow-2xl ${isDark ? 'bg-[#1C1C1E] border border-[#2C2C2E]' : 'bg-white'}`}>
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className={`relative w-full max-w-md rounded-section overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white'}`}>
               <div className="p-8 border-b flex justify-between items-center bg-red-500/5">
                 <h3 className="text-xl font-black uppercase italic tracking-tighter text-red-500">Registrar Quebra / Perda</h3>
                 <button onClick={() => setIsLossModalOpen(false)}><X className="w-6 h-6" /></button>
@@ -496,11 +496,11 @@ export const Stock: React.FC = () => {
               <form onSubmit={handleSaveLoss} className="p-8 space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Quantidade Perdida</label>
-                  <input required type="number" step="0.001" value={lossData.quantity} onChange={e => setLossData({...lossData, quantity: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-xl ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                  <input required type="number" step="0.001" value={lossData.quantity} onChange={e => setLossData({...lossData, quantity: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-xl ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Motivo da Baixa</label>
-                  <textarea required value={lossData.reason} onChange={e => setLossData({...lossData, reason: e.target.value})} placeholder="Ex: Vencimento, Quebra de garrafa, Desperdício de preparo..." rows={3} className={`w-full p-6 rounded-2xl border outline-none font-bold text-sm resize-none ${isDark ? 'bg-transparent border-[#2C2C2E]' : 'bg-gray-50 border-gray-100'}`} />
+                  <textarea required value={lossData.reason} onChange={e => setLossData({...lossData, reason: e.target.value})} placeholder="Ex: Vencimento, Quebra de garrafa, Desperdício de preparo..." rows={3} className={`w-full p-6 rounded-2xl border outline-none font-bold text-sm resize-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                 </div>
                 <button type="submit" className="w-full h-16 rounded-2xl bg-red-500 text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-red-500/20 mt-4 transition-all hover:scale-[1.02] active:scale-[0.98]">
                   Confirmar Baixa de Estoque

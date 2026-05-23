@@ -51,7 +51,7 @@ export const Support: React.FC = () => {
     <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-700">
       {/* Header section */}
       <div className="text-center space-y-4">
-        <div className="inline-flex p-4 rounded-3xl bg-[#E85D75]/10 text-[#E85D75] mb-4">
+        <div className="inline-flex p-4 rounded-3xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] mb-4">
           <LifeBuoy className="w-10 h-10" />
         </div>
         <h1 className="text-4xl font-black tracking-tighter uppercase">Central de Suporte</h1>
@@ -71,8 +71,8 @@ export const Support: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.1 }}
-            className={`group p-8 rounded-[2.5rem] border transition-all hover:scale-[1.02] active:scale-95
-              ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E] hover:border-[#E85D75]/40' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20 hover:border-[#E85D75]/40'}`}
+            className={`group p-8 rounded-panel border transition-all hover:scale-[1.02] active:scale-95
+              ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-accent)]/40' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20 hover:border-[var(--color-accent)]/40'}`}
           >
             <div className={`w-14 h-14 rounded-2xl ${method.bg} ${method.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
               <method.icon className="w-7 h-7" />
@@ -85,10 +85,10 @@ export const Support: React.FC = () => {
       </div>
 
       {/* Website Card */}
-      <div className={`p-10 rounded-[3rem] border overflow-hidden relative
-        ${isDark ? 'bg-[#1C1C1E] border-[#2C2C2E]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/30'}`}>
+      <div className={`p-10 rounded-section border overflow-hidden relative
+        ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/30'}`}>
         
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#E85D75]/5 blur-[100px] -mr-32 -mt-32" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-accent)]/5 blur-[100px] -mr-32 -mt-32" />
         
         <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
           <div className="space-y-6 flex-1 text-center md:text-left">
@@ -105,7 +105,7 @@ export const Support: React.FC = () => {
               href="https://www.plenainformatica.com.br" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-3 px-10 py-6 bg-[#E85D75] text-white rounded-[2rem] font-black uppercase tracking-widest text-[11px] shadow-2xl shadow-[#E85D75]/40 hover:scale-105 active:scale-95 transition-all"
+              className="flex items-center gap-3 px-10 py-6 bg-[var(--color-accent)] text-white rounded-section font-black uppercase tracking-widest text-[11px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-105 active:scale-95 transition-all"
             >
               Visitar Nosso Site
               <ExternalLink className="w-5 h-5" />
