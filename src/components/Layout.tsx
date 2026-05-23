@@ -121,6 +121,11 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
 
   const isDark = theme === 'dark';
 
+  // Filtrar navGroups para ocultar "Plena" se role !== 'master'
+  const visibleNavGroups = navGroups.filter(group =>
+    group.title !== 'Plena' || currentUser.role === 'master'
+  );
+
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
@@ -187,48 +192,47 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
           </div>
 
           <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 scrollbar-none">
-            {navGroups
-              .filter((group) => group.title !== 'Plena' || currentUser.role === 'master')
-              .map((group) => {
-                const filteredItems = group.items.filter(item => {
-                  if (item.id === 'master') return true;
-                  return canAccessModule(currentEmpresa.plano, currentUser.role, item.id as ModuleId);
-                });
+            {visibleNavGroups.map((group) => {
+              const filteredItems = group.items.filter(item => {
+                if (item.id === 'master') return true;
+                return canAccessModule(currentEmpresa.plano, currentUser.role, item.id as ModuleId);
+              });
 
-                if (filteredItems.length === 0) return null;
+              if (filteredItems.length === 0) return null;
 
-                return (
-              <div key={group.title} className="space-y-1">
-                {!isCollapsed && <h3 className="px-3 text-xs font-medium text-muted">{group.title}</h3>}
-                <div className="space-y-1">
-                  {filteredItems.map((item) => {
-                    const active = currentView === item.id;
-                    const Icon = item.icon;
-                    return (
-                      <button
-                        key={item.id}
-                        onClick={() => setCurrentView(item.id as View)}
-                        title={isCollapsed ? item.label : ''}
-                        className={`w-full flex items-center gap-3 px-3 py-2 transition-all rounded-control group relative ${
-                          active
-                            ? 'bg-accent text-white'
-                            : isDark
-                              ? 'text-muted hover:bg-elevated hover:text-text'
-                              : 'text-muted-light hover:bg-elevated-light hover:text-text-light'
-                        } ${isCollapsed ? 'justify-center' : ''}`}
-                      >
-                        <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${active ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} />
-                        {!isCollapsed && (
-                          <div className="flex-1 flex items-center justify-between overflow-hidden">
-                            <span className="font-medium text-sm transition-opacity duration-300 truncate">{item.label}</span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
+              return (
+                <div key={group.title} className="space-y-1">
+                  {!isCollapsed && <h3 className="px-3 text-xs font-medium text-muted">{group.title}</h3>}
+                  <div className="space-y-1">
+                    {filteredItems.map((item) => {
+                      const active = currentView === item.id;
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => setCurrentView(item.id as View)}
+                          title={isCollapsed ? item.label : ''}
+                          className={`w-full flex items-center gap-3 px-3 py-2 transition-all rounded-control group relative ${
+                            active
+                              ? 'bg-accent text-white'
+                              : isDark
+                                ? 'text-muted hover:bg-elevated hover:text-text'
+                                : 'text-muted-light hover:bg-elevated-light hover:text-text-light'
+                          } ${isCollapsed ? 'justify-center' : ''}`}
+                        >
+                          <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${active ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} />
+                          {!isCollapsed && (
+                            <div className="flex-1 flex items-center justify-between overflow-hidden">
+                              <span className="font-medium text-sm transition-opacity duration-300 truncate">{item.label}</span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            );})}
+              );
+            })}
           </nav>
 
           <div className="mt-auto p-5 transition-all duration-300">

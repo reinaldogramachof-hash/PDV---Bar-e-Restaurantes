@@ -8,6 +8,7 @@ import { MasterDashboard } from './components/MasterDashboard';
 import { LicenseLock } from './components/LicenseLock';
 import { LICENSE_STATUS_URL } from './domain/saas';
 import { checkLicense, LicenseCheckResult } from './services/licenseService';
+import { purgeOldLogs } from './services/auditService';
 
 // Lazy loading das views para otimização de performance (bundle principal < 150KB)
 const PDV = lazy(() => import('./components/PDV').then(module => ({ default: module.PDV })));
@@ -40,7 +41,7 @@ const RedirectToDashboard = ({ setCurrentView }: { setCurrentView: (view: any) =
 
 const AppContent = () => {
   const { currentView, setCurrentView } = useNavigation();
-  const { theme, currentUser } = useApp();
+  const { theme, currentUser, currentEmpresa } = useApp();
   const [license, setLicense] = React.useState<LicenseCheckResult | null>(null);
 
   React.useEffect(() => {
@@ -53,6 +54,8 @@ const AppContent = () => {
 
   React.useEffect(() => {
     let mounted = true;
+
+    purgeOldLogs(currentEmpresa.id);
 
     checkLicense(LICENSE_STATUS_URL).then(result => {
       if (mounted) setLicense(result);

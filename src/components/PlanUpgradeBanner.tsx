@@ -31,8 +31,8 @@ export const PlanUpgradeBanner: React.FC<PlanUpgradeBannerProps> = ({ moduleId }
 
   return (
     <div className="h-full w-full flex items-center justify-center p-6">
-      <div className={`max-w-md w-full p-5 rounded-panel border flex flex-col items-center text-center gap-6 ${isDark ? 'bg-[#18181b] border-white/10' : 'bg-white border-black/10'}`}>
-        <div className={`p-4 rounded-full ${isDark ? 'bg-white/5 text-white/50' : 'bg-black/5 text-black/50'}`}>
+      <div className={`max-w-md w-full p-5 rounded-panel border flex flex-col items-center text-center gap-6 ${isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light'}`}>
+        <div className={`p-4 rounded-full ${isDark ? 'bg-elevated text-muted' : 'bg-elevated-light text-muted'}`}>
           <Lock className="w-8 h-8" />
         </div>
         
@@ -43,7 +43,7 @@ export const PlanUpgradeBanner: React.FC<PlanUpgradeBannerProps> = ({ moduleId }
           </p>
         </div>
 
-        <div className={`w-full p-4 rounded-lg flex justify-between items-center ${isDark ? 'bg-white/5' : 'bg-black/5'}`}>
+        <div className={`w-full p-4 rounded-lg flex justify-between items-center ${isDark ? 'bg-elevated' : 'bg-elevated-light'}`}>
           <span className="text-xs text-muted">Plano atual</span>
           <span className="text-sm font-semibold capitalize">{currentEmpresa.plano}</span>
         </div>
@@ -52,7 +52,7 @@ export const PlanUpgradeBanner: React.FC<PlanUpgradeBannerProps> = ({ moduleId }
           href="https://wa.me/5512992191018"
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full h-10 px-4 text-xs font-medium flex items-center justify-center rounded-button bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
+          className="w-full h-10 px-4 text-xs font-medium flex items-center justify-center rounded-control bg-[var(--color-accent)] text-white hover:opacity-90 transition-opacity"
         >
           Falar com a Plena
         </a>
