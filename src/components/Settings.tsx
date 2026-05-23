@@ -3,17 +3,18 @@ import { useApp } from '../store/AppContext';
 import { 
   Settings as SettingsIcon, Store, Printer, Database, Save, 
   Download, Upload, RefreshCw, Check, AlertTriangle, ShieldCheck, 
-  Globe, Phone, MapPin, FileText, Layout
+  Globe, Phone, MapPin, FileText, Layout, Crown 
 } from 'lucide-react';
+import { getPlanModules } from '../domain/saas';
 import { motion } from 'motion/react';
 import { AppSettings } from '../types';
 
 export const Settings: React.FC = () => {
-  const { settings, updateSettings, exportData, importData, resetToMocks, theme } = useApp();
+  const { settings, updateSettings, exportData, importData, resetToMocks, theme, currentEmpresa } = useApp();
   const isDark = theme === 'dark';
 
   const [formData, setFormData] = useState<AppSettings>(settings);
-  const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'data'>('store');
+  const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'data' | 'plan'>('store');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = () => {
@@ -48,6 +49,7 @@ export const Settings: React.FC = () => {
     { id: 'store', label: 'Estabelecimento', icon: Store },
     { id: 'printer', label: 'Impressão', icon: Printer },
     { id: 'data', label: 'Dados & Backup', icon: Database },
+    { id: 'plan', label: 'Plano Atual', icon: Crown },
   ];
 
   return (
@@ -297,6 +299,53 @@ export const Settings: React.FC = () => {
                     >
                       Reiniciar Sistema
                     </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'plan' && (
+            <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="flex items-center gap-3 border-b border-dashed border-current/10 pb-4">
+                <div className="w-9 h-9 rounded-control bg-[var(--color-accent)]/10 flex items-center justify-center">
+                  <Crown className="w-4 h-4 text-[var(--color-accent)]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold">Plano Atual</h3>
+                  <p className="text-xs text-muted">Gerencie sua assinatura e acesso aos módulos</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className={`p-5 rounded-panel border space-y-4 flex flex-col justify-between ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-semibold capitalize">Plano {currentEmpresa.plano}</h4>
+                    <p className="text-xs text-muted leading-relaxed">
+                      Este é o seu plano atual. Você tem acesso a {getPlanModules(currentEmpresa.plano).length} módulos do sistema.
+                    </p>
+                  </div>
+                  {currentEmpresa.plano !== 'gestao' && (
+                    <a
+                      href="https://wa.me/5512992191018"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full h-10 rounded-control bg-[var(--color-accent)] text-white font-medium text-xs transition-all shadow shadow-[var(--color-accent)]/20 flex items-center justify-center gap-2 hover:opacity-90"
+                    >
+                      <Crown className="w-4 h-4" />
+                      Falar com a Plena
+                    </a>
+                  )}
+                </div>
+
+                <div className={`p-5 rounded-panel border space-y-3 ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                  <h4 className="text-sm font-semibold">Módulos Incluídos</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {getPlanModules(currentEmpresa.plano).map(mod => (
+                      <span key={mod} className={`px-2.5 py-1 text-[10px] font-medium rounded-full capitalize ${isDark ? 'bg-white/10 text-white/70' : 'bg-black/5 text-black/60'}`}>
+                        {mod}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
