@@ -27,7 +27,7 @@ export const Kitchen: React.FC = () => {
                 <Construction className="w-3.5 h-3.5" />
                 Em desenvolvimento
               </div>
-              <h2 className="text-2xl font-semibold">Módulo de cozinha</h2>
+              <h2 className="text-xl font-semibold">Módulo de Cozinha</h2>
               <p className="text-sm text-muted max-w-2xl">
                 A base visual já está preparada para uma tela KDS profissional, com foco em preparo, status e baixa fricção entre salão e cozinha.
               </p>

@@ -143,9 +143,9 @@ export const Stock: React.FC = () => {
   };
 
   const getStatusInfo = (si: StockItem) => {
-    if (si.currentStock <= 0) return { label: 'Esgotado', color: 'text-red-500', bg: 'bg-red-500/10' };
-    if (si.currentStock <= si.minStock) return { label: 'Baixo', color: 'text-amber-500', bg: 'bg-amber-500/10' };
-    return { label: 'OK', color: 'text-emerald-500', bg: 'bg-emerald-500/10' };
+    if (si.currentStock <= 0) return { label: 'Esgotado', color: 'text-danger', bg: 'bg-danger/10' };
+    if (si.currentStock <= si.minStock) return { label: 'Baixo', color: 'text-warning', bg: 'bg-warning/10' };
+    return { label: 'OK', color: 'text-success', bg: 'bg-success/10' };
   };
 
   const alertCount = stockItems.filter(i => i.currentStock <= i.minStock).length;
@@ -155,11 +155,11 @@ export const Stock: React.FC = () => {
       {/* Header & Stats */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="text-3xl font-semibold  leading-none">Gestão de Suprimentos</h2>
+          <h2 className="text-xl font-semibold leading-none">Gestão de Suprimentos</h2>
           <p className="text-xs font-bold  opacity-40">Controle profundo de insumos e movimentações</p>
         </div>
 
-        <div className={`flex p-1 rounded-panel ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+        <div className={`flex p-1 rounded-panel ${isDark ? 'bg-surface-light/5' : 'bg-elevated-light'}`}>
           {[
             { id: 'overview', label: 'Insumos', icon: Package },
             { id: 'movements', label: 'Histórico', icon: History },
@@ -168,10 +168,10 @@ export const Stock: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-control text-xs font-semibold  transition-all ${
+              className={`flex items-center gap-2 h-10 px-4 rounded-control text-xs font-semibold  transition-all ${
                 activeTab === tab.id
                   ? 'bg-[var(--color-accent)] text-white'
-                  : `opacity-40 hover:opacity-100 ${isDark ? 'text-white' : 'text-gray-900'}`
+                  : `opacity-40 hover:opacity-100 ${isDark ? 'text-white' : 'text-text-light'}`
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -186,19 +186,19 @@ export const Stock: React.FC = () => {
           {/* Controls */}
           <div className="flex flex-col lg:flex-row gap-3">
             <div className={`relative flex-1 group`}>
-              <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isDark ? 'text-white/20 group-focus-within:text-[var(--color-accent)]' : 'text-gray-400 group-focus-within:text-[var(--color-accent)]'}`} />
+              <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${isDark ? 'text-white/20 group-focus-within:text-[var(--color-accent)]' : 'text-muted-light group-focus-within:text-[var(--color-accent)]'}`} />
               <input
                 type="text"
                 placeholder="Buscar por nome ou categoria..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full h-10 pl-10 pr-4 rounded-panel border transition-all outline-none text-sm font-medium
-                  ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)] shadow-sm'}
+                  ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-surface-light border-border-light focus:border-[var(--color-accent)] shadow-sm'}
                 `}
               />
             </div>
 
-            <div className={`relative flex items-center px-3 h-10 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200 shadow-sm'}`}>
+            <div className={`relative flex items-center px-3 h-10 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-sm'}`}>
               <Filter className="w-4 h-4 mr-2 opacity-30" />
               <select
                 value={selectedCategory}
@@ -231,10 +231,10 @@ export const Stock: React.FC = () => {
           )}
 
           {/* Insumos Table */}
-          <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/10'}`}>
+          <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-2xl shadow-gray-200/10'}`}>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className={`text-xs font-medium ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-50 text-gray-500'}`}>
+                <thead className={`text-xs font-medium ${isDark ? 'bg-surface-light/5 text-muted' : 'bg-elevated-light text-muted-light'}`}>
                   <tr>
                     <th className="px-4 py-3 font-medium">Insumo</th>
                     <th className="px-4 py-3 font-medium">Fornecedor</th>
@@ -249,7 +249,7 @@ export const Stock: React.FC = () => {
                     const status = getStatusInfo(si);
                     const supplier = suppliers.find(s => s.id === si.supplierId);
                     return (
-                      <tr key={si.id} className={`${isDark ? 'hover:bg-elevated' : 'hover:bg-gray-50'} transition-colors group`}>
+                      <tr key={si.id} className={`${isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'} transition-colors group`}>
                         <td className="px-4 py-3">
                           <div className="flex flex-col">
                             <span className="font-medium text-sm">{si.name}</span>
@@ -286,7 +286,7 @@ export const Stock: React.FC = () => {
                         </td>
                         <td className="px-4 py-3 text-right">
                           <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={() => handleOpenModal(si)} className={`p-1.5 rounded-control transition-colors ${isDark ? 'hover:bg-elevated' : 'hover:bg-gray-100'}`}><Edit2 className="w-3.5 h-3.5 opacity-50" /></button>
+                            <button onClick={() => handleOpenModal(si)} className={`p-1.5 rounded-control transition-colors ${isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}`}><Edit2 className="w-3.5 h-3.5 opacity-50" /></button>
                             <button onClick={() => { setSelectedItemId(si.id); setIsLossModalOpen(true); }} className="p-1.5 rounded-control text-danger hover:bg-danger/10 transition-colors"><AlertTriangle className="w-3.5 h-3.5" /></button>
                             <button onClick={() => handleOpenModal(si)} className="p-1.5 rounded-control text-success hover:bg-success/10 transition-colors"><Plus className="w-3.5 h-3.5" /></button>
                           </div>
@@ -304,10 +304,10 @@ export const Stock: React.FC = () => {
       {/* Movements Tab */}
       {activeTab === 'movements' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200 shadow-2xl shadow-gray-200/10'}`}>
+          <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-2xl shadow-gray-200/10'}`}>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className={`text-xs font-medium ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-50 text-gray-500'}`}>
+                <thead className={`text-xs font-medium ${isDark ? 'bg-surface-light/5 text-muted' : 'bg-elevated-light text-muted-light'}`}>
                   <tr>
                     <th className="px-4 py-3 font-medium">Data / Hora</th>
                     <th className="px-4 py-3 font-medium">Insumo</th>
@@ -320,12 +320,12 @@ export const Stock: React.FC = () => {
                   {sortedMovements.map(m => {
                     const item = stockItems.find(si => si.id === m.stockItemId);
                     return (
-                      <tr key={m.id} className={`${isDark ? 'hover:bg-elevated' : 'hover:bg-gray-50'} transition-colors`}>
+                      <tr key={m.id} className={`${isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'} transition-colors`}>
                         <td className="px-4 py-3 text-xs text-muted">{new Date(m.timestamp).toLocaleString('pt-BR')}</td>
                         <td className="px-4 py-3 text-xs font-medium">{item?.name || 'Insumo Removido'}</td>
                         <td className="px-4 py-3">
                           {m.type === 'in' && <span className="inline-flex items-center gap-1.5 text-success text-xs font-medium"><ArrowDownRight className="w-3.5 h-3.5" /> Entrada</span>}
-                          {m.type === 'out' && <span className="inline-flex items-center gap-1.5 text-blue-500 text-xs font-medium"><ArrowUpRight className="w-3.5 h-3.5" /> Consumo PDV</span>}
+                          {m.type === 'out' && <span className="inline-flex items-center gap-1.5 text-accent text-xs font-medium"><ArrowUpRight className="w-3.5 h-3.5" /> Consumo PDV</span>}
                           {m.type === 'loss' && <span className="inline-flex items-center gap-1.5 text-danger text-xs font-medium"><AlertTriangle className="w-3.5 h-3.5" /> Quebra</span>}
                         </td>
                         <td className="px-4 py-3 font-mono text-sm">{m.quantity} <span className="text-xs text-muted">{item?.unit}</span></td>
@@ -346,16 +346,16 @@ export const Stock: React.FC = () => {
           {stockMovements.filter(m => m.type === 'loss').map(m => {
              const item = stockItems.find(si => si.id === m.stockItemId);
              return (
-               <div key={m.id} className={`p-8 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl'}`}>
+               <div key={m.id} className={`p-5 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-xl'}`}>
                   <div className="flex justify-between items-start mb-6">
-                     <div className="w-12 h-12 rounded-panel bg-red-500/10 text-red-500 flex items-center justify-center"><AlertTriangle className="w-6 h-6" /></div>
+                     <div className="w-12 h-12 rounded-panel bg-danger/10 text-danger flex items-center justify-center"><AlertTriangle className="w-6 h-6" /></div>
                      <span className="text-xs font-bold opacity-30">{new Date(m.timestamp).toLocaleDateString('pt-BR')}</span>
                   </div>
                   <h4 className="text-sm font-semibold  mb-1">{item?.name}</h4>
                   <p className="text-xs font-bold opacity-40  mb-4">{m.reason}</p>
                   <div className="flex justify-between items-end border-t border-current/5 pt-4">
                      <span className="text-xs font-semibold opacity-20">Volume Perdido</span>
-                     <span className="text-xl font-semibold text-red-500">-{m.quantity} {item?.unit}</span>
+                     <span className="text-xl font-semibold text-danger">-{m.quantity} {item?.unit}</span>
                   </div>
                </div>
              );
@@ -373,7 +373,7 @@ export const Stock: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0, y: 30 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 30 }} 
-              className={`relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-section shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white'}`}
+              className={`relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-section shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-surface-light'}`}
             >
               <div className="px-5 py-4 border-b flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -385,7 +385,7 @@ export const Stock: React.FC = () => {
                     <p className="text-xs text-muted">Dados cadastrais e entrada de estoque</p>
                   </div>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className={`p-2 rounded-control transition-colors ${isDark ? 'hover:bg-elevated' : 'hover:bg-gray-100'}`}><X className="w-4 h-4 opacity-50" /></button>
+                <button onClick={() => setIsModalOpen(false)} className={`p-2 rounded-control transition-colors ${isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}`}><X className="w-4 h-4 opacity-50" /></button>
               </div>
 
               <form onSubmit={handleSaveItem} className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
@@ -398,16 +398,16 @@ export const Stock: React.FC = () => {
                     <div className="space-y-3">
                       <div className="space-y-1">
                         <label className="text-xs text-muted ml-1">Nome do Insumo</label>
-                        <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-200 focus:border-[var(--color-accent)]'}`} />
+                        <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-elevated-light border-border-light focus:border-[var(--color-accent)]'}`} />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1">
                           <label className="text-xs text-muted ml-1">Categoria</label>
-                          <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-200 focus:border-[var(--color-accent)]'}`} />
+                          <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-elevated-light border-border-light focus:border-[var(--color-accent)]'}`} />
                         </div>
                         <div className="space-y-1">
                           <label className="text-xs text-muted ml-1">Unidade</label>
-                          <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm appearance-none ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-200'}`}>
+                          <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm appearance-none ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-white' : 'bg-elevated-light border-border-light'}`}>
                             <option value="kg">kg</option>
                             <option value="g">g</option>
                             <option value="L">L</option>
@@ -418,7 +418,7 @@ export const Stock: React.FC = () => {
                       </div>
                       <div className="space-y-1">
                         <label className="text-xs text-muted ml-1">Estoque Mínimo (alerta)</label>
-                        <input required type="number" step="0.001" value={formData.minStock} onChange={e => setFormData({...formData, minStock: Number(e.target.value)})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-200 focus:border-[var(--color-accent)]'}`} />
+                        <input required type="number" step="0.001" value={formData.minStock} onChange={e => setFormData({...formData, minStock: Number(e.target.value)})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-elevated-light border-border-light focus:border-[var(--color-accent)]'}`} />
                       </div>
                     </div>
                   </div>
@@ -431,7 +431,7 @@ export const Stock: React.FC = () => {
                     <div className="space-y-3">
                       <div className="space-y-1">
                         <label className="text-xs text-muted ml-1">Fornecedor</label>
-                        <select value={formData.supplierId} onChange={e => setFormData({...formData, supplierId: e.target.value})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm appearance-none ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
+                        <select value={formData.supplierId} onChange={e => setFormData({...formData, supplierId: e.target.value})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm appearance-none ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-white' : 'bg-elevated-light border-border-light text-text-light'}`}>
                           <option value="">Nenhum</option>
                           {suppliers.map(s => <option key={s.id} value={s.id}>{s.companyName}</option>)}
                         </select>
@@ -441,7 +441,7 @@ export const Stock: React.FC = () => {
                           <label className="text-xs text-muted ml-1">Custo unitário (R$)</label>
                           <div className="relative">
                             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-30" />
-                            <input required type="number" step="0.01" value={formData.costPrice} onChange={e => setFormData({...formData, costPrice: Number(e.target.value)})} className={`w-full h-10 pl-8 pr-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-200 focus:border-[var(--color-accent)]'}`} />
+                            <input required type="number" step="0.01" value={formData.costPrice} onChange={e => setFormData({...formData, costPrice: Number(e.target.value)})} className={`w-full h-10 pl-8 pr-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-elevated-light border-border-light focus:border-[var(--color-accent)]'}`} />
                           </div>
                         </div>
                         <div className="space-y-1">
@@ -451,7 +451,7 @@ export const Stock: React.FC = () => {
                       </div>
 
                       {editingItem && (
-                        <div className={`px-3 py-2.5 rounded-panel border flex justify-between items-center ${isDark ? 'bg-elevated border-border' : 'bg-gray-50 border-gray-200'}`}>
+                        <div className={`px-3 py-2.5 rounded-panel border flex justify-between items-center ${isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light'}`}>
                           <span className="text-xs text-muted flex items-center gap-2"><Info className="w-3.5 h-3.5" /> Saldo após entrada</span>
                           <span className="text-sm font-semibold">
                             {(editingItem.currentStock + Number(formData.addQuantity)).toFixed(3)} {formData.unit}
@@ -463,7 +463,7 @@ export const Stock: React.FC = () => {
                 </div>
 
                 <div className="flex gap-3 pt-1">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-10 rounded-panel text-sm font-medium transition-colors ${isDark ? 'bg-elevated hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>Cancelar</button>
+                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-10 rounded-panel text-sm font-medium transition-colors ${isDark ? 'bg-elevated hover:bg-surface-light/10' : 'bg-elevated-light hover:bg-border-light'}`}>Cancelar</button>
                   <button type="submit" className="flex-[2] h-10 rounded-panel bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white text-sm font-medium transition-colors">
                     {editingItem ? 'Salvar alterações' : 'Cadastrar insumo'}
                   </button>
@@ -477,19 +477,19 @@ export const Stock: React.FC = () => {
         {isLossModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsLossModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
-            <motion.div initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }} className={`relative w-full max-w-sm rounded-section overflow-hidden shadow-elevated ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white border border-gray-200'}`}>
+            <motion.div initial={{ scale: 0.95, opacity: 0, y: 10 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 10 }} className={`relative w-full max-w-sm rounded-section overflow-hidden shadow-elevated ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-surface-light border border-border-light'}`}>
               <div className="px-5 py-4 border-b flex justify-between items-center">
                 <h3 className="text-base font-semibold text-danger">Registrar Quebra / Perda</h3>
-                <button onClick={() => setIsLossModalOpen(false)} className={`p-1.5 rounded-control transition-colors ${isDark ? 'hover:bg-elevated' : 'hover:bg-gray-100'}`}><X className="w-4 h-4 opacity-50" /></button>
+                <button onClick={() => setIsLossModalOpen(false)} className={`p-1.5 rounded-control transition-colors ${isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}`}><X className="w-4 h-4 opacity-50" /></button>
               </div>
               <form onSubmit={handleSaveLoss} className="p-5 space-y-4">
                 <div className="space-y-1">
                   <label className="text-xs text-muted ml-1">Quantidade perdida</label>
-                  <input required type="number" step="0.001" value={lossData.quantity} onChange={e => setLossData({...lossData, quantity: Number(e.target.value)})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-danger' : 'bg-gray-50 border-gray-200 focus:border-danger'}`} />
+                  <input required type="number" step="0.001" value={lossData.quantity} onChange={e => setLossData({...lossData, quantity: Number(e.target.value)})} className={`w-full h-10 px-3 rounded-panel border outline-none text-sm ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-danger' : 'bg-elevated-light border-border-light focus:border-danger'}`} />
                 </div>
                 <div className="space-y-1">
                   <label className="text-xs text-muted ml-1">Motivo da baixa</label>
-                  <textarea required value={lossData.reason} onChange={e => setLossData({...lossData, reason: e.target.value})} placeholder="Ex: Vencimento, Quebra de garrafa..." rows={3} className={`w-full px-3 py-2.5 rounded-panel border outline-none text-sm resize-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                  <textarea required value={lossData.reason} onChange={e => setLossData({...lossData, reason: e.target.value})} placeholder="Ex: Vencimento, Quebra de garrafa..." rows={3} className={`w-full px-3 py-2.5 rounded-panel border outline-none text-sm resize-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-elevated-light border-border-light'}`} />
                 </div>
                 <button type="submit" className="w-full h-10 rounded-panel bg-danger text-white text-sm font-medium transition-colors hover:opacity-90">
                   Confirmar baixa

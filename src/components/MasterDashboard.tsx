@@ -62,7 +62,7 @@ export const MasterDashboard: React.FC = () => {
               <span className={`text-xs font-medium ${kpi.tone}`}>{kpi.detail}</span>
             </div>
             <p className="text-xs font-medium text-muted mb-2">{kpi.label}</p>
-            <p className="text-2xl font-semibold">{kpi.value}</p>
+            <p className="text-xl font-semibold">{kpi.value}</p>
           </motion.section>
         ))}
       </div>

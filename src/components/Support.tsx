@@ -54,8 +54,8 @@ export const Support: React.FC = () => {
         <div className="inline-flex p-4 rounded-3xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] mb-4">
           <LifeBuoy className="w-10 h-10" />
         </div>
-        <h1 className="text-4xl font-black tracking-tighter uppercase">Central de Suporte</h1>
-        <p className="text-sm font-bold opacity-40 uppercase tracking-[0.2em] max-w-lg mx-auto">
+        <h1 className="text-xl font-semibold">Central de Suporte</h1>
+        <p className="text-sm font-medium opacity-60 max-w-lg mx-auto">
           Estamos aqui para ajudar você a tirar o máximo proveito do {APP_NAME}.
         </p>
       </div>
@@ -77,9 +77,9 @@ export const Support: React.FC = () => {
             <div className={`w-14 h-14 rounded-2xl ${method.bg} ${method.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
               <method.icon className="w-7 h-7" />
             </div>
-            <h3 className="text-sm font-black uppercase tracking-widest opacity-40 mb-1">{method.title}</h3>
-            <p className={`${method.title === 'E-mail' ? 'text-sm' : 'text-xl'} font-black tracking-tight mb-2 break-all`}>{method.value}</p>
-            <p className="text-[10px] font-bold opacity-30 uppercase tracking-widest">{method.sub}</p>
+            <h3 className="text-sm font-medium opacity-40 mb-1">{method.title}</h3>
+            <p className={`${method.title === 'E-mail' ? 'text-sm' : 'text-xl'} font-semibold mb-2 break-all`}>{method.value}</p>
+            <p className="text-[10px] font-medium opacity-50">{method.sub}</p>
           </motion.a>
         ))}
       </div>
@@ -93,8 +93,8 @@ export const Support: React.FC = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
           <div className="space-y-6 flex-1 text-center md:text-left">
             <div>
-              <h2 className="text-2xl font-black tracking-tighter uppercase mb-2">Suporte Plena Informática</h2>
-              <p className="text-sm font-bold opacity-60 leading-relaxed max-w-md uppercase tracking-tight">
+              <h2 className="text-xl font-semibold mb-2">Suporte Plena Informática</h2>
+              <p className="text-sm font-medium opacity-70 leading-relaxed max-w-md">
                 Acesse nosso site e conheça outras soluções.
               </p>
             </div>
@@ -105,7 +105,7 @@ export const Support: React.FC = () => {
               href="https://www.plenainformatica.com.br" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-3 px-10 py-6 bg-[var(--color-accent)] text-white rounded-section font-black uppercase tracking-widest text-[11px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-105 active:scale-95 transition-all"
+              className="flex items-center gap-3 px-10 py-6 bg-[var(--color-accent)] text-white rounded-section font-medium text-[11px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-105 active:scale-95 transition-all"
             >
               Visitar Nosso Site
               <ExternalLink className="w-5 h-5" />
@@ -116,8 +116,8 @@ export const Support: React.FC = () => {
 
       {/* Footer Text */}
       <div className="text-center opacity-30 py-8">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em]">{APP_NAME} - Versão 1.0.0</p>
-        <p className="text-[8px] font-bold uppercase tracking-[0.2em] mt-2">© 2026 Plena Informática. Todos os direitos reservados.</p>
+        <p className="text-[10px] font-medium">{APP_NAME} - Versão 1.0.0</p>
+        <p className="text-[8px] font-medium mt-2">© 2026 Plena Informática. Todos os direitos reservados.</p>
       </div>
     </div>
   );

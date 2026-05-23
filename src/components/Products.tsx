@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, RecipeItem } from '../types';
+import { buildScopedStorageKey } from '../domain/saas';
 
 export const Products: React.FC = () => {
   const { currentEmpresa, products, stockItems, updateProduct, addProduct, deleteProduct, theme } = useApp();
@@ -14,7 +15,10 @@ export const Products: React.FC = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => (localStorage.getItem('viewMode_products') as any) || 'grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    const saved = localStorage.getItem(buildScopedStorageKey('viewMode_products', currentEmpresa.id));
+    return saved === 'list' || saved === 'grid' ? saved : 'grid';
+  });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,7 +37,7 @@ export const Products: React.FC = () => {
 
   const toggleViewMode = (mode: 'grid' | 'list') => {
     setViewMode(mode);
-    localStorage.setItem('viewMode_products', mode);
+    localStorage.setItem(buildScopedStorageKey('viewMode_products', currentEmpresa.id), mode);
   };
 
   const openModal = (product?: Product) => {
@@ -109,9 +113,9 @@ export const Products: React.FC = () => {
         </div>
 
         <div className="flex gap-3">
-          <div className={`flex p-1 rounded-control ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-            <button onClick={() => toggleViewMode('grid')} className={`p-1.5 rounded-control transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><LayoutGrid className="w-3.5 h-3.5" /></button>
-            <button onClick={() => toggleViewMode('list')} className={`p-1.5 rounded-control transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><List className="w-3.5 h-3.5" /></button>
+          <div className={`flex p-1 rounded-control ${isDark ? 'bg-surface-light/5' : 'bg-elevated-light'}`}>
+            <button onClick={() => toggleViewMode('grid')} className={`p-1.5 rounded-control transition-all ${viewMode === 'grid' ? 'bg-surface-light bg-elevated shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><LayoutGrid className="w-3.5 h-3.5" /></button>
+            <button onClick={() => toggleViewMode('list')} className={`p-1.5 rounded-control transition-all ${viewMode === 'list' ? 'bg-surface-light bg-elevated shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><List className="w-3.5 h-3.5" /></button>
           </div>
           <button
             onClick={() => openModal()}
@@ -131,7 +135,7 @@ export const Products: React.FC = () => {
             placeholder="Buscar no cardápio..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full h-10 pl-10 pr-4 rounded-panel border outline-none text-sm transition-all focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200'}`}
+            className={`w-full h-10 pl-10 pr-4 rounded-panel border outline-none text-sm transition-all focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light'}`}
           />
         </div>
         <div className="flex gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar">
@@ -141,7 +145,7 @@ export const Products: React.FC = () => {
               onClick={() => setSelectedCategory(cat)}
               className={`px-4 h-10 rounded-panel text-xs font-medium transition-all whitespace-nowrap ${
                 selectedCategory === cat
-                  ? 'bg-white dark:bg-[var(--color-border)] text-[var(--color-accent)] shadow border border-current/10'
+                  ? 'bg-surface-light bg-elevated text-[var(--color-accent)] shadow border border-current/10'
                   : 'opacity-40 hover:opacity-100'
               }`}
             >
@@ -162,17 +166,17 @@ export const Products: React.FC = () => {
               <motion.div
                 layout
                 key={p.id}
-                className={`group relative flex flex-col p-6 rounded-panel border transition-all duration-500
-                  ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-accent)]/40' : 'bg-white border-gray-100 hover:border-[var(--color-accent)]/40 shadow-xl shadow-gray-200/10'}
+                className={`group relative flex flex-col p-5 rounded-panel border transition-all duration-500
+                  ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-accent)]/40' : 'bg-surface-light border-border-light hover:border-[var(--color-accent)]/40 shadow-xl shadow-gray-200/10'}
                 `}
               >
                 <div className="flex justify-between items-start mb-6">
-                  <div className={`w-12 h-12 rounded-panel flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                  <div className={`w-12 h-12 rounded-panel flex items-center justify-center ${isDark ? 'bg-surface-light/5' : 'bg-elevated-light'}`}>
                     {getIcon(p.category)}
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                     <button onClick={() => openModal(p)} className="p-2.5 rounded-control hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] transition-all"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => deleteProduct(p.id)} className="p-2.5 rounded-control hover:bg-red-500/10 hover:text-red-500 transition-all"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => deleteProduct(p.id)} className="p-2.5 rounded-control hover:bg-danger/10 hover:text-danger transition-all"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
 
@@ -190,10 +194,10 @@ export const Products: React.FC = () => {
                     {p.recipe && p.recipe.length > 0 ? (
                       <div className="flex justify-between items-center text-xs font-semibold ">
                         <span className="opacity-20">Margem Estimada</span>
-                        <span className={margin > 60 ? 'text-emerald-500' : 'text-amber-500'}>{margin.toFixed(0)}%</span>
+                        <span className={margin > 60 ? 'text-success' : 'text-warning'}>{margin.toFixed(0)}%</span>
                       </div>
                     ) : (
-                      <div className="text-xs font-bold text-red-500  bg-red-500/5 px-2 py-1 rounded-lg w-fit">Sem Ficha Técnica</div>
+                      <div className="text-xs font-bold text-danger  bg-danger/5 px-2 py-1 rounded-lg w-fit">Sem Ficha Técnica</div>
                     )}
                   </div>
                 </div>
@@ -209,9 +213,9 @@ export const Products: React.FC = () => {
           })}
         </div>
       ) : (
-        <div className={`rounded-panel border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
+        <div className={`rounded-panel border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-xl shadow-gray-200/10'}`}>
           <table className="w-full text-left">
-            <thead className={`text-xs font-semibold  ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-50 text-gray-400'}`}>
+            <thead className={`text-xs font-semibold  ${isDark ? 'bg-surface-light/5 text-muted' : 'bg-elevated-light text-muted-light'}`}>
               <tr>
                 <th className="px-4 py-3">Produto</th>
                 <th className="px-4 py-3">Categoria</th>
@@ -228,7 +232,7 @@ export const Products: React.FC = () => {
                   <tr key={p.id} className="group hover:bg-current/[0.01] transition-all">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-control flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>{getIcon(p.category)}</div>
+                        <div className={`w-10 h-10 rounded-control flex items-center justify-center ${isDark ? 'bg-surface-light/5' : 'bg-elevated-light'}`}>{getIcon(p.category)}</div>
                         <span className="font-semibold ">{p.name}</span>
                       </div>
                     </td>
@@ -244,10 +248,10 @@ export const Products: React.FC = () => {
                     <td className="px-4 py-3">
                        <span className="font-semibold text-[var(--color-accent)]">R$ {p.price.toFixed(2)}</span>
                     </td>
-                    <td className="px-8 py-5 text-right">
+                    <td className="px-4 py-3 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                           <button onClick={() => openModal(p)} className="p-2 rounded-lg hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)]"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => deleteProduct(p.id)} className="p-2 rounded-lg hover:bg-red-500/10 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => deleteProduct(p.id)} className="p-2 rounded-lg hover:bg-danger/10 hover:text-danger"><Trash2 className="w-4 h-4" /></button>
                        </div>
                     </td>
                   </tr>
@@ -267,14 +271,14 @@ export const Products: React.FC = () => {
               initial={{ scale: 0.9, opacity: 0, y: 20 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 20 }} 
-              className={`relative w-full max-w-2xl rounded-panel overflow-hidden shadow-2xl flex flex-col max-h-[90vh] ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white'}`}
+              className={`relative w-full max-w-2xl rounded-panel overflow-hidden shadow-2xl flex flex-col max-h-[90vh] ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-surface-light'}`}
             >
               <div className="px-5 py-4 border-b flex justify-between items-center">
                 <div>
                   <h3 className="text-base font-semibold">{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h3>
                   <p className="text-xs text-muted">Configuração de Venda e Produção</p>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-control hover:bg-black/5 dark:hover:bg-white/5 opacity-40"><X className="w-4 h-4" /></button>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-control hover:bg-black/5 hover:bg-surface-light/5 opacity-40"><X className="w-4 h-4" /></button>
               </div>
 
               <form onSubmit={handleProductSubmit} className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
@@ -284,21 +288,21 @@ export const Products: React.FC = () => {
                   <div className="space-y-3">
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted ml-1">Nome do Produto</label>
-                      <input required name="name" defaultValue={editingProduct?.name} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                      <input required name="name" defaultValue={editingProduct?.name} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-elevated-light border-border-light'}`} />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <label className="text-xs text-muted ml-1">Categoria</label>
-                        <input required name="category" defaultValue={editingProduct?.category} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                        <input required name="category" defaultValue={editingProduct?.category} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-elevated-light border-border-light'}`} />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs text-muted ml-1">Preço de Venda (R$)</label>
-                        <input required type="number" step="0.01" name="price" defaultValue={editingProduct?.price} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                        <input required type="number" step="0.01" name="price" defaultValue={editingProduct?.price} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-elevated-light border-border-light'}`} />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted ml-1">Descrição (opcional)</label>
-                      <textarea name="description" defaultValue={editingProduct?.description} rows={2} className={`w-full px-3 py-2 rounded-control border outline-none text-sm resize-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                      <textarea name="description" defaultValue={editingProduct?.description} rows={2} className={`w-full px-3 py-2 rounded-control border outline-none text-sm resize-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-elevated-light border-border-light'}`} />
                     </div>
                   </div>
                 </div>
@@ -314,7 +318,7 @@ export const Products: React.FC = () => {
 
                   <div className="space-y-2">
                     {recipeItems.length === 0 && (
-                      <div className={`p-5 rounded-panel border border-dashed text-center space-y-2 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                      <div className={`p-5 rounded-panel border border-dashed text-center space-y-2 ${isDark ? 'border-border' : 'border-border-light'}`}>
                         <Package className="w-6 h-6 mx-auto opacity-20" />
                         <p className="text-xs text-muted">Nenhum insumo vinculado a este produto.</p>
                         <button type="button" onClick={addRecipeItem} className="text-xs font-medium text-[var(--color-accent)]">Vincular agora</button>
@@ -328,7 +332,7 @@ export const Products: React.FC = () => {
                             required
                             value={item.stockItemId}
                             onChange={e => updateRecipeItem(idx, 'stockItemId', e.target.value)}
-                            className={`w-full h-10 px-3 rounded-control border outline-none text-xs appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-200'}`}
+                            className={`w-full h-10 px-3 rounded-control border outline-none text-xs appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-elevated-light border-border-light'}`}
                           >
                             <option value="">Selecione...</option>
                             {stockItems.map(si => <option key={si.id} value={si.id}>{si.name} ({si.unit})</option>)}
@@ -342,16 +346,16 @@ export const Products: React.FC = () => {
                             step="0.001"
                             value={item.quantity}
                             onChange={e => updateRecipeItem(idx, 'quantity', e.target.value)}
-                            className={`w-full h-10 px-3 rounded-control border outline-none text-xs ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+                            className={`w-full h-10 px-3 rounded-control border outline-none text-xs ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-elevated-light border-border-light'}`}
                           />
                         </div>
-                        <button type="button" onClick={() => removeRecipeItem(idx)} className="h-10 w-10 rounded-control flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><MinusCircle className="w-3.5 h-3.5" /></button>
+                        <button type="button" onClick={() => removeRecipeItem(idx)} className="h-10 w-10 rounded-control flex items-center justify-center bg-danger/10 text-danger hover:bg-danger/10 transition-all"><MinusCircle className="w-3.5 h-3.5" /></button>
                       </div>
                     ))}
                   </div>
 
                   {recipeItems.length > 0 && (
-                    <div className={`px-4 py-3 rounded-control flex justify-between items-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                    <div className={`px-4 py-3 rounded-control flex justify-between items-center ${isDark ? 'bg-surface-light/5' : 'bg-elevated-light'}`}>
                       <span className="text-xs text-muted">Custo Total de Produção</span>
                       <span className="font-mono font-semibold text-sm">R$ {calculateProductionCost(recipeItems).toFixed(2)}</span>
                     </div>
@@ -359,7 +363,7 @@ export const Products: React.FC = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-10 rounded-panel text-xs font-medium ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>Cancelar</button>
+                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-10 rounded-panel text-xs font-medium ${isDark ? 'bg-surface-light/5' : 'bg-elevated-light'}`}>Cancelar</button>
                   <button type="submit" className="flex-[2] h-10 rounded-panel bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white text-xs font-medium transition-all">Salvar Produto</button>
                 </div>
               </form>

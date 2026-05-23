@@ -57,7 +57,7 @@ export const Dashboard: React.FC = () => {
     <div className="space-y-6 animate-in fade-in duration-500 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="text-2xl font-semibold leading-none">Visão geral</h2>
+          <h2 className="text-xl font-semibold leading-none">Visão Geral</h2>
           <p className="text-sm text-muted">Resumo operacional e métricas de desempenho</p>
         </div>
         <span className={`px-3 py-2 rounded-control text-xs font-medium border ${subtlePanelClass}`}>
@@ -132,7 +132,7 @@ export const Dashboard: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
               <thead>
-                <tr className="text-xs font-medium text-muted border-b border-border">
+                <tr className={`text-xs font-medium text-muted border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
                   <th className="px-3 py-3">ID</th>
                   <th className="px-3 py-3">Hora</th>
                   <th className="px-3 py-3">Modo</th>
@@ -140,7 +140,7 @@ export const Dashboard: React.FC = () => {
                   <th className="px-3 py-3 text-right">Valor</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className={`divide-y ${isDark ? 'divide-border' : 'divide-border-light'}`}>
                 {recentOrders.map(order => (
                   <tr key={order.id} className={isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}>
                     <td className="px-3 py-3 text-muted">#{order.id.slice(-6)}</td>

@@ -74,7 +74,7 @@ export const PDV: React.FC = () => {
       <section className="flex-1 flex flex-col min-w-0">
         <div className="mb-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="space-y-1">
-            <h2 className="text-2xl font-semibold leading-none">Venda rápida</h2>
+            <h2 className="text-xl font-semibold leading-none">Venda Rápida</h2>
             <p className="text-sm text-muted">Atendimento direto no balcão</p>
           </div>
 
