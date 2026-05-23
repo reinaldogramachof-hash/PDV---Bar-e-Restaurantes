@@ -116,3 +116,75 @@ Toda entrega do Codex deve, quando aplicável:
 - ser compreensível para manutenção futura;
 - possuir comportamento testável;
 - preservar a visão SaaS do produto.
+
+---
+
+## Contexto técnico consolidado
+
+### Stack
+
+- React + TypeScript + Tailwind CSS v4 + Vite + Lucide React + motion/react
+- Repositório: `reinaldogramachof-hash/PDV---Bar-e-Restaurantes`
+
+### Tailwind v4 — CRÍTICO
+
+Config via `@theme {}` em `src/index.css`. **Não existe `tailwind.config.js`.**  
+Plugin: `@tailwindcss/vite` em `vite.config.ts`.  
+Tokens gerados automaticamente como classes (`bg-accent`, `text-muted`, `border-border`, etc.).
+
+### Theme switching
+
+Via React state `isDark = theme === 'dark'` + ternários JSX por componente.  
+**Não usa CSS `.dark` class.** Alterar esta convenção quebraria todos os componentes.
+
+### Arquitetura SaaS
+
+- Todas as entidades: `BaseEntity { id, empresaId }`
+- Storage: `gestao-gastro:<empresaId>:<collection>` via `buildScopedStorageKey`
+- Fonte da verdade: `src/domain/saas.ts`
+- Estado global: `src/store/AppContext.tsx`
+
+**Riscos conhecidos não resolvidos:**
+- `importData` sem validação de `empresaId`
+- `closeCashier` usa todas as despesas, não só da sessão atual
+
+### Tokens de design (`src/index.css`)
+
+```
+--color-app-base: #0F0F11     --color-surface: #1A1A1E
+--color-elevated: #242428     --color-border: #2E2E32
+--color-text: #FAFAFA         --color-muted: #A1A1AA
+--color-accent: #E07B4A       --color-accent-hover: #C96E43
+--color-success: #22C55E      --color-warning: #F59E0B
+--color-danger: #EF4444
+--radius-control: 6px         --radius-panel: 8px
+--radius-section: 12px
+```
+
+### Padrão de densidade UI (desktop-first — vigente desde 2026-05-22)
+
+```
+Tabelas:        px-4 py-3
+Inputs:         h-10 px-3 rounded-control
+Botões:         h-10 px-4 font-medium text-xs
+Modais header:  px-5 py-4 border-b
+Modais body:    p-5 space-y-4/5
+Cards KPI:      p-5 rounded-panel
+Labels:         text-xs text-muted ml-1
+Títulos módulo: text-xl font-semibold
+```
+
+`font-black uppercase tracking-widest` é proibido em UI de dados.  
+Emojis substituídos por ícones Lucide React em todos os componentes.
+
+### Estado de migração dos componentes (atualizado 2026-05-22)
+
+✅ Migrados (tokens + densidade): `Layout`, `Dashboard`, `Stock`, `Reports`, `OrderModal`, `Products`, `Settings`, `Suppliers`, `Security`  
+⚠️ Pendentes: `UserManual`, `CheckoutModal`, `MenuList`, `Support`
+
+### Reports de sessão
+
+Reports detalhados de cada sessão em:  
+`C:\Users\reina\.claude\projects\c--Users-reina-OneDrive-Desktop-Projetos-Sistema-de-Gest-o-Restaurantes\memory\session-reports\`
+
+Consultar antes de iniciar trabalho em módulos já tocados.
