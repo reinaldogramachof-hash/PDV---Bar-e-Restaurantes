@@ -13,6 +13,7 @@ import {
   Unlock,
   Wallet,
 } from 'lucide-react';
+import { useAudit } from '../hooks/useAudit';
 
 export const Cashier: React.FC = () => {
   const { currentEmpresa, cashierSession, cashierHistory, expenses, orders, tables, theme, openCashier, closeCashier, addExpense } = useApp();
@@ -20,6 +21,7 @@ export const Cashier: React.FC = () => {
   const [expenseDesc, setExpenseDesc] = useState('');
   const [expenseVal, setExpenseVal] = useState('');
   const [tipsTotal, setTipsTotal] = useState('');
+  const { log } = useAudit();
 
   const closedOrders = orders.filter(order => order.status === 'closed');
   const activeOrdersCount = orders.filter(order => order.status === 'open').length;
@@ -50,11 +52,17 @@ export const Cashier: React.FC = () => {
     setExpenseVal('');
   };
 
+  const handleOpenCashier = () => {
+    openCashier();
+    log('cashier_open', 'Caixa foi aberto pelo usuário.');
+  };
+
   const handleCloseCashier = () => {
     if (!canCloseCashier) return;
     const tips = parseFloat(tipsTotal.replace(',', '.')) || 0;
     closeCashier(tips);
     setTipsTotal('');
+    log('cashier_close', 'Caixa foi fechado pelo usuário.', { tips });
   };
 
   if (!cashierSession) {
@@ -68,7 +76,7 @@ export const Cashier: React.FC = () => {
             <h2 className="text-xl font-semibold">Caixa Encerrado</h2>
             <p className="text-sm text-muted">Aguardando abertura do próximo turno.</p>
           </div>
-          <button onClick={openCashier} className="flex items-center gap-2 px-5 h-11 bg-accent text-white rounded-control font-medium text-sm hover:bg-accent-hover active:scale-95 transition-all">
+          <button onClick={handleOpenCashier} className="flex items-center gap-2 px-5 h-11 bg-accent text-white rounded-control font-medium text-sm hover:bg-accent-hover active:scale-95 transition-all">
             <Unlock className="w-4 h-4" /> Abrir novo turno
           </button>
         </section>

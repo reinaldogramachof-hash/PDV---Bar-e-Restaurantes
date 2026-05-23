@@ -2,11 +2,13 @@ import React, { lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './store/AppContext';
 import { Layout } from './components/Layout';
 import { useNavigation } from './hooks/useNavigation';
+import { PlanGuard } from './components/PlanGuard';
 import { Dashboard } from './components/Dashboard';
 import { MasterDashboard } from './components/MasterDashboard';
 import { LicenseLock } from './components/LicenseLock';
 import { LICENSE_STATUS_URL } from './domain/saas';
 import { checkLicense, LicenseCheckResult } from './services/licenseService';
+import { purgeOldLogs } from './services/auditService';
 
 // Lazy loading das views para otimização de performance (bundle principal < 150KB)
 const PDV = lazy(() => import('./components/PDV').then(module => ({ default: module.PDV })));
@@ -39,7 +41,7 @@ const RedirectToDashboard = ({ setCurrentView }: { setCurrentView: (view: any) =
 
 const AppContent = () => {
   const { currentView, setCurrentView } = useNavigation();
-  const { theme, currentUser } = useApp();
+  const { theme, currentUser, currentEmpresa } = useApp();
   const [license, setLicense] = React.useState<LicenseCheckResult | null>(null);
 
   React.useEffect(() => {
@@ -52,6 +54,8 @@ const AppContent = () => {
 
   React.useEffect(() => {
     let mounted = true;
+
+    purgeOldLogs(currentEmpresa.id);
 
     checkLicense(LICENSE_STATUS_URL).then(result => {
       if (mounted) setLicense(result);
@@ -80,21 +84,21 @@ const AppContent = () => {
         return currentUser.role === 'master'
           ? <MasterDashboard />
           : <RedirectToDashboard setCurrentView={setCurrentView} />;
-      case 'dashboard': return <Dashboard />;
-      case 'pdv': return <PDV />;
-      case 'mesas': return <Tables />;
-      case 'cozinha': return <Kitchen />;
-      case 'estoque': return <Stock />;
-      case 'caixa': return <Cashier />;
-      case 'relatorios': return <Reports />;
+      case 'dashboard': return <PlanGuard moduleId="dashboard"><Dashboard /></PlanGuard>;
+      case 'pdv': return <PlanGuard moduleId="pdv"><PDV /></PlanGuard>;
+      case 'mesas': return <PlanGuard moduleId="mesas"><Tables /></PlanGuard>;
+      case 'cozinha': return <PlanGuard moduleId="cozinha"><Kitchen /></PlanGuard>;
+      case 'estoque': return <PlanGuard moduleId="estoque"><Stock /></PlanGuard>;
+      case 'caixa': return <PlanGuard moduleId="caixa"><Cashier /></PlanGuard>;
+      case 'relatorios': return <PlanGuard moduleId="relatorios"><Reports /></PlanGuard>;
       case 'manual': return <UserManual />;
-      case 'clientes': return <Customers />;
-      case 'colaboradores': return <Collaborators />;
-      case 'fornecedores': return <Suppliers />;
-      case 'produtos': return <Products />;
+      case 'clientes': return <PlanGuard moduleId="clientes"><Customers /></PlanGuard>;
+      case 'colaboradores': return <PlanGuard moduleId="colaboradores"><Collaborators /></PlanGuard>;
+      case 'fornecedores': return <PlanGuard moduleId="fornecedores"><Suppliers /></PlanGuard>;
+      case 'produtos': return <PlanGuard moduleId="produtos"><Products /></PlanGuard>;
       case 'suporte': return <Support />;
       case 'configuracoes': return <Settings />;
-      case 'seguranca': return <Security />;
+      case 'seguranca': return <PlanGuard moduleId="seguranca"><Security /></PlanGuard>;
       default: return (
         <div className="h-full flex flex-col items-center justify-center gap-4 opacity-50">
           <p className="text-xl font-semibold">Em construcao</p>
