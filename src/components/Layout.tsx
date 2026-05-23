@@ -5,6 +5,7 @@ import {
   BookOpen,
   ChefHat,
   ChevronLeft,
+  Crown,
   LifeBuoy,
   LineChart,
   LayoutDashboard,
@@ -25,10 +26,13 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { APP_NAME } from '../domain/saas';
+import { LicenseCheckResult } from '../services/licenseService';
+import { LicenseBanner } from './LicenseBanner';
 
 interface LayoutProps {
   currentView: View;
   setCurrentView: (v: View) => void;
+  license?: LicenseCheckResult;
   children: React.ReactNode;
 }
 
@@ -52,6 +56,12 @@ const DateTimeDisplay = () => {
 };
 
 const navGroups = [
+  {
+    title: 'Plena',
+    items: [
+      { id: 'master', icon: Crown, label: 'Painel Master' },
+    ],
+  },
   {
     title: 'Operacional',
     items: [
@@ -85,6 +95,7 @@ const navGroups = [
 ] as const;
 
 const viewLabels: Record<View, string> = {
+  master: 'Painel Master',
   dashboard: 'Dashboard',
   pdv: 'PDV Balcão',
   mesas: 'Mesas',
@@ -102,8 +113,8 @@ const viewLabels: Record<View, string> = {
   suporte: 'Suporte',
 };
 
-export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, children }) => {
-  const { theme, setTheme, cashierSession } = useApp();
+export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, license, children }) => {
+  const { theme, setTheme, cashierSession, currentUser } = useApp();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
@@ -176,7 +187,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
           </div>
 
           <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 scrollbar-none">
-            {navGroups.map((group) => (
+            {navGroups
+              .filter((group) => group.title !== 'Plena' || currentUser.role === 'master')
+              .map((group) => (
               <div key={group.title} className="space-y-1">
                 {!isCollapsed && <h3 className="px-3 text-xs font-medium text-muted">{group.title}</h3>}
                 <div className="space-y-1">
@@ -233,6 +246,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
         </aside>
 
         <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+          {license && <LicenseBanner license={license} />}
           <header className={`h-16 flex items-center justify-between px-6 shrink-0 ${isDark ? 'bg-app-base border-border' : 'bg-surface-light border-border-light'} border-b sticky top-0 z-10`}>
             <div className="flex items-center gap-4 min-w-0">
               {isCollapsed && (
