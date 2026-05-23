@@ -1,6 +1,6 @@
 import { Expense, Permission, Plano, UserRole } from '../types';
 
-const viteEnv = (import.meta as ImportMeta & { env?: Record<string, string> }).env || {};
+const viteEnv = (import.meta as unknown as { env?: Record<string, string> }).env || {};
 
 export const APP_NAME = viteEnv.VITE_APP_NAME || 'Gestão Gastro';
 export const DEFAULT_EMPRESA_ID = viteEnv.VITE_DEFAULT_EMPRESA_ID || 'demo-empresa';

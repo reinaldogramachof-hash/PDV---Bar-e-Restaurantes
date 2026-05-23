@@ -42,7 +42,7 @@ interface AppContextType extends AppState {
   addExpense: (expense: Expense) => void;
   updateExpense: (expense: Expense) => void;
   deleteExpense: (id: string) => void;
-  openCashier: () => void;
+  openCashier: (initialBalance?: number) => void;
   closeCashier: (tipsTotal: number) => void;
   transferTable: (from: number, to: number) => void;
   mergeTables: (source: number, target: number) => void;
@@ -368,12 +368,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setExpenses(prev => prev.filter(e => e.id !== id));
   };
 
-  const openCashier = () => {
+  const openCashier = (initialBalance = 0) => {
     const newSession: CashierSession = {
       id: Date.now().toString(),
       empresaId: currentEmpresa.id,
       openedAt: new Date().toISOString(),
-      initialBalance: 0,
+      initialBalance,
       salesTotal: 0,
       serviceTaxTotal: 0,
       expensesTotal: 0,
@@ -395,7 +395,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const serviceTaxTotal = closedOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
     const sessionExpenses = getSessionScopedExpenses(expenses, cashierSession.openedAt, currentEmpresa.id);
     const expensesTotal = sessionExpenses.reduce((acc, e) => acc + e.amount, 0);
-    const finalBalance = salesTotal + serviceTaxTotal - expensesTotal + tipsTotal;
+    const finalBalance = cashierSession.initialBalance + salesTotal + serviceTaxTotal - expensesTotal + tipsTotal;
     const closedSession: CashierSession = {
       ...cashierSession,
       status: 'closed',

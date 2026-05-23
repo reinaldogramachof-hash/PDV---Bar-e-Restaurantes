@@ -5,22 +5,32 @@ import {
   Banknote,
   Calendar,
   CreditCard,
+  Edit3,
   History,
   Lock,
+  MessageSquare,
   Receipt,
+  Save,
   TrendingDown,
   TrendingUp,
+  Trash2,
   Unlock,
   Wallet,
+  X,
 } from 'lucide-react';
 import { useAudit } from '../hooks/useAudit';
+import { Expense } from '../types';
 
 export const Cashier: React.FC = () => {
-  const { currentEmpresa, cashierSession, cashierHistory, expenses, orders, tables, theme, openCashier, closeCashier, addExpense } = useApp();
+  const { currentEmpresa, cashierSession, cashierHistory, expenses, orders, tables, theme, openCashier, closeCashier, addExpense, updateExpense, deleteExpense } = useApp();
   const isDark = theme === 'dark';
   const [expenseDesc, setExpenseDesc] = useState('');
   const [expenseVal, setExpenseVal] = useState('');
   const [tipsTotal, setTipsTotal] = useState('');
+  const [initialBalanceInput, setInitialBalanceInput] = useState('');
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [editExpenseDesc, setEditExpenseDesc] = useState('');
+  const [editExpenseVal, setEditExpenseVal] = useState('');
   const { log } = useAudit();
 
   const closedOrders = orders.filter(order => order.status === 'closed');
@@ -30,7 +40,13 @@ export const Cashier: React.FC = () => {
   const salesToday = closedOrders.reduce((acc, order) => acc + order.subtotal, 0);
   const serviceChargeToday = closedOrders.reduce((acc, order) => acc + order.serviceCharge, 0);
   const expensesToday = expenses.reduce((acc, expense) => acc + expense.amount, 0);
-  const expectedBalance = salesToday + serviceChargeToday - expensesToday;
+  const expectedBalance = (cashierSession?.initialBalance ?? 0) + salesToday + serviceChargeToday - expensesToday;
+  const paymentBreakdown = closedOrders.reduce<Record<string, number>>((acc, order) => {
+    order.payments.forEach(payment => {
+      acc[payment.method] = (acc[payment.method] || 0) + payment.amount;
+    });
+    return acc;
+  }, {});
   const canCloseCashier = activeOrdersCount === 0 && occupiedTablesCount === 0;
   const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
   const fieldClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
@@ -53,8 +69,35 @@ export const Cashier: React.FC = () => {
   };
 
   const handleOpenCashier = () => {
-    openCashier();
-    log('cashier_open', 'Caixa foi aberto pelo usuário.');
+    const v = parseFloat(initialBalanceInput.replace(',', '.')) || 0;
+    openCashier(v);
+    setInitialBalanceInput('');
+    log('cashier_open', `Caixa aberto com fundo de R$${v.toFixed(2)}`);
+  };
+
+  const handleEditExpense = (expense: Expense) => {
+    setEditingExpense(expense);
+    setEditExpenseDesc(expense.description);
+    setEditExpenseVal(expense.amount.toString());
+  };
+
+  const handleSaveEditExpense = () => {
+    if (!editingExpense) return;
+    const v = parseFloat(editExpenseVal.replace(',', '.'));
+    if (!editExpenseDesc.trim() || isNaN(v) || v <= 0) return;
+    updateExpense({
+      ...editingExpense,
+      description: editExpenseDesc,
+      amount: v,
+    });
+    log('expense_edit', `Saída editada: ${editExpenseDesc} - R$${v.toFixed(2)}`);
+    setEditingExpense(null);
+  };
+
+  const handleDeleteExpense = (expense: Expense) => {
+    deleteExpense(expense.id);
+    log('expense_delete', `Saída removida: ${expense.description} - R$${expense.amount.toFixed(2)}`);
+    if (editingExpense?.id === expense.id) setEditingExpense(null);
   };
 
   const handleCloseCashier = () => {
@@ -63,6 +106,49 @@ export const Cashier: React.FC = () => {
     closeCashier(tips);
     setTipsTotal('');
     log('cashier_close', 'Caixa foi fechado pelo usuário.', { tips });
+  };
+
+  const money = (value: number) =>
+    value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  const generateWhatsAppReport = () => {
+    if (!cashierSession) return '';
+    const now = new Date();
+    const openedAt = new Date(cashierSession.openedAt);
+    const fmt = (d: Date) => d.toLocaleString('pt-BR', {
+      day: '2-digit', month: '2-digit',
+      hour: '2-digit', minute: '2-digit'
+    });
+
+    const lines = [
+      `*Fechamento de Caixa*`,
+      `Abertura: ${fmt(openedAt)}`,
+      `Fechamento: ${fmt(now)}`,
+      ``,
+      `*Resumo Financeiro*`,
+      `Fundo inicial: ${money(cashierSession.initialBalance ?? 0)}`,
+      `Faturamento: ${money(salesToday)}`,
+      `Taxa serviço: ${money(serviceChargeToday)}`,
+      `Saídas: ${money(expensesToday)}`,
+      ``,
+      `*Saldo Final: ${money(expectedBalance)}*`,
+    ];
+
+    const methods = Object.entries(paymentBreakdown);
+    if (methods.length > 0) {
+      lines.push('', '*Por forma de pagamento*');
+      methods.forEach(([method, value]) => {
+        lines.push(`${method}: ${money(Number(value))}`);
+      });
+    }
+
+    return lines.join('\n');
+  };
+
+  const handleWhatsAppReport = () => {
+    const report = generateWhatsAppReport();
+    const encoded = encodeURIComponent(report);
+    window.open(`https://wa.me/?text=${encoded}`, '_blank');
   };
 
   if (!cashierSession) {
@@ -75,6 +161,16 @@ export const Cashier: React.FC = () => {
           <div className="text-center space-y-2 mb-6">
             <h2 className="text-xl font-semibold">Caixa Encerrado</h2>
             <p className="text-sm text-muted">Aguardando abertura do próximo turno.</p>
+          </div>
+          <div className="w-full max-w-xs mb-5">
+            <Field
+              label="Fundo de troco"
+              value={initialBalanceInput}
+              onChange={setInitialBalanceInput}
+              placeholder="Fundo de troco (opcional)"
+              className={fieldClass}
+              prefix="R$"
+            />
           </div>
           <button onClick={handleOpenCashier} className="flex items-center gap-2 px-5 h-11 bg-accent text-white rounded-control font-medium text-sm hover:bg-accent-hover active:scale-95 transition-all">
             <Unlock className="w-4 h-4" /> Abrir novo turno
@@ -133,7 +229,23 @@ export const Cashier: React.FC = () => {
                         <p className="text-xs text-muted">{new Date(expense.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                       </div>
                     </div>
-                    <span className="font-semibold text-danger">- R$ {expense.amount.toFixed(2)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-danger">- R$ {expense.amount.toFixed(2)}</span>
+                      <button
+                        onClick={() => handleEditExpense(expense)}
+                        className={`w-8 h-8 rounded-control flex items-center justify-center border transition-all ${isDark ? 'border-border hover:bg-surface' : 'border-border-light hover:bg-surface-light'}`}
+                        aria-label="Editar saída"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteExpense(expense)}
+                        className="w-8 h-8 rounded-control flex items-center justify-center border border-danger/20 text-danger transition-all hover:bg-danger/10"
+                        aria-label="Remover saída"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -168,6 +280,10 @@ export const Cashier: React.FC = () => {
             ) : (
               <div className="space-y-4">
                 <Field label="Gorjetas em espécie" value={tipsTotal} onChange={setTipsTotal} placeholder="0,00" className={fieldClass} prefix="R$" />
+                <button onClick={handleWhatsAppReport} className={`w-full h-10 rounded-control border font-medium text-sm transition-all flex items-center justify-center gap-2 ${fieldClass}`}>
+                  <MessageSquare className="w-4 h-4" />
+                  Relatório WhatsApp
+                </button>
                 <button onClick={handleCloseCashier} className="w-full h-11 bg-danger text-white rounded-control font-medium text-sm hover:brightness-110 active:scale-95 transition-all">
                   Fechar caixa agora
                 </button>
@@ -176,6 +292,46 @@ export const Cashier: React.FC = () => {
           </section>
         </aside>
       </div>
+
+      {editingExpense && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className={`w-full max-w-md rounded-panel border shadow-2xl overflow-hidden ${panelClass}`}>
+            <div className={`px-5 py-4 flex items-center justify-between border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
+              <div>
+                <h3 className="font-semibold text-base">Editar saída</h3>
+                <p className="text-xs text-muted">Ajuste a movimentação registrada</p>
+              </div>
+              <button
+                onClick={() => setEditingExpense(null)}
+                className="p-2 rounded-control transition-all hover:bg-danger/10 hover:text-danger text-muted"
+                aria-label="Fechar edição"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <Field label="Descrição" value={editExpenseDesc} onChange={setEditExpenseDesc} placeholder="Descrição" className={fieldClass} />
+              <Field label="Valor" value={editExpenseVal} onChange={setEditExpenseVal} placeholder="0,00" className={fieldClass} prefix="R$" />
+            </div>
+            <div className={`p-5 border-t grid grid-cols-2 gap-3 ${isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light'}`}>
+              <button
+                onClick={() => handleDeleteExpense(editingExpense)}
+                className="h-10 rounded-control border border-danger/20 text-danger font-medium text-sm transition-all hover:bg-danger/10 flex items-center justify-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Excluir
+              </button>
+              <button
+                onClick={handleSaveEditExpense}
+                className="h-10 rounded-control bg-accent text-white font-medium text-sm hover:bg-accent-hover transition-all flex items-center justify-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Salvar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
