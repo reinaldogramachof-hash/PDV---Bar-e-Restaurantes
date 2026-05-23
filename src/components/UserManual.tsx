@@ -97,19 +97,19 @@ export const UserManual: React.FC = () => {
         <div className="absolute top-0 left-0 w-full h-1 bg-current opacity-5" />
         
         <div className="space-y-4 text-center md:text-left relative z-10 flex-1">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-[10px] font-black uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-[10px] font-medium">
             <Award className="w-4 h-4" /> Academia de Gestão Gastro
           </div>
-          <h1 className="text-5xl font-black tracking-tighter uppercase italic leading-none">Manual de <span className="text-[var(--color-accent)]">Alta Performance</span></h1>
-          <p className="text-sm font-bold opacity-40 uppercase tracking-[0.2em] max-w-lg">
+          <h1 className="text-5xl font-semibold leading-none">Manual de <span className="text-[var(--color-accent)]">Alta Performance</span></h1>
+          <p className="text-sm font-medium opacity-60 max-w-lg">
             Domine as ferramentas do Gestão Gastro e transforme sua gestão.
           </p>
         </div>
 
         <div className="w-full md:w-80 space-y-4 relative z-10">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Seu Progresso no Treinamento</span>
-            <span className="text-xl font-black text-[var(--color-accent)]">{progressPercent}%</span>
+            <span className="text-[10px] font-medium opacity-60">Seu Progresso no Treinamento</span>
+            <span className="text-xl font-semibold text-[var(--color-accent)]">{progressPercent}%</span>
           </div>
           <div className={`h-4 w-full rounded-full overflow-hidden p-1 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
             <motion.div 
@@ -118,7 +118,7 @@ export const UserManual: React.FC = () => {
               className="h-full bg-[var(--color-accent)] rounded-full shadow-lg shadow-[var(--color-accent)]/40"
             />
           </div>
-          <p className="text-[9px] font-bold opacity-30 text-center md:text-right uppercase tracking-widest">
+          <p className="text-[9px] font-medium opacity-50">
             {completedItems} de {totalItems} tópicos concluídos
           </p>
         </div>
@@ -129,7 +129,7 @@ export const UserManual: React.FC = () => {
         <div className={`p-1.5 rounded-2xl flex gap-1 ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
           <button
             onClick={() => setActiveTab('guides')}
-            className={`px-10 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.1em] transition-all
+            className={`px-10 py-3 rounded-xl font-medium text-xs transition-all
               ${activeTab === 'guides' 
                 ? 'bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20' 
                 : 'opacity-40 hover:opacity-100'
@@ -140,7 +140,7 @@ export const UserManual: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('tips')}
-            className={`px-10 py-3 rounded-xl font-black text-[11px] uppercase tracking-[0.1em] transition-all
+            className={`px-10 py-3 rounded-xl font-medium text-xs transition-all
               ${activeTab === 'tips' 
                 ? 'bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20' 
                 : 'opacity-40 hover:opacity-100'
@@ -184,7 +184,7 @@ export const UserManual: React.FC = () => {
                     </div>
                     <button 
                       onClick={() => toggleGuideRead(guide.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-medium transition-all
                         ${isRead 
                           ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
                           : `${isDark ? 'bg-white/5 text-white/40 hover:bg-[var(--color-accent)] hover:text-white' : 'bg-gray-100 text-gray-400 hover:bg-[var(--color-accent)] hover:text-white'}`
@@ -197,19 +197,19 @@ export const UserManual: React.FC = () => {
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-2xl font-black uppercase italic tracking-tighter">{guide.title}</h3>
-                    <p className="text-[12px] font-bold opacity-40 uppercase leading-relaxed tracking-wider mb-8">{guide.description}</p>
+                    <h3 className="text-xl font-semibold">{guide.title}</h3>
+                    <p className="text-xs font-medium opacity-60 leading-relaxed mb-8">{guide.description}</p>
                     
                     <div className="space-y-6 pt-8 border-t border-dashed border-current/10">
                       {guide.steps.map((step, sIdx) => (
                         <div key={sIdx} className="flex gap-5">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0
                             ${isRead ? 'bg-emerald-500/10 text-emerald-500' : 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'}`}>
                             {sIdx + 1}
                           </div>
                           <div className="space-y-1.5">
-                            <h4 className="text-sm font-black uppercase tracking-tight">{step.t}</h4>
-                            <p className="text-[11px] font-bold opacity-50 leading-relaxed uppercase tracking-tighter">{step.d}</p>
+                            <h4 className="text-sm font-semibold">{step.t}</h4>
+                            <p className="text-[11px] font-medium opacity-60 leading-relaxed">{step.d}</p>
                           </div>
                         </div>
                       ))}
@@ -252,14 +252,14 @@ export const UserManual: React.FC = () => {
                       </button>
                     </div>
                     <div className="space-y-4">
-                      <h3 className="text-2xl font-black uppercase italic tracking-tighter">{tip.title}</h3>
-                      <p className="text-sm font-bold opacity-60 leading-relaxed uppercase tracking-tight">
+                      <h3 className="text-xl font-semibold">{tip.title}</h3>
+                      <p className="text-sm font-medium opacity-70 leading-relaxed">
                         "{tip.content}"
                       </p>
                     </div>
                   </div>
                   
-                  <div className="pt-8 mt-8 border-t border-dashed border-current/10 flex items-center gap-3 text-emerald-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                  <div className="pt-8 mt-8 border-t border-dashed border-current/10 flex items-center gap-3 text-emerald-500 text-[10px] font-medium">
                     <ShieldCheck className="w-5 h-5" /> Estratégia Recomendada
                   </div>
                 </div>
@@ -274,8 +274,8 @@ export const UserManual: React.FC = () => {
         <div className="w-20 h-20 bg-[var(--color-accent)] rounded-full mx-auto flex items-center justify-center text-white shadow-2xl shadow-[var(--color-accent)]/40 mb-4">
           <Lightbulb className="w-10 h-10" />
         </div>
-        <h3 className="text-2xl font-black uppercase italic tracking-tighter">Pronto para o Próximo Nível?</h3>
-        <p className="text-[11px] font-bold opacity-40 uppercase tracking-[0.3em] max-w-xl mx-auto">
+        <h3 className="text-xl font-semibold">Pronto para o Próximo Nível?</h3>
+        <p className="text-[11px] font-medium opacity-60 max-w-xl mx-auto">
           O domínio operacional é o primeiro passo para a expansão. Use o suporte da Plena Informática para qualquer dúvida técnica.
         </p>
       </div>

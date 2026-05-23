@@ -73,7 +73,7 @@ export const Tables: React.FC = () => {
       <div className="space-y-5">
         <div className="flex flex-col md:flex-row justify-between md:items-end gap-5">
           <div className="space-y-1">
-            <h2 className="text-2xl font-semibold leading-none">Mapa de mesas</h2>
+            <h2 className="text-xl font-semibold leading-none">Mapa de Mesas</h2>
             <p className="text-sm text-muted">Gestão do salão em tempo real</p>
           </div>
 
@@ -135,7 +135,7 @@ export const Tables: React.FC = () => {
               : isAguardando
                 ? 'border-warning text-warning'
                 : isReservada
-                  ? 'border-purple-500 text-purple-500'
+                  ? 'border-purple-500 text-accent'
                   : isDark ? 'border-border text-muted' : 'border-border-light text-muted-light';
 
             return (
@@ -156,7 +156,7 @@ export const Tables: React.FC = () => {
                   <span className="text-4xl font-semibold tracking-tight">{table.number.toString().padStart(2, '0')}</span>
                   {order && (isOcupada || isAguardando) && <TableTimer timestamp={order.timestamp} status={table.status} />}
                   {isReservada && (
-                    <div className="flex flex-col items-center text-purple-500 max-w-[80%] text-center mt-1">
+                    <div className="flex flex-col items-center text-accent max-w-[80%] text-center mt-1">
                       <CalendarCheck className="w-4 h-4 mb-1" />
                       <span className="text-xs font-medium truncate w-full">{table.reservationReason}</span>
                     </div>
@@ -207,7 +207,7 @@ const StatCard = ({ label, value, subValue, icon: Icon, tone, panelClass }: any)
     success: 'text-success bg-success/10 border-success/20',
     warning: 'text-warning bg-warning/10 border-warning/20',
     accent: 'text-accent bg-accent/10 border-accent/20',
-    purple: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+    purple: 'text-accent bg-accent/10 border-purple-500/20',
   }[tone as 'success' | 'warning' | 'accent' | 'purple'];
 
   return (

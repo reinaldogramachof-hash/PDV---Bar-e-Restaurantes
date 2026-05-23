@@ -65,7 +65,7 @@ export const Cashier: React.FC = () => {
             <Lock className="w-7 h-7" />
           </div>
           <div className="text-center space-y-2 mb-6">
-            <h2 className="text-2xl font-semibold">Caixa encerrado</h2>
+            <h2 className="text-xl font-semibold">Caixa Encerrado</h2>
             <p className="text-sm text-muted">Aguardando abertura do próximo turno.</p>
           </div>
           <button onClick={openCashier} className="flex items-center gap-2 px-5 h-11 bg-accent text-white rounded-control font-medium text-sm hover:bg-accent-hover active:scale-95 transition-all">
@@ -97,7 +97,7 @@ export const Cashier: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <section className={`lg:col-span-8 p-5 rounded-panel border ${panelClass}`}>
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-semibold">Movimentação detalhada</h2>
+            <h2 className="text-xl font-semibold">Movimentação Detalhada</h2>
             <div className="flex items-center gap-2 px-3 py-1.5 bg-success/10 text-success rounded-full text-xs font-medium">
               <span className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" /> Ao vivo
             </div>
@@ -185,7 +185,7 @@ const CashierStatCard = ({ label, value, icon: Icon, tone, panelClass }: any) =>
         <div className={`p-2 rounded-panel border ${tones}`}><Icon className="w-5 h-5" /></div>
         <div className="text-right">
           <p className="text-xs text-muted mb-1">{label}</p>
-          <p className="text-2xl font-semibold">R$ {value.toFixed(2)}</p>
+          <p className="text-xl font-semibold">R$ {value.toFixed(2)}</p>
         </div>
       </div>
     </div>

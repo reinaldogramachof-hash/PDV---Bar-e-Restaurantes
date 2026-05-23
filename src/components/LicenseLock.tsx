@@ -14,13 +14,13 @@ export const LicenseLock: React.FC<LicenseLockProps> = ({ license }) => (
   <div className="fixed inset-0 z-[9999] bg-[#0A0A0B] flex items-center justify-center p-6 overflow-hidden font-sans">
     <div className="absolute inset-0">
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[var(--color-accent)]/10 blur-[120px] rounded-full" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[120px] rounded-full" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent/10 blur-[120px] rounded-full" />
     </div>
 
     <motion.div
       initial={{ opacity: 0, scale: 0.96, y: 16 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      className="max-w-md w-full bg-[var(--color-surface)] border border-white/10 rounded-section p-8 relative z-10 shadow-2xl shadow-black/50 text-center space-y-7"
+      className="max-w-md w-full bg-[var(--color-surface)] border border-border rounded-section p-8 relative z-10 shadow-2xl shadow-black/50 text-center space-y-7"
     >
       <div className="relative inline-block">
         <div className="w-20 h-20 rounded-section bg-[var(--color-accent)]/10 flex items-center justify-center text-[var(--color-accent)]">
@@ -45,27 +45,27 @@ export const LicenseLock: React.FC<LicenseLockProps> = ({ license }) => (
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-left">
-        <div className="rounded-panel border border-white/5 bg-white/5 p-4">
-          <p className="text-xs text-white/40">Plano</p>
+        <div className="rounded-panel border border-border bg-surface-light/5 p-4">
+          <p className="text-xs text-muted">Plano</p>
           <p className="mt-1 text-sm font-semibold capitalize text-white">{license?.plan || 'gestao'}</p>
         </div>
-        <div className="rounded-panel border border-white/5 bg-white/5 p-4">
-          <p className="text-xs text-white/40">Expiracao</p>
+        <div className="rounded-panel border border-border bg-surface-light/5 p-4">
+          <p className="text-xs text-muted">Expiracao</p>
           <p className="mt-1 text-sm font-semibold text-white">{formatDate(license?.expiresAt)}</p>
         </div>
       </div>
 
-      <div className="p-5 rounded-section bg-white/5 border border-white/5 space-y-4 text-left">
+      <div className="p-5 rounded-section bg-surface-light/5 border border-border space-y-4 text-left">
         <p className="text-xs font-medium text-white/60">Entre em contato para liberar:</p>
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-white/80">
-            <div className="w-8 h-8 rounded-control bg-white/5 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-control bg-surface-light/5 flex items-center justify-center">
               <Phone className="w-4 h-4 text-[var(--color-accent)]" />
             </div>
             <span className="text-xs font-medium">(12) 99219-1018</span>
           </div>
           <div className="flex items-center gap-3 text-white/80">
-            <div className="w-8 h-8 rounded-control bg-white/5 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-control bg-surface-light/5 flex items-center justify-center">
               <Mail className="w-4 h-4 text-[var(--color-accent)]" />
             </div>
             <span className="text-xs font-medium break-all">tecnologia@plenainformatica.com.br</span>
@@ -81,8 +81,8 @@ export const LicenseLock: React.FC<LicenseLockProps> = ({ license }) => (
         </a>
       </div>
 
-      <div className="pt-2 border-t border-white/5 space-y-3">
-        <p className="text-xs font-medium text-white/40">Plena Informatica</p>
+      <div className="pt-2 border-t border-border space-y-3">
+        <p className="text-xs font-medium text-muted">Plena Informatica</p>
         <a
           href="https://www.plenainformatica.com.br"
           target="_blank"

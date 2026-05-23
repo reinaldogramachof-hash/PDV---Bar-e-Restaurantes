@@ -32,11 +32,11 @@ export const MenuList: React.FC<MenuListProps> = ({ category, searchTerm, onSele
             whileTap={{ scale: 0.98 }}
             key={product.id}
             onClick={() => onSelect(product)}
-            className={`group relative flex flex-col items-start p-5 rounded-panel border text-left transition-colors
+            className={`group relative flex min-h-52 flex-col items-start p-5 rounded-panel border text-left transition-colors
               ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-accent)]/40' : 'bg-white border-gray-200 hover:border-[var(--color-accent)]/40'}
             `}
           >
-            <div className={`absolute top-4 right-4 px-2.5 py-1 rounded-control text-xs font-semibold ${isDark ? 'bg-white/5 text-white' : 'bg-[var(--color-accent)] text-white'}`}>
+            <div className={`absolute top-4 right-4 h-7 px-3 rounded-control text-xs font-medium flex items-center ${isDark ? 'bg-white/5 text-white' : 'bg-[var(--color-accent)] text-white'}`}>
               R$ {product.price.toFixed(2)}
             </div>
 
@@ -58,7 +58,7 @@ export const MenuList: React.FC<MenuListProps> = ({ category, searchTerm, onSele
                 <div className={`w-1.5 h-1.5 rounded-full ${product.stock > 10 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                 <span className="text-xs text-[var(--color-muted)]">{product.stock} em estoque</span>
               </div>
-              <div className={`p-2 rounded-control transition-colors ${isDark ? 'bg-white/10 text-white' : 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'}`}>
+              <div className={`h-10 w-10 rounded-control transition-colors flex items-center justify-center ${isDark ? 'bg-white/10 text-white' : 'bg-[var(--color-accent)]/10 text-[var(--color-accent)]'}`}>
                 <ShoppingCart className="w-3.5 h-3.5" />
               </div>
             </div>

@@ -171,12 +171,12 @@ export const Reports: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <div className="flex p-1 gap-1 rounded-panel bg-black/5 dark:bg-white/5 border border-white/10">
+          <div className="flex p-1 gap-1 rounded-panel bg-black/5 bg-surface-light/5 border border-border">
             {(['hoje', 'semana', 'mes', 'total'] as Period[]).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-3 py-1.5 rounded-control text-xs font-medium transition-all ${period === p ? 'bg-white dark:bg-[var(--color-border)] shadow text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}
+                className={`px-3 py-1.5 rounded-control text-xs font-medium transition-all ${period === p ? 'bg-surface-light bg-elevated shadow text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}
               >
                 {p}
               </button>
@@ -190,12 +190,12 @@ export const Reports: React.FC = () => {
       </div>
 
       {/* Tabs Selector */}
-      <div className="flex-shrink-0 flex p-1 gap-1 rounded-panel bg-black/5 dark:bg-white/5 border border-white/10 w-fit">
+      <div className="flex-shrink-0 flex p-1 gap-1 rounded-panel bg-black/5 bg-surface-light/5 border border-border w-fit">
         {(['dashboard', 'fluxo', 'vendas', 'produtos', 'atendentes'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setActiveTab(t)}
-            className={`px-4 py-1.5 rounded-control text-xs font-medium transition-all duration-200 relative ${activeTab === t ? 'bg-white dark:bg-[var(--color-border)] shadow text-[var(--color-accent)]' : 'opacity-40 hover:opacity-80'}`}
+            className={`px-4 py-1.5 rounded-control text-xs font-medium transition-all duration-200 relative ${activeTab === t ? 'bg-surface-light bg-elevated shadow text-[var(--color-accent)]' : 'opacity-40 hover:opacity-80'}`}
           >
             {t === 'fluxo' ? 'Gestão de Caixa' : t}
           </button>
@@ -209,12 +209,12 @@ export const Reports: React.FC = () => {
               {/* Main KPIs */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Entradas (Vendas)', value: `R$ ${totalSalesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: DollarSign, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-                  { label: 'Saídas (Despesas)', value: `R$ ${totalExpensesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: 'text-red-500', bg: 'bg-red-500/10' },
-                  { label: 'Lucro Líquido Real', value: `R$ ${netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: netProfit >= 0 ? 'text-blue-500' : 'text-[var(--color-accent)]', bg: netProfit >= 0 ? 'bg-blue-500/10' : 'bg-[var(--color-accent)]/10' },
-                  { label: 'Margem Líquida', value: `${totalSalesAmount ? ((netProfit / totalSalesAmount) * 100).toFixed(1) : 0}%`, icon: Target, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                  { label: 'Entradas (Vendas)', value: `R$ ${totalSalesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: DollarSign, color: 'text-success', bg: 'bg-success/10' },
+                  { label: 'Saídas (Despesas)', value: `R$ ${totalExpensesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: 'text-danger', bg: 'bg-danger/10' },
+                  { label: 'Lucro Líquido Real', value: `R$ ${netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: netProfit >= 0 ? 'text-accent' : 'text-[var(--color-accent)]', bg: netProfit >= 0 ? 'bg-accent/10' : 'bg-[var(--color-accent)]/10' },
+                  { label: 'Margem Líquida', value: `${totalSalesAmount ? ((netProfit / totalSalesAmount) * 100).toFixed(1) : 0}%`, icon: Target, color: 'text-accent', bg: 'bg-accent/10' },
                 ].map((kpi, i) => (
-                  <div key={i} className={`p-5 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20'}`}>
+                  <div key={i} className={`p-5 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-xl shadow-gray-200/20'}`}>
                     <div className={`w-9 h-9 rounded-control ${kpi.bg} ${kpi.color} flex items-center justify-center mb-3`}>
                       <kpi.icon className="w-4 h-4" />
                     </div>
@@ -226,7 +226,7 @@ export const Reports: React.FC = () => {
 
               {/* Advanced Views */}
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-                <div className={`lg:col-span-2 p-5 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl'}`}>
+                <div className={`lg:col-span-2 p-5 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-xl'}`}>
                   <div className="flex justify-between items-center mb-5">
                     <h3 className="text-sm font-semibold">Estrutura de Gastos</h3>
                     <PieChart className="w-4 h-4 opacity-20" />
@@ -241,8 +241,8 @@ export const Reports: React.FC = () => {
                             <span>{cat}</span>
                             <span className="text-muted">R$ {Number(rev).toLocaleString('pt-BR')}</span>
                           </div>
-                          <div className="h-2 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden">
-                            <motion.div initial={{ width: 0 }} animate={{ width: `${(Number(rev) / totalExpensesAmount) * 100}%` }} className="h-full bg-red-500/50 rounded-full" />
+                          <div className="h-2 bg-black/5 bg-surface-light/5 rounded-full overflow-hidden">
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${(Number(rev) / totalExpensesAmount) * 100}%` }} className="h-full bg-danger/50 rounded-full" />
                           </div>
                         </div>
                       ))
@@ -268,7 +268,7 @@ export const Reports: React.FC = () => {
                          <span className="text-xs text-muted">Despesas (Insumos/Gerais)</span>
                          <span className="text-sm font-medium text-red-400">-(R$ {totalExpensesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>
                       </div>
-                      <div className={`flex justify-between items-center px-3 py-2.5 rounded-control mt-2 ${netProfit >= 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+                      <div className={`flex justify-between items-center px-3 py-2.5 rounded-control mt-2 ${netProfit >= 0 ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
                          <span className="text-xs font-medium">Resultado Final</span>
                          <span className="text-base font-semibold">R$ {netProfit.toLocaleString('pt-BR')}</span>
                       </div>
@@ -280,11 +280,11 @@ export const Reports: React.FC = () => {
 
           {activeTab === 'fluxo' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl'}`}>
+              <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-2xl'}`}>
                 <div className="overflow-x-auto">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className={`text-xs font-semibold  border-b ${isDark ? 'bg-white/5 border-white/5 text-white/30' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+                      <tr className={`text-xs font-semibold  border-b ${isDark ? 'bg-surface-light/5 border-border text-muted' : 'bg-elevated-light border-border-light text-muted-light'}`}>
                         <th className="px-4 py-3">Data</th>
                         <th className="px-4 py-3">Categoria</th>
                         <th className="px-4 py-3">Descrição</th>
@@ -325,11 +325,11 @@ export const Reports: React.FC = () => {
           )}
 
           {activeTab === 'vendas' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl'}`}>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-2xl'}`}>
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
-                    <tr className={`text-xs font-semibold  border-b ${isDark ? 'bg-white/5 border-white/5 text-white/30' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
+                    <tr className={`text-xs font-semibold  border-b ${isDark ? 'bg-surface-light/5 border-border text-muted' : 'bg-elevated-light border-border-light text-muted-light'}`}>
                       <th className="px-4 py-3 font-medium">Data & Hora</th>
                       <th className="px-4 py-3 font-medium">Ticket</th>
                       <th className="px-4 py-3 font-medium">Operação</th>
@@ -339,11 +339,11 @@ export const Reports: React.FC = () => {
                   </thead>
                   <tbody className={`divide-y ${isDark ? 'divide-border' : 'divide-gray-100'}`}>
                     {salesData.map(o => (
-                      <tr key={o.id} className={`group transition-colors ${isDark ? 'hover:bg-elevated' : 'hover:bg-gray-50'}`}>
+                      <tr key={o.id} className={`group transition-colors ${isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}`}>
                         <td className="px-4 py-3 text-xs text-muted">{new Date(o.timestamp).toLocaleString('pt-BR')}</td>
                         <td className="px-4 py-3 text-xs font-medium">#{o.id.slice(-6)}</td>
                         <td className="px-4 py-3">
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${isDark ? 'bg-surface-light/5' : 'bg-elevated-light'}`}>
                             {o.mode === 'mesa' ? `Mesa ${o.tableNumber}` : 'Balcão'}
                           </span>
                         </td>
@@ -360,7 +360,7 @@ export const Reports: React.FC = () => {
           {activeTab === 'produtos' && (
              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {productRanking.map((p, i) => (
-                  <div key={p.name} className={`p-5 rounded-panel border relative overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl'}`}>
+                  <div key={p.name} className={`p-5 rounded-panel border relative overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-xl'}`}>
                     <div className="absolute top-0 right-0 p-3">
                        <span className={`text-3xl font-semibold opacity-5 ${i < 3 ? 'text-[var(--color-accent)]' : ''}`}>{i + 1}º</span>
                     </div>
@@ -369,7 +369,7 @@ export const Reports: React.FC = () => {
                        <h4 className="text-sm font-semibold truncate pr-8">{p.name}</h4>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                       <div className="p-3 rounded-control bg-black/5 dark:bg-white/5 border border-current/5">
+                       <div className="p-3 rounded-control bg-black/5 bg-surface-light/5 border border-current/5">
                           <p className="text-xs text-muted mb-1">Volume</p>
                           <p className="text-lg font-semibold">{p.qty}</p>
                        </div>
@@ -386,7 +386,7 @@ export const Reports: React.FC = () => {
           {activeTab === 'atendentes' && (
              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
                 {waiterStats.map((w) => (
-                  <div key={w.id} className={`p-5 rounded-panel border flex flex-col md:flex-row justify-between items-center gap-5 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl'}`}>
+                  <div key={w.id} className={`p-5 rounded-panel border flex flex-col md:flex-row justify-between items-center gap-5 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-xl'}`}>
                      <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-panel bg-gradient-to-br from-[var(--color-accent)] to-orange-400 flex items-center justify-center text-white text-base font-semibold">
                            {w.name[0]}
@@ -404,8 +404,8 @@ export const Reports: React.FC = () => {
                         </div>
                         <div className="h-8 w-px bg-current/10" />
                         <div className="text-center">
-                           <p className="text-xs text-emerald-500 mb-0.5">Comissão Acumulada</p>
-                           <p className="text-base font-semibold text-emerald-500">R$ {w.commission.toFixed(2)}</p>
+                           <p className="text-xs text-success mb-0.5">Comissão Acumulada</p>
+                           <p className="text-base font-semibold text-success">R$ {w.commission.toFixed(2)}</p>
                         </div>
                         <button className="w-8 h-8 rounded-control bg-[var(--color-accent)]/10 text-[var(--color-accent)] flex items-center justify-center hover:bg-[var(--color-accent)] hover:text-white transition-all">
                           <ChevronRight className="w-4 h-4" />
@@ -423,17 +423,17 @@ export const Reports: React.FC = () => {
         {isExpenseModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsExpenseModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className={`relative w-full max-w-lg rounded-panel border shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
-               <div className={`flex items-center gap-3 px-5 py-4 border-b ${isDark ? 'border-[var(--color-border)]' : 'border-gray-100'}`}>
+            <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className={`relative w-full max-w-lg rounded-panel border shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light'}`}>
+               <div className={`flex items-center gap-3 px-5 py-4 border-b ${isDark ? 'border-[var(--color-border)]' : 'border-border-light'}`}>
                   <motion.div
                     layout
                     className={`w-8 h-8 rounded-control flex items-center justify-center transition-colors duration-500
-                      ${newExpense.category === 'Aluguel' ? 'bg-blue-500/20 text-blue-500' :
+                      ${newExpense.category === 'Aluguel' ? 'bg-blue-500/20 text-accent' :
                         newExpense.category === 'Insumos' ? 'bg-orange-500/20 text-orange-500' :
-                        newExpense.category === 'Pessoal' ? 'bg-purple-500/20 text-purple-500' :
+                        newExpense.category === 'Pessoal' ? 'bg-purple-500/20 text-accent' :
                         newExpense.category === 'Utilidades' ? 'bg-cyan-500/20 text-cyan-500' :
                         newExpense.category === 'Marketing' ? 'bg-pink-500/20 text-pink-500' :
-                        newExpense.category === 'Impostos' ? 'bg-amber-500/20 text-amber-500' :
+                        newExpense.category === 'Impostos' ? 'bg-warning/20 text-warning' :
                         'bg-[var(--color-accent)]/20 text-[var(--color-accent)]'}`}
                   >
                      <Receipt className="w-4 h-4" />
@@ -460,9 +460,9 @@ export const Reports: React.FC = () => {
                                       cat === 'Pessoal' ? 'bg-purple-500 border-purple-500 text-white' :
                                       cat === 'Utilidades' ? 'bg-cyan-500 border-cyan-500 text-white' :
                                       cat === 'Marketing' ? 'bg-pink-500 border-pink-500 text-white' :
-                                      cat === 'Impostos' ? 'bg-amber-500 border-amber-500 text-white' :
+                                      cat === 'Impostos' ? 'bg-warning border-amber-500 text-white' :
                                       'bg-[var(--color-accent)] border-[var(--color-accent)] text-white'
-                                    : isDark ? 'bg-white/5 border-white/5 opacity-40 hover:opacity-100' : 'bg-gray-50 border-gray-100 opacity-60 hover:opacity-100'}`}
+                                    : isDark ? 'bg-surface-light/5 border-border opacity-40 hover:opacity-100' : 'bg-elevated-light border-border-light opacity-60 hover:opacity-100'}`}
                            >
                               {cat === 'Insumos' && <ShoppingBag className="w-3.5 h-3.5" />}
                               {cat === 'Pessoal' && <Users className="w-3.5 h-3.5" />}
@@ -487,8 +487,8 @@ export const Reports: React.FC = () => {
                               onClick={() => setNewExpense(prev => ({ ...prev, status: status as any }))}
                               className={`flex-1 h-9 rounded-control text-xs font-medium border transition-all
                                  ${newExpense.status === status
-                                    ? status === 'pago' ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-amber-500 border-amber-500 text-white'
-                                    : isDark ? 'bg-white/5 border-white/5 opacity-30' : 'bg-gray-50 border-gray-100 opacity-60'}`}
+                                    ? status === 'pago' ? 'bg-success border-emerald-500 text-white' : 'bg-warning border-amber-500 text-white'
+                                    : isDark ? 'bg-surface-light/5 border-border opacity-30' : 'bg-elevated-light border-border-light opacity-60'}`}
                            >
                               {status}
                            </button>
@@ -504,7 +504,7 @@ export const Reports: React.FC = () => {
                         value={newExpense.description}
                         onChange={e => setNewExpense(prev => ({ ...prev, description: e.target.value }))}
                         placeholder="Ex: Aluguel Mensal, Pagamento Staff..."
-                        className={`w-full h-10 px-3 rounded-control border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'border-[var(--color-border)]' : 'border-gray-200'}`}
+                        className={`w-full h-10 px-3 rounded-control border bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'border-[var(--color-border)]' : 'border-border-light'}`}
                      />
                   </div>
 
@@ -519,7 +519,7 @@ export const Reports: React.FC = () => {
                            value={newExpense.amount || ''}
                            onChange={e => setNewExpense(prev => ({ ...prev, amount: Number(e.target.value) }))}
                            placeholder="0,00"
-                           className={`w-full h-10 pl-9 pr-3 rounded-control border bg-transparent text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'border-[var(--color-border)]' : 'border-gray-200'}`}
+                           className={`w-full h-10 pl-9 pr-3 rounded-control border bg-transparent text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'border-[var(--color-border)]' : 'border-border-light'}`}
                         />
                      </div>
                   </div>
