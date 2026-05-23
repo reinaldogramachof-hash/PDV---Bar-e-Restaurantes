@@ -1,4 +1,4 @@
-import { Permission, Plano, UserRole } from '../types';
+import { Expense, Permission, Plano, UserRole } from '../types';
 
 const viteEnv = (import.meta as ImportMeta & { env?: Record<string, string> }).env || {};
 
@@ -152,4 +152,30 @@ export const hasForeignEmpresaId = (value: unknown, empresaId: string): boolean 
 
   const record = value as { empresaId?: unknown };
   return typeof record.empresaId === 'string' && record.empresaId.length > 0 && record.empresaId !== empresaId;
+};
+
+export const validateImportEmpresaId = (value: unknown, empresaId: string) => {
+  if (!value || typeof value !== 'object') {
+    throw new Error('Backup invalido. Verifique o formato do arquivo.');
+  }
+
+  const record = value as { empresaId?: unknown; settings?: { empresaId?: unknown } };
+  const importedEmpresaId = typeof record.empresaId === 'string' ? record.empresaId : record.settings?.empresaId;
+
+  if (typeof importedEmpresaId === 'string' && importedEmpresaId !== empresaId) {
+    throw new Error('Backup pertence a outra empresa e nao pode ser importado neste ambiente.');
+  }
+
+  if (hasForeignEmpresaId(value, empresaId)) {
+    throw new Error('Backup contem dados de outra empresa e nao pode ser importado neste ambiente.');
+  }
+};
+
+export const getSessionScopedExpenses = (expenses: Expense[], openedAt: string, empresaId: string) => {
+  const openedAtMs = new Date(openedAt).getTime();
+
+  return expenses.filter(expense => {
+    const createdAt = expense.createdAt || expense.timestamp;
+    return expense.empresaId === empresaId && new Date(createdAt).getTime() >= openedAtMs;
+  });
 };

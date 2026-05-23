@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission } from '../types';
 import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers, mockSettings } from './mock';
-import { DEFAULT_EMPRESA_ID, buildScopedStorageKey, ensureEmpresaId, hasForeignEmpresaId, hasRolePermission, migrateLegacyCollection, normalizeImportedCollection, scopedCollections } from '../domain/saas';
+import { DEFAULT_EMPRESA_ID, buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, hasRolePermission, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId } from '../domain/saas';
 
 interface AppState {
   currentEmpresa: Empresa;
@@ -152,7 +152,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [settings, setSettings] = useState<AppSettings>(() => parseScopedJSON('settings', currentEmpresa.id, mockSettings, true));
   const [readGuides, setReadGuides] = useState<string[]>(() => parseScopedJSON('readGuides', currentEmpresa.id, []));
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    const th = localStorage.getItem('theme');
+    const th = parseJSON(buildScopedStorageKey('theme', currentEmpresa.id), parseJSON('theme', 'dark'));
     return th === 'dark' || th === 'light' ? th : 'dark';
   });
 
@@ -171,7 +171,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(buildScopedStorageKey('stockMovements', currentEmpresa.id), JSON.stringify(stockMovements));
     localStorage.setItem(buildScopedStorageKey('settings', currentEmpresa.id), JSON.stringify(settings));
     localStorage.setItem(buildScopedStorageKey('readGuides', currentEmpresa.id), JSON.stringify(readGuides));
-    localStorage.setItem('theme', theme);
+    localStorage.setItem(buildScopedStorageKey('theme', currentEmpresa.id), theme);
   }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme, currentEmpresa.id]);
 
   const resetToMocks = () => {
@@ -181,6 +181,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const exportData = () => {
     const data = {
+      empresaId: currentEmpresa.id,
       products, stockItems, suppliers, tables, waiters, orders, expenses, 
       cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides
     };
@@ -190,14 +191,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const importData = (json: string) => {
     try {
       const data = JSON.parse(json);
-      if (data.settings?.empresaId && data.settings.empresaId !== currentEmpresa.id) {
-        alert('Backup pertence a outra empresa e não pode ser importado neste ambiente.');
-        return;
-      }
-
-      if (hasForeignEmpresaId(data, currentEmpresa.id)) {
-        alert('Backup contém dados de outra empresa. Apenas registros compatíveis com a empresa atual serão importados.');
-      }
+      validateImportEmpresaId(data, currentEmpresa.id);
 
       if (data.products) setProducts(normalizeImportedCollection(data.products, currentEmpresa.id));
       if (data.stockItems) setStockItems(normalizeImportedCollection(data.stockItems, currentEmpresa.id));
@@ -209,14 +203,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (data.customers) setCustomers(normalizeImportedCollection(data.customers, currentEmpresa.id));
       if (data.collaborators) setCollaborators(normalizeImportedCollection(data.collaborators, currentEmpresa.id));
       if (data.stockMovements) setStockMovements(normalizeImportedCollection(data.stockMovements, currentEmpresa.id));
-      if (data.cashierSession) {
-        setCashierSession(hasForeignEmpresaId(data.cashierSession, currentEmpresa.id) ? null : ensureEmpresaId(data.cashierSession, currentEmpresa.id));
-      }
+      if (data.cashierSession) setCashierSession(ensureEmpresaId(data.cashierSession, currentEmpresa.id));
       if (data.settings) setSettings(ensureEmpresaId(data.settings, currentEmpresa.id));
       if (data.readGuides) setReadGuides(data.readGuides);
       alert('Dados importados com sucesso!');
-    } catch (e) {
-      alert('Erro ao importar JSON. Verifique o formato.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Erro ao importar JSON. Verifique o formato.');
     }
   };
 
@@ -396,7 +388,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const closedOrders = orders.filter(o => o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId));
     const salesTotal = closedOrders.reduce((acc, o) => acc + o.subtotal, 0);
     const serviceTaxTotal = closedOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
-    const sessionExpenses = expenses.filter(e => belongsToCurrentSession(e.timestamp, e.empresaId));
+    const sessionExpenses = getSessionScopedExpenses(expenses, cashierSession.openedAt, currentEmpresa.id);
     const expensesTotal = sessionExpenses.reduce((acc, e) => acc + e.amount, 0);
     const finalBalance = salesTotal + serviceTaxTotal - expensesTotal + tipsTotal;
     const closedSession: CashierSession = {

@@ -6,10 +6,13 @@ import {
   ensureEmpresaId,
   getPlanModules,
   hasForeignEmpresaId,
+  getSessionScopedExpenses,
   migrateLegacyCollection,
   normalizeImportedCollection,
+  validateImportEmpresaId,
 } from './saas';
-import { Product, Table } from '../types';
+import { Expense, Product, Table } from '../types';
+import { parseLicensePayload } from '../services/licenseService';
 
 const scopedKey = buildScopedStorageKey('products', 'empresa-alpha');
 assert.equal(scopedKey, 'gestao-gastro:empresa-alpha:products');
@@ -48,5 +51,57 @@ assert.equal(normalizedImport.length, 2);
 assert.ok(normalizedImport.every(item => item.empresaId === 'empresa-alpha'));
 assert.ok(hasForeignEmpresaId(mixedImport, 'empresa-alpha'));
 assert.ok(!hasForeignEmpresaId(normalizedImport, 'empresa-alpha'));
+
+const empresaAKey = buildScopedStorageKey('orders', 'empresa-a');
+const empresaBKey = buildScopedStorageKey('orders', 'empresa-b');
+assert.notEqual(empresaAKey, empresaBKey);
+
+const empresaAProducts = [{ id: 'pa', empresaId: 'empresa-a', name: 'Produto A', description: '', price: 15, category: 'Teste' }] as Product[];
+const empresaBImportView = normalizeImportedCollection(empresaAProducts, 'empresa-b');
+assert.equal(empresaBImportView.length, 0);
+
+assert.doesNotThrow(() =>
+  validateImportEmpresaId(
+    {
+      empresaId: 'empresa-a',
+      products: empresaAProducts,
+      settings: { empresaId: 'empresa-a' },
+    },
+    'empresa-a',
+  ),
+);
+
+assert.throws(
+  () =>
+    validateImportEmpresaId(
+      {
+        empresaId: 'empresa-a',
+        products: empresaAProducts,
+        settings: { empresaId: 'empresa-a' },
+      },
+      'empresa-b',
+    ),
+  /Backup pertence a outra empresa/,
+);
+
+const expenses = [
+  { id: 'old', empresaId: 'empresa-a', description: 'Antes', amount: 10, category: 'Outros', status: 'pago', timestamp: '2026-05-23T08:59:00.000Z' },
+  { id: 'current', empresaId: 'empresa-a', description: 'Sessao', amount: 20, category: 'Outros', status: 'pago', timestamp: '2026-05-23T09:00:00.000Z' },
+  { id: 'foreign', empresaId: 'empresa-b', description: 'Outra empresa', amount: 30, category: 'Outros', status: 'pago', timestamp: '2026-05-23T09:30:00.000Z' },
+] as Expense[];
+const sessionExpenses = getSessionScopedExpenses(expenses, '2026-05-23T09:00:00.000Z', 'empresa-a');
+assert.deepEqual(sessionExpenses.map(expense => expense.id), ['current']);
+
+const parsedJsonLicense = parseLicensePayload(
+  JSON.stringify({ status: 'trial', expiresAt: '2026-06-02T00:00:00.000Z', plan: 'profissional' }),
+  new Date('2026-05-23T00:00:00.000Z'),
+);
+assert.equal(parsedJsonLicense.status, 'trial');
+assert.equal(parsedJsonLicense.daysRemaining, 10);
+assert.equal(parsedJsonLicense.plan, 'profissional');
+
+const blockedLicense = parseLicensePayload('BLOQUEADO', new Date('2026-05-23T00:00:00.000Z'));
+assert.equal(blockedLicense.status, 'suspended');
+assert.equal(blockedLicense.daysRemaining, 0);
 
 console.log('saas domain tests passed');
