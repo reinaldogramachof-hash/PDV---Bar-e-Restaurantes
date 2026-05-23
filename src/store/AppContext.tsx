@@ -103,10 +103,10 @@ const parseScopedJSON = <T,>(key: string, empresaId: string, fallback: T, withEm
   return legacy;
 };
 
-const clearAppStorage = () => {
+const clearAppStorage = (empresaId: string) => {
   const legacyKeys = [...scopedCollections, 'theme', 'viewMode_products', 'viewMode_customers', 'viewMode_collaborators', 'viewMode_suppliers'];
   Object.keys(localStorage).forEach(key => {
-    if (key.startsWith('gestao-gastro:') || legacyKeys.includes(key)) {
+    if (key.startsWith(`gestao-gastro:${empresaId}:`) || legacyKeys.includes(key)) {
       localStorage.removeItem(key);
     }
   });
@@ -175,7 +175,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme, currentEmpresa.id]);
 
   const resetToMocks = () => {
-    clearAppStorage();
+    clearAppStorage(currentEmpresa.id);
     window.location.reload();
   };
 

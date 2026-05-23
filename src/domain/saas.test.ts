@@ -104,4 +104,26 @@ const blockedLicense = parseLicensePayload('BLOQUEADO', new Date('2026-05-23T00:
 assert.equal(blockedLicense.status, 'suspended');
 assert.equal(blockedLicense.daysRemaining, 0);
 
+// Teste de Isolamento Explícito (Feature 7)
+const mixedProducts = [
+  { id: 'p_emp1', empresaId: 'empresa1', name: 'Prod 1', description: '', price: 10, category: 'A' },
+  { id: 'p_emp2', empresaId: 'empresa2', name: 'Prod 2', description: '', price: 20, category: 'B' }
+] as Product[];
+const isolatedEmpresa1 = normalizeImportedCollection(mixedProducts, 'empresa1');
+const isolatedEmpresa2 = normalizeImportedCollection(mixedProducts, 'empresa2');
+
+assert.equal(isolatedEmpresa1.length, 1);
+assert.equal(isolatedEmpresa1[0].id, 'p_emp1');
+assert.equal(isolatedEmpresa2.length, 1);
+assert.equal(isolatedEmpresa2[0].id, 'p_emp2');
+
+const testExpenses = [
+  { id: 'e1', empresaId: 'empresa1', description: 'Despesa 1', amount: 10, category: 'Outros', status: 'pago', timestamp: '2026-05-23T09:00:00.000Z' },
+  { id: 'e2', empresaId: 'empresa2', description: 'Despesa 2', amount: 10, category: 'Outros', status: 'pago', timestamp: '2026-05-23T09:00:00.000Z' }
+] as Expense[];
+
+const isolatedExpensesEmpresa1 = getSessionScopedExpenses(testExpenses, '2026-05-23T08:00:00.000Z', 'empresa1');
+assert.equal(isolatedExpensesEmpresa1.length, 1);
+assert.equal(isolatedExpensesEmpresa1[0].id, 'e1');
+
 console.log('saas domain tests passed');
