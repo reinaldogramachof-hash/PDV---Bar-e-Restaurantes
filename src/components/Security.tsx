@@ -48,8 +48,8 @@ export const Security: React.FC = () => {
           <Shield className="w-12 h-12 text-blue-500" />
         </div>
         <div className="text-center md:text-left space-y-2">
-          <h1 className="text-4xl font-black tracking-tighter uppercase italic">Central de Segurança</h1>
-          <p className="text-sm font-bold opacity-40 uppercase tracking-[0.2em]">Transparência, Privacidade e Responsabilidade</p>
+          <h1 className="text-4xl font-semibold ">Central de Segurança</h1>
+          <p className="text-sm font-bold opacity-40 ">Transparência, Privacidade e Responsabilidade</p>
         </div>
       </div>
 
@@ -58,15 +58,15 @@ export const Security: React.FC = () => {
         {sections.map((section, idx) => (
           <div 
             key={idx}
-            className={`p-8 rounded-panel border space-y-6 relative overflow-hidden group transition-all hover:scale-[1.02]
+            className={`p-8 rounded-panel border space-y-6 relative overflow-hidden group transition-all
               ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20'}`}
           >
-            <div className={`w-12 h-12 rounded-2xl bg-current/10 ${section.color} flex items-center justify-center transition-transform group-hover:rotate-12`}>
+            <div className={`w-12 h-12 rounded-panel bg-current/10 ${section.color} flex items-center justify-center transition-transform group-hover:rotate-12`}>
               <section.icon className="w-6 h-6" />
             </div>
             <div className="space-y-3">
-              <h3 className="text-sm font-black uppercase tracking-widest">{section.title}</h3>
-              <p className="text-[11px] font-bold opacity-50 leading-relaxed uppercase tracking-tight">
+              <h3 className="text-sm font-semibold ">{section.title}</h3>
+              <p className="text-xs font-bold opacity-50 leading-relaxed ">
                 {section.content}
               </p>
             </div>
@@ -82,16 +82,16 @@ export const Security: React.FC = () => {
           <div className="flex-1 space-y-6">
             <div className="flex items-center gap-3">
               <FileText className="w-5 h-5 text-[var(--color-accent)]" />
-              <h2 className="text-xl font-black uppercase tracking-tight">Termos de Uso & Políticas</h2>
+              <h2 className="text-xl font-semibold ">Termos de Uso & Políticas</h2>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {terms.map((term, idx) => (
-                <div key={idx} className="flex gap-4 p-4 rounded-2xl bg-current/5">
+                <div key={idx} className="flex gap-4 p-4 rounded-panel bg-current/5">
                   <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)] mt-1.5 flex-shrink-0" />
                   <div className="space-y-1">
-                    <h4 className="text-[10px] font-black uppercase tracking-widest">{term.title}</h4>
-                    <p className="text-[10px] font-bold opacity-40 uppercase tracking-tighter">{term.desc}</p>
+                    <h4 className="text-xs font-semibold ">{term.title}</h4>
+                    <p className="text-xs font-bold opacity-40 ">{term.desc}</p>
                   </div>
                 </div>
               ))}
@@ -101,16 +101,16 @@ export const Security: React.FC = () => {
           <div className={`md:w-72 p-8 rounded-section space-y-6 border border-dashed flex flex-col justify-between
             ${isDark ? 'bg-white/5 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
             <div className="space-y-4 text-center">
-              <div className="inline-flex p-3 rounded-xl bg-amber-500/10 text-amber-500">
+              <div className="inline-flex p-3 rounded-control bg-amber-500/10 text-amber-500">
                 <AlertCircle className="w-6 h-6" />
               </div>
-              <h4 className="text-xs font-black uppercase tracking-widest">Aviso Importante</h4>
-              <p className="text-[9px] font-bold opacity-40 uppercase leading-relaxed">
+              <h4 className="text-xs font-semibold ">Aviso Importante</h4>
+              <p className="text-xs font-bold opacity-40 leading-relaxed">
                 A limpeza de dados do navegador ou desinstalação do mesmo pode resultar na perda permanente de informações não exportadas.
               </p>
             </div>
             <button 
-              className="w-full h-12 rounded-xl bg-current/10 font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-current/20 transition-all"
+              className="w-full h-12 rounded-control bg-current/10 font-semibold text-xs  flex items-center justify-center gap-2 hover:bg-current/20 transition-all"
               onClick={() => window.location.href = '#'}
             >
               Baixar Termos em PDF <Info className="w-4 h-4" />
@@ -121,9 +121,9 @@ export const Security: React.FC = () => {
 
       {/* Footer Badge */}
       <div className="flex justify-center">
-        <div className={`px-8 py-4 rounded-2xl border flex items-center gap-4 ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+        <div className={`px-8 py-4 rounded-panel border flex items-center gap-4 ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
           <ShieldCheck className="w-6 h-6 text-emerald-500" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">{APP_NAME} - base preparada para LGPD e isolamento multiempresa</span>
+          <span className="text-xs font-semibold  opacity-40">{APP_NAME} - base preparada para LGPD e isolamento multiempresa</span>
         </div>
       </div>
     </div>

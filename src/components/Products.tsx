@@ -104,18 +104,18 @@ export const Products: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tighter uppercase italic">Cardápio & Vendas</h2>
-          <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Gestão de catálogo e fichas técnicas</p>
+          <h2 className="text-3xl font-semibold ">Cardápio & Vendas</h2>
+          <p className="text-xs font-bold  opacity-40">Gestão de catálogo e fichas técnicas</p>
         </div>
 
         <div className="flex gap-4">
-          <div className={`flex p-1 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+          <div className={`flex p-1 rounded-control ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
             <button onClick={() => toggleViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
             <button onClick={() => toggleViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
           </div>
           <button
             onClick={() => openModal()}
-            className="px-8 h-12 rounded-xl bg-[var(--color-accent)] text-white font-black text-[10px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[var(--color-accent)]/20 flex items-center gap-2"
+            className="px-8 h-12 rounded-control bg-[var(--color-accent)] text-white font-semibold text-xs  transition-all flex items-center gap-2"
           >
             <Plus className="w-4 h-4" /> Novo Produto
           </button>
@@ -131,7 +131,7 @@ export const Products: React.FC = () => {
             placeholder="Buscar no cardápio..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full h-12 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)]'}`}
+            className={`w-full h-12 pl-12 pr-6 rounded-panel border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)]'}`}
           />
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
@@ -139,7 +139,7 @@ export const Products: React.FC = () => {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-6 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+              className={`px-6 h-12 rounded-panel text-xs font-semibold  transition-all whitespace-nowrap ${
                 selectedCategory === cat
                   ? 'bg-white dark:bg-[var(--color-border)] text-[var(--color-accent)] shadow-lg border border-current/10'
                   : 'opacity-40 hover:opacity-100'
@@ -167,39 +167,39 @@ export const Products: React.FC = () => {
                 `}
               >
                 <div className="flex justify-between items-start mb-6">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                  <div className={`w-12 h-12 rounded-panel flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                     {getIcon(p.category)}
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                    <button onClick={() => openModal(p)} className="p-2.5 rounded-xl hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] transition-all"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => deleteProduct(p.id)} className="p-2.5 rounded-xl hover:bg-red-500/10 hover:text-red-500 transition-all"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => openModal(p)} className="p-2.5 rounded-control hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] transition-all"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={() => deleteProduct(p.id)} className="p-2.5 rounded-control hover:bg-red-500/10 hover:text-red-500 transition-all"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
 
                 <div className="space-y-4 flex-1">
                   <div>
-                    <h4 className="text-sm font-black uppercase tracking-tight truncate">{p.name}</h4>
-                    <p className="text-[10px] font-bold opacity-30 line-clamp-2 mt-1">{p.description}</p>
+                    <h4 className="text-sm font-semibold  truncate">{p.name}</h4>
+                    <p className="text-xs font-bold opacity-30 line-clamp-2 mt-1">{p.description}</p>
                   </div>
 
                   <div className="space-y-1">
                     <div className="flex justify-between items-end">
-                      <span className="text-[9px] font-black uppercase tracking-widest opacity-20">Preço de Venda</span>
-                      <span className="text-xl font-black tracking-tighter">R$ {p.price.toFixed(2)}</span>
+                      <span className="text-xs font-semibold  opacity-20">Preço de Venda</span>
+                      <span className="text-xl font-semibold ">R$ {p.price.toFixed(2)}</span>
                     </div>
                     {p.recipe && p.recipe.length > 0 ? (
-                      <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest">
+                      <div className="flex justify-between items-center text-xs font-semibold ">
                         <span className="opacity-20">Margem Estimada</span>
                         <span className={margin > 60 ? 'text-emerald-500' : 'text-amber-500'}>{margin.toFixed(0)}%</span>
                       </div>
                     ) : (
-                      <div className="text-[8px] font-bold text-red-500 uppercase tracking-widest bg-red-500/5 px-2 py-1 rounded-lg w-fit">Sem Ficha Técnica</div>
+                      <div className="text-xs font-bold text-red-500  bg-red-500/5 px-2 py-1 rounded-lg w-fit">Sem Ficha Técnica</div>
                     )}
                   </div>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-dashed border-current/5">
-                   <button onClick={() => openModal(p)} className="w-full flex items-center justify-between text-[9px] font-black uppercase tracking-widest opacity-30 group-hover:opacity-100 transition-all">
+                   <button onClick={() => openModal(p)} className="w-full flex items-center justify-between text-xs font-semibold  opacity-30 group-hover:opacity-100 transition-all">
                      <span className="flex items-center gap-2"><BookOpen className="w-3.5 h-3.5" /> Ficha Técnica</span>
                      <ArrowRight className="w-3 h-3 translate-x-0 group-hover:translate-x-1 transition-transform" />
                    </button>
@@ -211,7 +211,7 @@ export const Products: React.FC = () => {
       ) : (
         <div className={`rounded-panel border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
           <table className="w-full text-left">
-            <thead className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-50 text-gray-400'}`}>
+            <thead className={`text-xs font-semibold  ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-50 text-gray-400'}`}>
               <tr>
                 <th className="px-8 py-6">Produto</th>
                 <th className="px-8 py-6">Categoria</th>
@@ -228,21 +228,21 @@ export const Products: React.FC = () => {
                   <tr key={p.id} className="group hover:bg-current/[0.01] transition-all">
                     <td className="px-8 py-5">
                       <div className="flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>{getIcon(p.category)}</div>
-                        <span className="font-black uppercase tracking-tight">{p.name}</span>
+                        <div className={`w-10 h-10 rounded-control flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>{getIcon(p.category)}</div>
+                        <span className="font-semibold ">{p.name}</span>
                       </div>
                     </td>
                     <td className="px-8 py-5">
-                       <span className="text-[10px] font-bold uppercase opacity-40">{p.category}</span>
+                       <span className="text-xs font-bold opacity-40">{p.category}</span>
                     </td>
                     <td className="px-8 py-5">
-                       <span className="text-[10px] font-bold opacity-40">{p.recipe?.length || 0} itens</span>
+                       <span className="text-xs font-bold opacity-40">{p.recipe?.length || 0} itens</span>
                     </td>
                     <td className="px-8 py-5">
-                       <span className="font-mono text-[11px] font-bold opacity-60">R$ {cost.toFixed(2)}</span>
+                       <span className="font-mono text-xs font-bold opacity-60">R$ {cost.toFixed(2)}</span>
                     </td>
                     <td className="px-8 py-5">
-                       <span className="font-black text-[var(--color-accent)]">R$ {p.price.toFixed(2)}</span>
+                       <span className="font-semibold text-[var(--color-accent)]">R$ {p.price.toFixed(2)}</span>
                     </td>
                     <td className="px-8 py-5 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
@@ -271,34 +271,34 @@ export const Products: React.FC = () => {
             >
               <div className="p-8 md:p-10 border-b flex justify-between items-center">
                 <div>
-                  <h3 className="text-2xl font-black uppercase italic tracking-tighter">{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-40 mt-1">Configuração de Venda e Produção</p>
+                  <h3 className="text-2xl font-semibold ">{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h3>
+                  <p className="text-xs font-bold  opacity-40 mt-1">Configuração de Venda e Produção</p>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="p-4 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 opacity-40"><X className="w-6 h-6" /></button>
+                <button onClick={() => setIsModalOpen(false)} className="p-4 rounded-panel hover:bg-black/5 dark:hover:bg-white/5 opacity-40"><X className="w-6 h-6" /></button>
               </div>
 
               <form onSubmit={handleProductSubmit} className="flex-1 overflow-y-auto p-8 md:p-10 space-y-8 custom-scrollbar">
                 {/* Basic Info */}
                 <div className="space-y-6">
-                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-accent)]">Informações Básicas</h4>
+                  <h4 className="text-xs font-semibold  text-[var(--color-accent)]">Informações Básicas</h4>
                   <div className="space-y-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Nome do Produto</label>
-                      <input required name="name" defaultValue={editingProduct?.name} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                      <label className="text-xs font-semibold  opacity-40 ml-2">Nome do Produto</label>
+                      <input required name="name" defaultValue={editingProduct?.name} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Categoria</label>
-                        <input required name="category" defaultValue={editingProduct?.category} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                        <label className="text-xs font-semibold  opacity-40 ml-2">Categoria</label>
+                        <input required name="category" defaultValue={editingProduct?.category} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Preço de Venda (R$)</label>
-                        <input required type="number" step="0.01" name="price" defaultValue={editingProduct?.price} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                        <label className="text-xs font-semibold  opacity-40 ml-2">Preço de Venda (R$)</label>
+                        <input required type="number" step="0.01" name="price" defaultValue={editingProduct?.price} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Descrição (opcional)</label>
-                      <textarea name="description" defaultValue={editingProduct?.description} rows={2} className={`w-full p-6 rounded-2xl border outline-none font-bold text-sm resize-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                      <label className="text-xs font-semibold  opacity-40 ml-2">Descrição (opcional)</label>
+                      <textarea name="description" defaultValue={editingProduct?.description} rows={2} className={`w-full p-6 rounded-panel border outline-none font-bold text-sm resize-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                     </div>
                   </div>
                 </div>
@@ -306,61 +306,61 @@ export const Products: React.FC = () => {
                 {/* Technical Sheet */}
                 <div className="space-y-6 pt-4">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-[var(--color-accent)]">Ficha Técnica (Ingredientes)</h4>
-                    <button type="button" onClick={addRecipeItem} className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest opacity-40 hover:opacity-100 transition-all">
+                    <h4 className="text-xs font-semibold  text-[var(--color-accent)]">Ficha Técnica (Ingredientes)</h4>
+                    <button type="button" onClick={addRecipeItem} className="flex items-center gap-2 text-xs font-semibold  opacity-40 hover:opacity-100 transition-all">
                       <PlusCircle className="w-4 h-4" /> Adicionar Insumo
                     </button>
                   </div>
 
                   <div className="space-y-3">
                     {recipeItems.length === 0 && (
-                      <div className={`p-10 rounded-3xl border border-dashed text-center space-y-2 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                      <div className={`p-10 rounded-section border border-dashed text-center space-y-2 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                         <Package className="w-8 h-8 mx-auto opacity-20" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest opacity-30">Nenhum insumo vinculado a este produto.</p>
-                        <button type="button" onClick={addRecipeItem} className="text-[9px] font-black uppercase text-[var(--color-accent)]">Vincular agora</button>
+                        <p className="text-xs font-bold  opacity-30">Nenhum insumo vinculado a este produto.</p>
+                        <button type="button" onClick={addRecipeItem} className="text-xs font-semibold text-[var(--color-accent)]">Vincular agora</button>
                       </div>
                     )}
                     {recipeItems.map((item, idx) => (
                       <div key={idx} className="flex gap-4 items-end animate-in fade-in slide-in-from-top-2">
                         <div className="flex-[2] space-y-1">
-                          <label className="text-[8px] font-black uppercase tracking-widest opacity-30 ml-2">Insumo do Estoque</label>
+                          <label className="text-xs font-semibold  opacity-30 ml-2">Insumo do Estoque</label>
                           <select 
                             required 
                             value={item.stockItemId} 
                             onChange={e => updateRecipeItem(idx, 'stockItemId', e.target.value)}
-                            className={`w-full h-12 px-4 rounded-xl border outline-none font-bold text-xs appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-100'}`}
+                            className={`w-full h-12 px-4 rounded-control border outline-none font-bold text-xs appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-100'}`}
                           >
                             <option value="">Selecione...</option>
                             {stockItems.map(si => <option key={si.id} value={si.id}>{si.name} ({si.unit})</option>)}
                           </select>
                         </div>
                         <div className="flex-1 space-y-1">
-                          <label className="text-[8px] font-black uppercase tracking-widest opacity-30 ml-2">Quantidade</label>
+                          <label className="text-xs font-semibold  opacity-30 ml-2">Quantidade</label>
                           <input 
                             required 
                             type="number" 
                             step="0.001" 
                             value={item.quantity} 
                             onChange={e => updateRecipeItem(idx, 'quantity', e.target.value)}
-                            className={`w-full h-12 px-4 rounded-xl border outline-none font-bold text-xs ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} 
+                            className={`w-full h-12 px-4 rounded-control border outline-none font-bold text-xs ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} 
                           />
                         </div>
-                        <button type="button" onClick={() => removeRecipeItem(idx)} className="h-12 w-12 rounded-xl flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all mb-0.5"><MinusCircle className="w-4 h-4" /></button>
+                        <button type="button" onClick={() => removeRecipeItem(idx)} className="h-12 w-12 rounded-control flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all mb-0.5"><MinusCircle className="w-4 h-4" /></button>
                       </div>
                     ))}
                   </div>
                   
                   {recipeItems.length > 0 && (
-                    <div className={`p-6 rounded-2xl flex justify-between items-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                      <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Custo Total de Produção</span>
+                    <div className={`p-6 rounded-panel flex justify-between items-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                      <span className="text-xs font-semibold  opacity-40">Custo Total de Produção</span>
                       <span className="font-mono font-bold text-sm">R$ {calculateProductionCost(recipeItems).toFixed(2)}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="pt-4 flex gap-4">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-[10px] ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>Cancelar</button>
-                  <button type="submit" className="flex-[2] h-16 rounded-2xl bg-[var(--color-accent)] text-white font-black uppercase tracking-widest text-[10px] shadow-lg shadow-[var(--color-accent)]/20">Salvar Produto</button>
+                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-16 rounded-panel font-semibold  text-xs ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>Cancelar</button>
+                  <button type="submit" className="flex-[2] h-16 rounded-panel bg-[var(--color-accent)] text-white font-semibold  text-xs">Salvar Produto</button>
                 </div>
               </form>
             </motion.div>

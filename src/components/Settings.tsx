@@ -55,17 +55,17 @@ export const Settings: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black tracking-tighter uppercase italic">Configurações</h2>
-          <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Personalização e Gestão do Sistema</p>
+          <h2 className="text-3xl font-semibold ">Configurações</h2>
+          <p className="text-xs font-bold  opacity-40">Personalização e Gestão do Sistema</p>
         </div>
 
         <button
           onClick={handleSave}
           disabled={isSaving}
-          className={`px-8 h-12 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all shadow-lg flex items-center gap-2
+          className={`px-8 h-12 rounded-control font-semibold text-xs  transition-all shadow-lg flex items-center gap-2
             ${isSaving 
               ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
-              : 'bg-[var(--color-accent)] text-white shadow-[var(--color-accent)]/20 hover:scale-105 active:scale-95'
+              : 'bg-[var(--color-accent)] text-white'
             }
           `}
         >
@@ -81,9 +81,9 @@ export const Settings: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`w-full flex items-center gap-4 px-6 py-4 rounded-2xl transition-all font-bold text-xs uppercase tracking-tight
+              className={`w-full flex items-center gap-4 px-6 py-4 rounded-panel transition-all font-bold text-xs 
                 ${activeTab === tab.id 
-                  ? 'bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20' 
+                  ? 'bg-[var(--color-accent)] text-white' 
                   : `${isDark ? 'bg-white/5 text-white/40 hover:bg-white/10' : 'bg-white text-gray-400 hover:bg-gray-50 border border-gray-100 shadow-sm'}`
                 }
               `}
@@ -99,73 +99,73 @@ export const Settings: React.FC = () => {
           {activeTab === 'store' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center gap-4 border-b border-dashed border-current/10 pb-6 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-panel bg-amber-500/10 flex items-center justify-center">
                   <Store className="w-6 h-6 text-amber-500" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Dados do Estabelecimento</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Informações que saem nos cupons e relatórios</p>
+                  <h3 className="text-xl font-semibold ">Dados do Estabelecimento</h3>
+                  <p className="text-xs font-bold  opacity-40">Informações que saem nos cupons e relatórios</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Nome Fantasia</label>
+                  <label className="text-xs font-semibold  opacity-40 ml-2">Nome Fantasia</label>
                   <div className="relative group">
                     <Store className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-20 group-focus-within:opacity-100 transition-opacity" />
                     <input 
                       value={formData.establishment.name}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, name: e.target.value } })}
-                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
+                      className={`w-full h-14 pl-12 pr-6 rounded-panel border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">CNPJ / Documento</label>
+                  <label className="text-xs font-semibold  opacity-40 ml-2">CNPJ / Documento</label>
                   <div className="relative group">
                     <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-20 group-focus-within:opacity-100 transition-opacity" />
                     <input 
                       value={formData.establishment.document}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, document: e.target.value } })}
-                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
+                      className={`w-full h-14 pl-12 pr-6 rounded-panel border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Telefone de Contato</label>
+                  <label className="text-xs font-semibold  opacity-40 ml-2">Telefone de Contato</label>
                   <div className="relative group">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-20 group-focus-within:opacity-100 transition-opacity" />
                     <input 
                       value={formData.establishment.phone}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, phone: e.target.value } })}
-                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
+                      className={`w-full h-14 pl-12 pr-6 rounded-panel border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Website / Redes Sociais</label>
+                  <label className="text-xs font-semibold  opacity-40 ml-2">Website / Redes Sociais</label>
                   <div className="relative group">
                     <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 opacity-20 group-focus-within:opacity-100 transition-opacity" />
                     <input 
                       value={formData.establishment.website}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, website: e.target.value } })}
-                      className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
+                      className={`w-full h-14 pl-12 pr-6 rounded-panel border outline-none font-bold text-sm transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
 
                 <div className="md:col-span-2 space-y-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Endereço Completo</label>
+                  <label className="text-xs font-semibold  opacity-40 ml-2">Endereço Completo</label>
                   <div className="relative group">
                     <MapPin className="absolute left-4 top-5 w-4 h-4 opacity-20 group-focus-within:opacity-100 transition-opacity" />
                     <textarea 
                       rows={2}
                       value={formData.establishment.address}
                       onChange={e => setFormData({ ...formData, establishment: { ...formData.establishment, address: e.target.value } })}
-                      className={`w-full p-5 pl-12 rounded-2xl border outline-none font-bold text-sm resize-none transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
+                      className={`w-full p-5 pl-12 rounded-panel border outline-none font-bold text-sm resize-none transition-all ${isDark ? 'bg-transparent border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-gray-50 border-gray-100 focus:border-[var(--color-accent)]'}`} 
                     />
                   </div>
                 </div>
@@ -176,24 +176,24 @@ export const Settings: React.FC = () => {
           {activeTab === 'printer' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center gap-4 border-b border-dashed border-current/10 pb-6 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-panel bg-blue-500/10 flex items-center justify-center">
                   <Printer className="w-6 h-6 text-blue-500" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Configuração de Impressão</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Impressoras térmicas e cupons de venda</p>
+                  <h3 className="text-xl font-semibold ">Configuração de Impressão</h3>
+                  <p className="text-xs font-bold  opacity-40">Impressoras térmicas e cupons de venda</p>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className={`p-6 rounded-3xl flex items-center justify-between transition-all ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                <div className={`p-6 rounded-section flex items-center justify-between transition-all ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${formData.thermalPrinter.enabled ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-gray-500'}`}>
+                    <div className={`w-10 h-10 rounded-control flex items-center justify-center ${formData.thermalPrinter.enabled ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-gray-500'}`}>
                       <Printer className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black uppercase tracking-tight">Habilitar Impressora Térmica</h4>
-                      <p className="text-[9px] font-bold opacity-30 uppercase tracking-widest">Ativar conexão com hardware de impressão</p>
+                      <h4 className="text-xs font-semibold ">Habilitar Impressora Térmica</h4>
+                      <p className="text-xs font-bold opacity-30 ">Ativar conexão com hardware de impressão</p>
                     </div>
                   </div>
                   <button 
@@ -204,14 +204,14 @@ export const Settings: React.FC = () => {
                   </button>
                 </div>
 
-                <div className={`p-6 rounded-3xl flex items-center justify-between transition-all ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                <div className={`p-6 rounded-section flex items-center justify-between transition-all ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${formData.thermalPrinter.autoPrint ? 'bg-blue-500/10 text-blue-500' : 'bg-gray-500/10 text-gray-500'}`}>
+                    <div className={`w-10 h-10 rounded-control flex items-center justify-center ${formData.thermalPrinter.autoPrint ? 'bg-blue-500/10 text-blue-500' : 'bg-gray-500/10 text-gray-500'}`}>
                       <RefreshCw className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-black uppercase tracking-tight">Impressão Automática</h4>
-                      <p className="text-[9px] font-bold opacity-30 uppercase tracking-widest">Imprimir cupom ao finalizar venda no PDV</p>
+                      <h4 className="text-xs font-semibold ">Impressão Automática</h4>
+                      <p className="text-xs font-bold opacity-30 ">Imprimir cupom ao finalizar venda no PDV</p>
                     </div>
                   </div>
                   <button 
@@ -224,11 +224,11 @@ export const Settings: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Largura do Papel</label>
+                      <label className="text-xs font-semibold  opacity-40 ml-2">Largura do Papel</label>
                       <select 
                         value={formData.thermalPrinter.paperWidth}
                         onChange={e => setFormData({ ...formData, thermalPrinter: { ...formData.thermalPrinter, paperWidth: e.target.value as any } })}
-                        className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}
+                        className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}
                       >
                         <option value="80mm">80mm (Padrão)</option>
                         <option value="58mm">58mm (Portátil)</option>
@@ -242,27 +242,27 @@ export const Settings: React.FC = () => {
           {activeTab === 'data' && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="flex items-center gap-4 border-b border-dashed border-current/10 pb-6 mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                <div className="w-12 h-12 rounded-panel bg-emerald-500/10 flex items-center justify-center">
                   <Database className="w-6 h-6 text-emerald-500" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-black uppercase italic tracking-tighter">Dados & Segurança</h3>
-                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Backups e restauração de sistema</p>
+                  <h3 className="text-xl font-semibold ">Dados & Segurança</h3>
+                  <p className="text-xs font-bold  opacity-40">Backups e restauração de sistema</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className={`p-8 rounded-section border space-y-6 flex flex-col justify-between ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
                   <div className="space-y-2">
-                    <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 mb-2">
+                    <div className="w-10 h-10 rounded-control bg-blue-500/10 flex items-center justify-center text-blue-500 mb-2">
                       <Download className="w-5 h-5" />
                     </div>
-                    <h4 className="text-sm font-black uppercase tracking-tight">Exportar Backup</h4>
-                    <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Cria um arquivo JSON com todos os dados do sistema para segurança.</p>
+                    <h4 className="text-sm font-semibold ">Exportar Backup</h4>
+                    <p className="text-xs font-bold opacity-30 leading-relaxed">Cria um arquivo JSON com todos os dados do sistema para segurança.</p>
                   </div>
                   <button 
                     onClick={handleExport}
-                    className="w-full h-12 rounded-xl bg-blue-500 text-white font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-blue-500/20"
+                    className="w-full h-12 rounded-control bg-blue-500 text-white font-semibold text-xs  transition-all shadow-lg shadow-blue-500/20"
                   >
                     Baixar Backup (.json)
                   </button>
@@ -270,13 +270,13 @@ export const Settings: React.FC = () => {
 
                 <div className={`p-8 rounded-section border space-y-6 flex flex-col justify-between ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
                   <div className="space-y-2">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 mb-2">
+                    <div className="w-10 h-10 rounded-control bg-amber-500/10 flex items-center justify-center text-amber-500 mb-2">
                       <Upload className="w-5 h-5" />
                     </div>
-                    <h4 className="text-sm font-black uppercase tracking-tight">Importar Dados</h4>
-                    <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">Restaura o sistema a partir de um arquivo de backup anterior.</p>
+                    <h4 className="text-sm font-semibold ">Importar Dados</h4>
+                    <p className="text-xs font-bold opacity-30 leading-relaxed">Restaura o sistema a partir de um arquivo de backup anterior.</p>
                   </div>
-                  <label className="w-full h-12 rounded-xl bg-amber-500 text-white font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center cursor-pointer">
+                  <label className="w-full h-12 rounded-control bg-amber-500 text-white font-semibold text-xs  transition-all shadow-lg shadow-amber-500/20 flex items-center justify-center cursor-pointer">
                     Selecionar Arquivo
                     <input type="file" accept=".json" onChange={handleImport} className="hidden" />
                   </label>
@@ -285,15 +285,15 @@ export const Settings: React.FC = () => {
                 <div className="md:col-span-2 p-8 rounded-section border border-red-500/20 bg-red-500/5 space-y-4">
                   <div className="flex items-center gap-3 text-red-500">
                     <AlertTriangle className="w-5 h-5" />
-                    <h4 className="text-sm font-black uppercase tracking-tight">Zona de Perigo</h4>
+                    <h4 className="text-sm font-semibold ">Zona de Perigo</h4>
                   </div>
                   <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest text-center md:text-left">
+                    <p className="text-xs font-bold opacity-40  text-center md:text-left">
                       Esta ação irá apagar todos os dados atuais e restaurar os dados de demonstração (Mocks).
                     </p>
                     <button 
                       onClick={resetToMocks}
-                      className="px-8 h-12 rounded-xl bg-red-500 text-white font-black text-[9px] uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-red-500/20 whitespace-nowrap"
+                      className="px-8 h-12 rounded-control bg-red-500 text-white font-semibold text-xs  transition-all shadow-lg shadow-red-500/20 whitespace-nowrap"
                     >
                       Reiniciar Sistema
                     </button>
@@ -305,11 +305,11 @@ export const Settings: React.FC = () => {
         </div>
       </div>
 
-      <div className={`p-6 rounded-3xl border border-dashed flex items-center gap-4 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+      <div className={`p-6 rounded-section border border-dashed flex items-center gap-4 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
         <ShieldCheck className="w-8 h-8 text-emerald-500 opacity-40" />
         <div>
-          <p className="text-[9px] font-black uppercase tracking-widest opacity-40">Segurança de Dados</p>
-          <p className="text-[10px] font-bold opacity-30 uppercase leading-relaxed">
+          <p className="text-xs font-semibold  opacity-40">Segurança de Dados</p>
+          <p className="text-xs font-bold opacity-30 leading-relaxed">
             Seus dados são armazenados localmente neste navegador. Recomendamos realizar backups semanais para evitar perda de informações em caso de limpeza de cache do navegador.
           </p>
         </div>

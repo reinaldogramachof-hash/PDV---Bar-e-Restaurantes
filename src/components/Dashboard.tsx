@@ -78,7 +78,7 @@ export const Dashboard: React.FC = () => {
               <div className={`p-2 rounded-panel ${kpi.bg}`}>
                 <kpi.icon className={`w-5 h-5 ${kpi.tone}`} />
               </div>
-              <span className="text-xs font-medium text-success">{kpi.detail}</span>
+              <span className={`text-xs font-medium ${kpi.label === 'Mesas ocupadas' ? 'text-muted' : 'text-success'}`}>{kpi.detail}</span>
             </div>
             <h3 className="text-xs font-medium text-muted mb-1">{kpi.label}</h3>
             <p className="text-2xl font-semibold">{kpi.value}</p>

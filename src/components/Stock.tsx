@@ -155,11 +155,11 @@ export const Stock: React.FC = () => {
       {/* Header & Stats */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-1">
-          <h2 className="text-3xl font-black tracking-tighter uppercase italic leading-none">Gestão de Suprimentos</h2>
-          <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Controle profundo de insumos e movimentações</p>
+          <h2 className="text-3xl font-semibold  leading-none">Gestão de Suprimentos</h2>
+          <p className="text-xs font-bold  opacity-40">Controle profundo de insumos e movimentações</p>
         </div>
 
-        <div className={`flex p-1 rounded-2xl ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
+        <div className={`flex p-1 rounded-panel ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
           {[
             { id: 'overview', label: 'Insumos', icon: Package },
             { id: 'movements', label: 'Histórico', icon: History },
@@ -168,9 +168,9 @@ export const Stock: React.FC = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabType)}
-              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-control text-xs font-semibold  transition-all ${
                 activeTab === tab.id
-                  ? 'bg-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20'
+                  ? 'bg-[var(--color-accent)] text-white'
                   : `opacity-40 hover:opacity-100 ${isDark ? 'text-white' : 'text-gray-900'}`
               }`}
             >
@@ -192,18 +192,18 @@ export const Stock: React.FC = () => {
                 placeholder="Buscar por nome ou categoria..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full h-14 pl-14 pr-6 rounded-2xl border transition-all outline-none text-sm font-bold
+                className={`w-full h-14 pl-14 pr-6 rounded-panel border transition-all outline-none text-sm font-bold
                   ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)] shadow-sm'}
                 `}
               />
             </div>
 
-            <div className={`relative flex items-center px-5 rounded-2xl border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200 shadow-sm'}`}>
+            <div className={`relative flex items-center px-5 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200 shadow-sm'}`}>
               <Filter className="w-4 h-4 mr-3 opacity-30" />
               <select 
                 value={selectedCategory} 
                 onChange={e => setSelectedCategory(e.target.value)}
-                className="bg-transparent border-none outline-none text-[10px] font-black uppercase tracking-widest appearance-none pr-10 cursor-pointer"
+                className="bg-transparent border-none outline-none text-xs font-semibold  appearance-none pr-10 cursor-pointer"
               >
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -211,7 +211,7 @@ export const Stock: React.FC = () => {
             
             <button
               onClick={() => handleOpenModal()}
-              className="flex items-center justify-center gap-3 px-10 h-14 rounded-2xl bg-[var(--color-accent)] text-white font-black text-[10px] uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-[var(--color-accent)]/30"
+              className="flex items-center justify-center gap-3 px-10 h-14 rounded-panel bg-[var(--color-accent)] text-white font-semibold text-xs  transition-all"
             >
               <Plus className="w-5 h-5" /> Novo Insumo / Entrada
             </button>
@@ -223,11 +223,11 @@ export const Stock: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-5 p-6 rounded-section bg-amber-500/5 border border-amber-500/20 text-amber-600"
             >
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-panel bg-amber-500/20 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-6 h-6 shadow-lg shadow-amber-500/20" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em]">Insumos em Nível Crítico</p>
+                <p className="text-xs font-semibold ">Insumos em Nível Crítico</p>
                 <p className="text-xs font-bold opacity-80 mt-0.5">Existem <strong>{alertCount}</strong> itens que precisam de reposição imediata.</p>
               </div>
             </motion.div>
@@ -237,7 +237,7 @@ export const Stock: React.FC = () => {
           <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/10'}`}>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className={`text-[9px] font-black uppercase tracking-[0.2em] ${isDark ? 'bg-white/5 text-white/30' : 'bg-gray-50 text-gray-400'}`}>
+                <thead className={`text-xs font-semibold  ${isDark ? 'bg-white/5 text-white/30' : 'bg-gray-50 text-gray-400'}`}>
                   <tr>
                     <th className="px-10 py-7">Insumo</th>
                     <th className="px-10 py-7">Fornecedor Preferencial</th>
@@ -255,8 +255,8 @@ export const Stock: React.FC = () => {
                       <tr key={si.id} className={`${isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50/50'} transition-all group`}>
                         <td className="px-10 py-6">
                           <div className="flex flex-col">
-                            <span className="font-black uppercase tracking-tight text-sm">{si.name}</span>
-                            <span className="text-[9px] font-bold opacity-20 uppercase tracking-widest">{si.category}</span>
+                            <span className="font-semibold  text-sm">{si.name}</span>
+                            <span className="text-xs font-bold opacity-20 ">{si.category}</span>
                           </div>
                         </td>
                         <td className="px-10 py-6">
@@ -265,16 +265,16 @@ export const Stock: React.FC = () => {
                               <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
                                 <Truck className="w-4 h-4 opacity-30" />
                               </div>
-                              <span className="text-[10px] font-black uppercase tracking-tight opacity-60">{supplier.companyName}</span>
+                              <span className="text-xs font-semibold  opacity-60">{supplier.companyName}</span>
                             </div>
                           ) : (
-                            <span className="text-[9px] font-bold opacity-20 italic">Não vinculado</span>
+                            <span className="text-xs font-bold opacity-20">Não vinculado</span>
                           )}
                         </td>
                         <td className="px-10 py-6">
                           <div className="flex flex-col">
-                            <span className={`text-lg font-black tabular-nums ${status.color}`}>
-                              {si.currentStock.toFixed(3)} <span className="text-[10px] opacity-40 ml-1 font-bold">{si.unit}</span>
+                            <span className={`text-lg font-semibold tabular-nums ${status.color}`}>
+                              {si.currentStock.toFixed(3)} <span className="text-xs opacity-40 ml-1 font-bold">{si.unit}</span>
                             </span>
                             <div className="w-20 h-1 bg-current/10 rounded-full overflow-hidden mt-1.5">
                               <div 
@@ -288,15 +288,15 @@ export const Stock: React.FC = () => {
                           <span className="font-bold font-mono text-xs opacity-60">R$ {si.costPrice.toFixed(2)}</span>
                         </td>
                         <td className="px-10 py-6">
-                           <span className={`px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${status.color} ${status.bg}`}>
+                           <span className={`px-3 py-1.5 rounded-full text-xs font-semibold  ${status.color} ${status.bg}`}>
                              {status.label}
                            </span>
                         </td>
                         <td className="px-10 py-6 text-right">
                           <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
-                            <button onClick={() => handleOpenModal(si)} className={`p-3 rounded-2xl transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}><Edit2 className="w-4 h-4 opacity-40" /></button>
-                            <button onClick={() => { setSelectedItemId(si.id); setIsLossModalOpen(true); }} className="p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><AlertTriangle className="w-4 h-4" /></button>
-                            <button onClick={() => handleOpenModal(si)} className="p-3 rounded-2xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-all"><Plus className="w-4 h-4" /></button>
+                            <button onClick={() => handleOpenModal(si)} className={`p-3 rounded-panel transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}><Edit2 className="w-4 h-4 opacity-40" /></button>
+                            <button onClick={() => { setSelectedItemId(si.id); setIsLossModalOpen(true); }} className="p-3 rounded-panel bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><AlertTriangle className="w-4 h-4" /></button>
+                            <button onClick={() => handleOpenModal(si)} className="p-3 rounded-panel bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition-all"><Plus className="w-4 h-4" /></button>
                           </div>
                         </td>
                       </tr>
@@ -315,7 +315,7 @@ export const Stock: React.FC = () => {
           <div className={`rounded-section border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200 shadow-2xl shadow-gray-200/10'}`}>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className={`text-[9px] font-black uppercase tracking-[0.2em] ${isDark ? 'bg-white/5 text-white/30' : 'bg-gray-50 text-gray-400'}`}>
+                <thead className={`text-xs font-semibold  ${isDark ? 'bg-white/5 text-white/30' : 'bg-gray-50 text-gray-400'}`}>
                   <tr>
                     <th className="px-10 py-7">Timestamp</th>
                     <th className="px-10 py-7">Insumo</th>
@@ -329,15 +329,15 @@ export const Stock: React.FC = () => {
                     const item = stockItems.find(si => si.id === m.stockItemId);
                     return (
                       <tr key={m.id} className={`${isDark ? 'hover:bg-white/5' : 'hover:bg-gray-50/50'} transition-all group`}>
-                        <td className="px-10 py-6 text-[10px] font-bold opacity-30">{new Date(m.timestamp).toLocaleString('pt-BR')}</td>
-                        <td className="px-10 py-6 font-black uppercase tracking-tight text-xs">{item?.name || 'Insumo Removido'}</td>
+                        <td className="px-10 py-6 text-xs font-bold opacity-30">{new Date(m.timestamp).toLocaleString('pt-BR')}</td>
+                        <td className="px-10 py-6 font-semibold  text-xs">{item?.name || 'Insumo Removido'}</td>
                         <td className="px-10 py-6">
-                          {m.type === 'in' && <span className="inline-flex items-center gap-2 text-emerald-500 font-black text-[9px] uppercase tracking-widest"><ArrowDownRight className="w-4 h-4" /> Entrada</span>}
-                          {m.type === 'out' && <span className="inline-flex items-center gap-2 text-blue-500 font-black text-[9px] uppercase tracking-widest"><ArrowUpRight className="w-4 h-4" /> Consumo PDV</span>}
-                          {m.type === 'loss' && <span className="inline-flex items-center gap-2 text-red-500 font-black text-[9px] uppercase tracking-widest"><AlertTriangle className="w-4 h-4" /> Quebra</span>}
+                          {m.type === 'in' && <span className="inline-flex items-center gap-2 text-emerald-500 font-semibold text-xs "><ArrowDownRight className="w-4 h-4" /> Entrada</span>}
+                          {m.type === 'out' && <span className="inline-flex items-center gap-2 text-blue-500 font-semibold text-xs "><ArrowUpRight className="w-4 h-4" /> Consumo PDV</span>}
+                          {m.type === 'loss' && <span className="inline-flex items-center gap-2 text-red-500 font-semibold text-xs "><AlertTriangle className="w-4 h-4" /> Quebra</span>}
                         </td>
-                        <td className="px-10 py-6 font-black font-mono text-base">{m.quantity} <span className="text-[10px] opacity-20 uppercase">{item?.unit}</span></td>
-                        <td className="px-10 py-6 text-[10px] font-bold uppercase opacity-40">{m.reason}</td>
+                        <td className="px-10 py-6 font-semibold font-mono text-base">{m.quantity} <span className="text-xs opacity-20">{item?.unit}</span></td>
+                        <td className="px-10 py-6 text-xs font-bold opacity-40">{m.reason}</td>
                       </tr>
                     );
                   })}
@@ -356,14 +356,14 @@ export const Stock: React.FC = () => {
              return (
                <div key={m.id} className={`p-8 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl'}`}>
                   <div className="flex justify-between items-start mb-6">
-                     <div className="w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center"><AlertTriangle className="w-6 h-6" /></div>
-                     <span className="text-[10px] font-bold opacity-30">{new Date(m.timestamp).toLocaleDateString('pt-BR')}</span>
+                     <div className="w-12 h-12 rounded-panel bg-red-500/10 text-red-500 flex items-center justify-center"><AlertTriangle className="w-6 h-6" /></div>
+                     <span className="text-xs font-bold opacity-30">{new Date(m.timestamp).toLocaleDateString('pt-BR')}</span>
                   </div>
-                  <h4 className="text-sm font-black uppercase tracking-tight mb-1">{item?.name}</h4>
-                  <p className="text-[10px] font-bold opacity-40 uppercase tracking-widest italic mb-4">{m.reason}</p>
+                  <h4 className="text-sm font-semibold  mb-1">{item?.name}</h4>
+                  <p className="text-xs font-bold opacity-40  mb-4">{m.reason}</p>
                   <div className="flex justify-between items-end border-t border-current/5 pt-4">
-                     <span className="text-[9px] font-black uppercase opacity-20">Volume Perdido</span>
-                     <span className="text-xl font-black text-red-500">-{m.quantity} {item?.unit}</span>
+                     <span className="text-xs font-semibold opacity-20">Volume Perdido</span>
+                     <span className="text-xl font-semibold text-red-500">-{m.quantity} {item?.unit}</span>
                   </div>
                </div>
              );
@@ -389,33 +389,33 @@ export const Stock: React.FC = () => {
                     <Package className="w-8 h-8 text-[var(--color-accent)]" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black tracking-tighter uppercase leading-tight italic">{editingItem ? 'Gestão de Insumo' : 'Novo Insumo / Entrada'}</h3>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Dados cadastrais e entrada de estoque</p>
+                    <h3 className="text-3xl font-semibold  leading-tight">{editingItem ? 'Gestão de Insumo' : 'Novo Insumo / Entrada'}</h3>
+                    <p className="text-xs font-semibold  opacity-40">Dados cadastrais e entrada de estoque</p>
                   </div>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="p-4 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 opacity-40"><X className="w-6 h-6" /></button>
+                <button onClick={() => setIsModalOpen(false)} className="p-4 rounded-panel hover:bg-black/5 dark:hover:bg-white/5 opacity-40"><X className="w-6 h-6" /></button>
               </div>
 
               <form onSubmit={handleSaveItem} className="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
                   {/* Left Column: Cadastro */}
                   <div className="space-y-8">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--color-accent)] flex items-center gap-3">
+                    <h4 className="text-xs font-semibold  text-[var(--color-accent)] flex items-center gap-3">
                        <Tag className="w-4 h-4" /> Dados Cadastrais
                     </h4>
                     <div className="space-y-5">
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Nome do Insumo</label>
-                        <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                        <label className="text-xs font-semibold  opacity-40 ml-2">Nome do Insumo</label>
+                        <input required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Categoria</label>
-                          <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                          <label className="text-xs font-semibold  opacity-40 ml-2">Categoria</label>
+                          <input required value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Unidade</label>
-                          <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-100'}`}>
+                          <label className="text-xs font-semibold  opacity-40 ml-2">Unidade</label>
+                          <select value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-100'}`}>
                             <option value="kg">Quilograma (kg)</option>
                             <option value="g">Grama (g)</option>
                             <option value="L">Litro (L)</option>
@@ -425,46 +425,46 @@ export const Stock: React.FC = () => {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Estoque de Alerta (Mínimo)</label>
-                        <input required type="number" step="0.001" value={formData.minStock} onChange={e => setFormData({...formData, minStock: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                        <label className="text-xs font-semibold  opacity-40 ml-2">Estoque de Alerta (Mínimo)</label>
+                        <input required type="number" step="0.001" value={formData.minStock} onChange={e => setFormData({...formData, minStock: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                       </div>
                     </div>
                   </div>
 
                   {/* Right Column: Entrada e Fornecedor */}
                   <div className="space-y-8">
-                    <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-[var(--color-accent)] flex items-center gap-3">
+                    <h4 className="text-xs font-semibold  text-[var(--color-accent)] flex items-center gap-3">
                        <Truck className="w-4 h-4" /> Entrada & Supply
                     </h4>
                     <div className="space-y-5">
                       <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Fornecedor Preferencial</label>
-                        <select value={formData.supplierId} onChange={e => setFormData({...formData, supplierId: e.target.value})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-100 text-gray-900'}`}>
+                        <label className="text-xs font-semibold  opacity-40 ml-2">Fornecedor Preferencial</label>
+                        <select value={formData.supplierId} onChange={e => setFormData({...formData, supplierId: e.target.value})} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-100 text-gray-900'}`}>
                           <option value="">Selecione um parceiro...</option>
                           {suppliers.map(s => <option key={s.id} value={s.id}>{s.companyName}</option>)}
                         </select>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">Custo de Aquisição (R$)</label>
+                          <label className="text-xs font-semibold  opacity-40 ml-2">Custo de Aquisição (R$)</label>
                           <div className="relative">
                             <DollarSign className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-20" />
-                            <input required type="number" step="0.01" value={formData.costPrice} onChange={e => setFormData({...formData, costPrice: Number(e.target.value)})} className={`w-full h-14 pl-12 pr-6 rounded-2xl border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                            <input required type="number" step="0.01" value={formData.costPrice} onChange={e => setFormData({...formData, costPrice: Number(e.target.value)})} className={`w-full h-14 pl-12 pr-6 rounded-panel border outline-none font-bold text-sm ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                           </div>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-widest opacity-40 ml-2">{editingItem ? 'Somar ao Estoque' : 'Estoque Inicial'}</label>
-                          <input required type="number" step="0.001" value={formData.addQuantity} onChange={e => setFormData({...formData, addQuantity: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-sm bg-[var(--color-accent)]/5 border-[var(--color-accent)]/20 text-[var(--color-accent)] placeholder:text-[var(--color-accent)]/30`} />
+                          <label className="text-xs font-semibold  opacity-40 ml-2">{editingItem ? 'Somar ao Estoque' : 'Estoque Inicial'}</label>
+                          <input required type="number" step="0.001" value={formData.addQuantity} onChange={e => setFormData({...formData, addQuantity: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-sm bg-[var(--color-accent)]/5 border-[var(--color-accent)]/20 text-[var(--color-accent)] placeholder:text-[var(--color-accent)]/30`} />
                         </div>
                       </div>
                       
                       {editingItem && (
-                        <div className={`p-6 rounded-2xl border flex justify-between items-center ${isDark ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                        <div className={`p-6 rounded-panel border flex justify-between items-center ${isDark ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
                            <div className="flex items-center gap-3">
                               <Info className="w-5 h-5 opacity-20" />
-                              <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Saldo Atualizado</span>
+                              <span className="text-xs font-semibold  opacity-40">Saldo Atualizado</span>
                            </div>
-                           <span className="text-xl font-black italic">
+                           <span className="text-xl font-semibold">
                              {(editingItem.currentStock + Number(formData.addQuantity)).toFixed(3)} {formData.unit}
                            </span>
                         </div>
@@ -474,8 +474,8 @@ export const Stock: React.FC = () => {
                 </div>
 
                 <div className="pt-6 flex gap-6">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-[10px] ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>Cancelar</button>
-                  <button type="submit" className="flex-[2] h-16 rounded-2xl bg-[var(--color-accent)] text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-16 rounded-panel font-semibold  text-xs ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>Cancelar</button>
+                  <button type="submit" className="flex-[2] h-16 rounded-panel bg-[var(--color-accent)] text-white font-semibold  text-xs transition-all">
                     Finalizar Lançamento
                   </button>
                 </div>
@@ -490,19 +490,19 @@ export const Stock: React.FC = () => {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsLossModalOpen(false)} className="absolute inset-0 bg-black/60 backdrop-blur-md" />
             <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }} className={`relative w-full max-w-md rounded-section overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white'}`}>
               <div className="p-8 border-b flex justify-between items-center bg-red-500/5">
-                <h3 className="text-xl font-black uppercase italic tracking-tighter text-red-500">Registrar Quebra / Perda</h3>
+                <h3 className="text-xl font-semibold  text-red-500">Registrar Quebra / Perda</h3>
                 <button onClick={() => setIsLossModalOpen(false)}><X className="w-6 h-6" /></button>
               </div>
               <form onSubmit={handleSaveLoss} className="p-8 space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Quantidade Perdida</label>
-                  <input required type="number" step="0.001" value={lossData.quantity} onChange={e => setLossData({...lossData, quantity: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-2xl border outline-none font-bold text-xl ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                  <label className="text-xs font-semibold  opacity-40 ml-2">Quantidade Perdida</label>
+                  <input required type="number" step="0.001" value={lossData.quantity} onChange={e => setLossData({...lossData, quantity: Number(e.target.value)})} className={`w-full h-14 px-6 rounded-panel border outline-none font-bold text-xl ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Motivo da Baixa</label>
-                  <textarea required value={lossData.reason} onChange={e => setLossData({...lossData, reason: e.target.value})} placeholder="Ex: Vencimento, Quebra de garrafa, Desperdício de preparo..." rows={3} className={`w-full p-6 rounded-2xl border outline-none font-bold text-sm resize-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
+                  <label className="text-xs font-semibold  opacity-40 ml-2">Motivo da Baixa</label>
+                  <textarea required value={lossData.reason} onChange={e => setLossData({...lossData, reason: e.target.value})} placeholder="Ex: Vencimento, Quebra de garrafa, Desperdício de preparo..." rows={3} className={`w-full p-6 rounded-panel border outline-none font-bold text-sm resize-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`} />
                 </div>
-                <button type="submit" className="w-full h-16 rounded-2xl bg-red-500 text-white font-black uppercase tracking-widest text-[10px] shadow-xl shadow-red-500/20 mt-4 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                <button type="submit" className="w-full h-16 rounded-panel bg-red-500 text-white font-semibold  text-xs shadow-xl shadow-red-500/20 mt-4 transition-all">
                   Confirmar Baixa de Estoque
                 </button>
               </form>
