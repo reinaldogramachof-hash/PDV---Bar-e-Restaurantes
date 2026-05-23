@@ -75,104 +75,102 @@ export const Suppliers: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-full gap-8 animate-in fade-in duration-700 pb-12">
+    <div className="flex flex-col min-h-full gap-5 animate-in fade-in duration-700 pb-8">
       {/* Header Section */}
-      <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-6">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-extrabold tracking-tighter uppercase leading-none">Parceiros & Supply</h2>
-          <p className="text-[10px] font-bold uppercase tracking-widest opacity-40">Inteligência Logística e Suprimentos</p>
+      <div className="flex flex-col lg:flex-row justify-between lg:items-end gap-4">
+        <div className="space-y-0.5">
+          <h2 className="text-xl font-semibold leading-none">Parceiros & Supply</h2>
+          <p className="text-xs text-muted">Inteligência Logística e Suprimentos</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-          <div className="flex p-1.5 gap-1 rounded-2xl bg-black/5 dark:bg-white/5 border border-white/10 w-fit backdrop-blur-md">
-            <button onClick={() => toggleViewMode('grid')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[var(--color-border)] shadow-xl text-[var(--color-accent)]' : 'opacity-30 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
-            <button onClick={() => toggleViewMode('list')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[var(--color-border)] shadow-xl text-[var(--color-accent)]' : 'opacity-30 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
+          <div className="flex p-1 gap-1 rounded-panel bg-black/5 dark:bg-white/5 border border-white/10 w-fit">
+            <button onClick={() => toggleViewMode('grid')} className={`p-1.5 rounded-control transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[var(--color-border)] shadow text-[var(--color-accent)]' : 'opacity-30 hover:opacity-100'}`}><LayoutGrid className="w-3.5 h-3.5" /></button>
+            <button onClick={() => toggleViewMode('list')} className={`p-1.5 rounded-control transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[var(--color-border)] shadow text-[var(--color-accent)]' : 'opacity-30 hover:opacity-100'}`}><List className="w-3.5 h-3.5" /></button>
           </div>
-          <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 lg:w-96 transition-all focus-within:ring-4 focus-within:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] focus-within:border-[var(--color-accent)]/40' : 'bg-white border-gray-200 focus-within:border-pink-300 shadow-sm'}`}>
-            <Search className="w-4 h-4 mr-3 opacity-30" />
-            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar por empresa, categoria ou contato..." className="bg-transparent border-none outline-none w-full text-xs font-bold placeholder:opacity-20" />
+          <div className={`flex items-center px-3 h-10 rounded-panel border flex-1 lg:w-80 transition-all focus-within:ring-2 focus-within:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200 shadow-sm'}`}>
+            <Search className="w-3.5 h-3.5 mr-2.5 opacity-30 shrink-0" />
+            <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Buscar fornecedor..." className="bg-transparent border-none outline-none w-full text-xs placeholder:opacity-40" />
           </div>
-          <button onClick={() => handleOpenModal()} className="px-8 py-3 bg-[var(--color-accent)] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[var(--color-accent)]/30 flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all">
-            <Plus className="w-4 h-4" /> Novo Fornecedor
+          <button onClick={() => handleOpenModal()} className="px-4 h-10 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-panel text-xs font-medium flex items-center justify-center gap-2 transition-all">
+            <Plus className="w-3.5 h-3.5" /> Novo Fornecedor
           </button>
         </div>
       </div>
 
       {/* Main Content Area */}
       {viewMode === 'grid' ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-4">
           {filteredSuppliers.map(supplier => (
-            <motion.div 
-              key={supplier.id} 
+            <motion.div
+              key={supplier.id}
               layout
-              className={`p-10 rounded-section border transition-all duration-500 group hover:border-[var(--color-accent)]/40 relative overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/20'}`}
+              className={`p-5 rounded-panel border transition-all duration-300 group hover:border-[var(--color-accent)]/40 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20'}`}
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[var(--color-accent)]/5 to-transparent rounded-bl-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700" />
-
-              <div className="flex justify-between items-start mb-10 relative z-10">
-                <div className="flex items-center gap-6">
-                  <div className={`w-16 h-16 rounded-panel flex items-center justify-center text-2xl relative ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                    <Truck className="w-7 h-7 text-[var(--color-accent)]" />
-                    <div className="absolute -top-2 -right-2 flex gap-0.5">
-                       {[...Array(supplier.rating || 0)].map((_, i) => <Star key={i} className="w-3 h-3 fill-amber-500 text-amber-500" />)}
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-panel flex items-center justify-center relative ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                    <Truck className="w-5 h-5 text-[var(--color-accent)]" />
+                    <div className="absolute -top-1 -right-1 flex gap-0.5">
+                       {[...Array(Math.min(3, supplier.rating || 0))].map((_, i) => <Star key={i} className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />)}
                     </div>
                   </div>
                   <div>
-                    <h3 className="text-xl font-black tracking-tighter truncate leading-tight uppercase max-w-[200px]">{supplier.companyName}</h3>
-                    <div className="flex items-center gap-2 mt-1.5">
-                       <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-md ${isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>{supplier.category}</span>
-                       {supplier.deliveryPerformance >= 95 && <span className="flex items-center gap-1 text-[8px] font-black uppercase text-emerald-500"><Check className="w-3 h-3" /> Premium</span>}
+                    <h3 className="text-sm font-semibold truncate max-w-[200px]">{supplier.companyName}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                       <span className={`text-[10px] font-medium px-2 py-0.5 rounded-control ${isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>{supplier.category}</span>
+                       {supplier.deliveryPerformance >= 95 && <span className="flex items-center gap-1 text-[10px] font-medium text-emerald-500"><Check className="w-3 h-3" /> Premium</span>}
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
-                   <button onClick={() => handleOpenModal(supplier)} className={`p-3 rounded-2xl transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}><Edit3 className="w-4 h-4 opacity-40" /></button>
-                   <button onClick={() => deleteSupplier(supplier.id)} className="p-3 rounded-2xl bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><Trash2 className="w-4 h-4" /></button>
+                <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                   <button onClick={() => handleOpenModal(supplier)} className={`p-1.5 rounded-control transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-50 hover:bg-gray-100'}`}><Edit3 className="w-3.5 h-3.5 opacity-40" /></button>
+                   <button onClick={() => deleteSupplier(supplier.id)} className="p-1.5 rounded-control bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 relative z-10">
-                <div className="space-y-5">
-                  <div className="flex items-center gap-4 group/item">
-                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}><User className="w-3.5 h-3.5 opacity-30" /></div>
-                     <div className="flex flex-col"><span className="text-[8px] font-black uppercase opacity-30">Contato</span><span className="text-[10px] font-bold">{supplier.contactName}</span></div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                     <div className={`w-7 h-7 rounded-control flex items-center justify-center shrink-0 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}><User className="w-3 h-3 opacity-30" /></div>
+                     <div><span className="text-[10px] text-muted block">Contato</span><span className="text-xs font-medium">{supplier.contactName}</span></div>
                   </div>
-                  <div className="flex items-center gap-4 group/item">
-                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}><Phone className="w-3.5 h-3.5 opacity-30" /></div>
-                     <div className="flex flex-col"><span className="text-[8px] font-black uppercase opacity-30">Telefone</span><span className="text-[10px] font-bold">{supplier.phone}</span></div>
+                  <div className="flex items-center gap-3">
+                     <div className={`w-7 h-7 rounded-control flex items-center justify-center shrink-0 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}><Phone className="w-3 h-3 opacity-30" /></div>
+                     <div><span className="text-[10px] text-muted block">Telefone</span><span className="text-xs font-medium">{supplier.phone}</span></div>
                   </div>
-                  <div className="flex items-center gap-4 group/item">
-                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}><MapPin className="w-3.5 h-3.5 opacity-30" /></div>
-                     <div className="flex flex-col"><span className="text-[8px] font-black uppercase opacity-30">Localização</span><span className="text-[10px] font-bold truncate max-w-[150px]">{supplier.address || 'Não informado'}</span></div>
+                  <div className="flex items-center gap-3">
+                     <div className={`w-7 h-7 rounded-control flex items-center justify-center shrink-0 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}><MapPin className="w-3 h-3 opacity-30" /></div>
+                     <div><span className="text-[10px] text-muted block">Localização</span><span className="text-xs font-medium truncate max-w-[150px]">{supplier.address || 'Não informado'}</span></div>
                   </div>
                 </div>
 
-                <div className={`p-8 rounded-panel flex flex-col justify-between border ${isDark ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                <div className={`p-4 rounded-control flex flex-col justify-between border ${isDark ? 'bg-black/20 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
                    <div>
-                      <div className="flex justify-between items-end mb-3">
-                         <p className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30">Performance</p>
-                         <span className={`text-[11px] font-black ${supplier.deliveryPerformance >= 90 ? 'text-emerald-500' : 'text-amber-500'}`}>{supplier.deliveryPerformance}%</span>
+                      <div className="flex justify-between items-end mb-2">
+                         <p className="text-[10px] text-muted">Performance</p>
+                         <span className={`text-xs font-semibold ${supplier.deliveryPerformance >= 90 ? 'text-emerald-500' : 'text-amber-500'}`}>{supplier.deliveryPerformance}%</span>
                       </div>
-                      <div className="h-2 bg-current/10 rounded-full overflow-hidden">
-                         <motion.div initial={{ width: 0 }} animate={{ width: `${supplier.deliveryPerformance}%` }} transition={{ duration: 1.5, ease: "easeOut" }} className={`h-full rounded-full ${supplier.deliveryPerformance >= 90 ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 'bg-amber-500'}`} />
+                      <div className="h-1.5 bg-current/10 rounded-full overflow-hidden">
+                         <motion.div initial={{ width: 0 }} animate={{ width: `${supplier.deliveryPerformance}%` }} transition={{ duration: 1.5, ease: "easeOut" }} className={`h-full rounded-full ${supplier.deliveryPerformance >= 90 ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                       </div>
                    </div>
-                   <div className="mt-6 pt-6 border-t border-dashed border-current/10 flex justify-between items-center">
+                   <div className="mt-3 pt-3 border-t border-dashed border-current/10 flex justify-between items-center">
                       <div>
-                         <p className="text-[8px] font-black uppercase tracking-widest opacity-30">Pagamento</p>
-                         <p className="text-[10px] font-black flex items-center gap-2 mt-1"><CreditCard className="w-3 h-3 opacity-30" /> {supplier.paymentTerms || 'Padrão'}</p>
+                         <p className="text-[10px] text-muted">Pagamento</p>
+                         <p className="text-xs font-medium flex items-center gap-1 mt-0.5"><CreditCard className="w-3 h-3 opacity-30" /> {supplier.paymentTerms || 'Padrão'}</p>
                       </div>
                       <div className="text-right">
-                         <p className="text-[8px] font-black uppercase tracking-widest opacity-30">Última</p>
-                         <p className="text-[10px] font-black">{new Date(supplier.lastDelivery).toLocaleDateString('pt-BR')}</p>
+                         <p className="text-[10px] text-muted">Última entrega</p>
+                         <p className="text-xs font-medium">{new Date(supplier.lastDelivery).toLocaleDateString('pt-BR')}</p>
                       </div>
                    </div>
                 </div>
               </div>
 
-              <div className="mt-8 pt-6 border-t border-current/5 flex justify-between items-center relative z-10">
-                 <button className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest opacity-30 hover:opacity-100 hover:text-[var(--color-accent)] transition-all"><Box className="w-4 h-4" /> Catálogo de Produtos</button>
-                 {supplier.observations && <div className="flex items-center gap-1.5 text-[9px] font-bold text-amber-500/60 bg-amber-500/5 px-3 py-1.5 rounded-full"><AlertCircle className="w-3 h-3" /> Ver Notas</div>}
+              <div className="mt-4 pt-3 border-t border-current/5 flex justify-between items-center">
+                 <button className="flex items-center gap-1.5 text-[10px] font-medium opacity-30 hover:opacity-100 hover:text-[var(--color-accent)] transition-all"><Box className="w-3.5 h-3.5" /> Catálogo de Produtos</button>
+                 {supplier.observations && <div className="flex items-center gap-1 text-[10px] font-medium text-amber-500/60 bg-amber-500/5 px-2.5 py-1 rounded-full"><AlertCircle className="w-3 h-3" /> Ver Notas</div>}
               </div>
             </motion.div>
           ))}
@@ -183,18 +181,18 @@ export const Suppliers: React.FC = () => {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className={`text-[9px] uppercase font-black tracking-[0.2em] border-b ${isDark ? 'bg-white/5 border-white/5 text-white/30' : 'bg-gray-50 border-gray-100 text-gray-400'}`}>
-                  <th className="px-10 py-6">Parceiro Logístico</th>
-                  <th className="px-10 py-6">Categoria</th>
-                  <th className="px-10 py-6">Contatos & Docs</th>
-                  <th className="px-10 py-6">Condição Pgto</th>
-                  <th className="px-10 py-6 text-right">Métrica</th>
-                  <th className="px-10 py-6 text-right">Ações</th>
+                  <th className="px-4 py-3">Parceiro Logístico</th>
+                  <th className="px-4 py-3">Categoria</th>
+                  <th className="px-4 py-3">Contatos & Docs</th>
+                  <th className="px-4 py-3">Condição Pgto</th>
+                  <th className="px-4 py-3 text-right">Métrica</th>
+                  <th className="px-4 py-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-current/[0.03]">
                 {filteredSuppliers.map(supplier => (
                   <tr key={supplier.id} className="group hover:bg-current/[0.01] transition-all">
-                    <td className="px-10 py-6">
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-4">
                         <div className={`w-12 h-12 rounded-[1rem] flex items-center justify-center relative ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
                           <Truck className="w-6 h-6 opacity-20" />
@@ -208,16 +206,16 @@ export const Suppliers: React.FC = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-10 py-6">
+                    <td className="px-4 py-3">
                        <span className={`text-[8px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg ${isDark ? 'bg-white/5 text-gray-400' : 'bg-gray-100 text-gray-500'}`}>{supplier.category}</span>
                     </td>
-                    <td className="px-10 py-6">
+                    <td className="px-4 py-3">
                        <div className="flex flex-col">
                           <span className="text-[11px] font-bold opacity-50">{supplier.phone}</span>
                           <span className="text-[9px] font-bold opacity-20 italic">{supplier.contactName}</span>
                        </div>
                     </td>
-                    <td className="px-10 py-6">
+                    <td className="px-4 py-3">
                        <div className="flex items-center gap-2">
                           <CreditCard className="w-3 h-3 opacity-20" />
                           <span className="text-[10px] font-black opacity-40 uppercase tracking-widest">{supplier.paymentTerms || 'Boleto'}</span>
@@ -258,64 +256,61 @@ export const Suppliers: React.FC = () => {
               className={`relative w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col rounded-section shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border border-[var(--color-border)]' : 'bg-white border border-gray-100'}`}
             >
               {/* Modal Header */}
-              <div className="p-10 pb-6 flex justify-between items-start">
-                <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 rounded-panel bg-[var(--color-accent)]/10 flex items-center justify-center">
-                    <Truck className="w-8 h-8 text-[var(--color-accent)]" />
+              <div className={`px-5 py-4 flex justify-between items-center border-b ${isDark ? 'border-[var(--color-border)]' : 'border-gray-100'}`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-control bg-[var(--color-accent)]/10 flex items-center justify-center">
+                    <Truck className="w-4 h-4 text-[var(--color-accent)]" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black tracking-tighter uppercase leading-tight italic">{editingSupplier ? 'Ficha do Parceiro' : 'Novo Fornecedor'}</h3>
-                    <p className="text-[10px] font-black uppercase tracking-[0.3em] opacity-40">Gestão de Supply Chain</p>
+                    <h3 className="text-base font-semibold">{editingSupplier ? 'Ficha do Parceiro' : 'Novo Fornecedor'}</h3>
+                    <p className="text-xs text-muted">Gestão de Supply Chain</p>
                   </div>
                 </div>
-                <button onClick={() => setIsModalOpen(false)} className="p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition-all opacity-40 hover:opacity-100"><X className="w-6 h-6" /></button>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-control hover:bg-black/5 dark:hover:bg-white/5 transition-all opacity-40 hover:opacity-100"><X className="w-4 h-4" /></button>
               </div>
 
               {/* Tabs */}
-              <div className="px-10 flex gap-6 border-b border-current/5">
+              <div className="px-5 flex gap-4 border-b border-current/5">
                 {[
                   { id: 'geral', label: 'Dados Gerais', icon: User },
                   { id: 'logistica', label: 'Logística & Comercial', icon: Box }
                 ].map((tab) => (
-                  <button 
+                  <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
-                    className={`pb-4 px-2 flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all relative ${activeTab === tab.id ? 'text-[var(--color-accent)]' : 'opacity-30 hover:opacity-100'}`}
+                    className={`pb-3 px-1 flex items-center gap-2 text-xs font-medium transition-all relative ${activeTab === tab.id ? 'text-[var(--color-accent)]' : 'opacity-40 hover:opacity-80'}`}
                   >
-                    <tab.icon className="w-4 h-4" />
+                    <tab.icon className="w-3.5 h-3.5" />
                     {tab.label}
-                    {activeTab === tab.id && <motion.div layoutId="tab-underline-supplier" className="absolute bottom-0 left-0 right-0 h-1 bg-[var(--color-accent)] rounded-t-full" />}
+                    {activeTab === tab.id && <motion.div layoutId="tab-underline-supplier" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-accent)] rounded-t-full" />}
                   </button>
                 ))}
               </div>
 
               {/* Modal Body (Scrollable) */}
-              <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
-                <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+              <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
+                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
                   {activeTab === 'geral' ? (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-left-4 duration-500">
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Razão Social / Nome Fantasia</label>
-                          <div className="relative group">
-                             <input required value={formData.companyName} onChange={e => setFormData({ ...formData, companyName: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-8 focus:ring-[var(--color-accent)]/5 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
-                             <Box className="absolute right-5 top-1/2 -translate-y-1/2 w-4 h-4 opacity-10 group-focus-within:opacity-100 group-focus-within:text-[var(--color-accent)] transition-all" />
-                          </div>
+                    <div className="space-y-4 animate-in fade-in slide-in-from-left-4 duration-300">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-muted ml-1">Razão Social / Nome Fantasia</label>
+                          <input required value={formData.companyName} onChange={e => setFormData({ ...formData, companyName: e.target.value })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">CNPJ / CPF</label>
-                          <input value={formData.document} onChange={e => setFormData({ ...formData, document: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-muted ml-1">CNPJ / CPF</label>
+                          <input value={formData.document} onChange={e => setFormData({ ...formData, document: e.target.value })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Representante / Contato</label>
-                          <input value={formData.contactName} onChange={e => setFormData({ ...formData, contactName: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-muted ml-1">Representante / Contato</label>
+                          <input value={formData.contactName} onChange={e => setFormData({ ...formData, contactName: e.target.value })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Categoria</label>
-                          <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm appearance-none transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40 text-white' : 'bg-gray-50 border-gray-200 focus:border-pink-300 text-gray-900'}`}>
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-muted ml-1">Categoria</label>
+                          <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm appearance-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}>
                             <option>Bebidas</option>
                             <option>Perecíveis</option>
                             <option>Proteínas</option>
@@ -326,44 +321,44 @@ export const Suppliers: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">WhatsApp / Telefone</label>
-                          <input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-muted ml-1">WhatsApp / Telefone</label>
+                          <input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">E-mail Comercial</label>
-                          <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-muted ml-1">E-mail Comercial</label>
+                          <input type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Endereço de Retirada / Depósito</label>
-                        <textarea value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} rows={2} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-muted ml-1">Endereço de Retirada / Depósito</label>
+                        <textarea value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} rows={2} className={`w-full px-3 py-2 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                       </div>
 
-                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Condição de Pagamento</label>
-                          <input value={formData.paymentTerms} onChange={e => setFormData({ ...formData, paymentTerms: e.target.value })} placeholder="Ex: 15 dias, À vista, Boleto 30" className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-muted ml-1">Condição de Pagamento</label>
+                          <input value={formData.paymentTerms} onChange={e => setFormData({ ...formData, paymentTerms: e.target.value })} placeholder="Ex: 15 dias, À vista, Boleto 30" className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                         </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Classificação Interna (Rating)</label>
-                          <div className="flex gap-2 p-5 rounded-2xl border dark:bg-[var(--color-app-base)] dark:border-[var(--color-border)]">
+                        <div className="space-y-1.5">
+                          <label className="text-xs text-muted ml-1">Classificação Interna (Rating)</label>
+                          <div className="flex gap-2 h-10 px-3 rounded-control border items-center dark:bg-[var(--color-app-base)] dark:border-[var(--color-border)]">
                              {[1, 2, 3, 4, 5].map(r => (
-                               <button type="button" key={r} onClick={() => setFormData({ ...formData, rating: r })} className={`transition-all ${formData.rating && formData.rating >= r ? 'text-amber-500 scale-110' : 'text-gray-300 opacity-30 hover:opacity-100'}`}>
-                                 <Star className={`w-6 h-6 ${formData.rating && formData.rating >= r ? 'fill-current' : ''}`} />
+                               <button type="button" key={r} onClick={() => setFormData({ ...formData, rating: r })} className={`transition-all ${formData.rating && formData.rating >= r ? 'text-amber-500' : 'text-gray-300 opacity-30 hover:opacity-100'}`}>
+                                 <Star className={`w-5 h-5 ${formData.rating && formData.rating >= r ? 'fill-current' : ''}`} />
                                </button>
                              ))}
                           </div>
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <label className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30 ml-2">Observações & Notas Logísticas</label>
-                        <textarea value={formData.observations} onChange={e => setFormData({ ...formData, observations: e.target.value })} rows={4} className={`w-full p-5 rounded-2xl border outline-none font-bold text-sm transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                      <div className="space-y-1.5">
+                        <label className="text-xs text-muted ml-1">Observações & Notas Logísticas</label>
+                        <textarea value={formData.observations} onChange={e => setFormData({ ...formData, observations: e.target.value })} rows={3} className={`w-full px-3 py-2 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                       </div>
                     </div>
                   )}
@@ -371,9 +366,9 @@ export const Suppliers: React.FC = () => {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-10 border-t border-current/5 bg-black/5 dark:bg-white/5 flex gap-6">
-                <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 py-5 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>Descartar</button>
-                <button onClick={handleSave} className="flex-[2] py-5 bg-[var(--color-accent)] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-[1.02] active:scale-95 transition-all">Salvar Parceiro</button>
+              <div className="px-5 py-4 border-t border-current/5 bg-black/5 dark:bg-white/5 flex gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-10 rounded-panel text-xs font-medium transition-all ${isDark ? 'bg-white/5 hover:bg-white/10' : 'bg-gray-100 hover:bg-gray-200'}`}>Descartar</button>
+                <button onClick={handleSave} className="flex-[2] h-10 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-panel text-xs font-medium transition-all">Salvar Parceiro</button>
               </div>
             </motion.div>
           </div>

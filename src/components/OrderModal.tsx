@@ -141,39 +141,39 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                       </div>
                     </div>
                   ) : isOpening ? (
-                    <div className={`w-full max-w-md rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
-                      <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
-                         <div><h3 className="font-bold text-2xl">Mesa {tableNumber?.toString().padStart(2, '0')}</h3><p className="text-xs font-semibold opacity-40">Configuração de Abertura</p></div>
-                         <button onClick={onClose} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
+                    <div className={`w-full max-w-md rounded-panel border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
+                      <div className={`px-5 py-4 flex justify-between items-center border-b ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
+                         <div><h3 className="text-base font-semibold">Mesa {tableNumber?.toString().padStart(2, '0')}</h3><p className="text-xs text-muted">Configuração de Abertura</p></div>
+                         <button onClick={onClose} className="p-2 rounded-control hover:bg-black/5 transition-colors"><X className="w-4 h-4 opacity-40" /></button>
                       </div>
-                      <div className="p-10 space-y-8">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-2"><label className="text-xs font-bold opacity-40 ml-4">Atendente</label><select value={selectedWaiterId} onChange={e => setSelectedWaiterId(e.target.value)} className={`w-full p-4 rounded-2xl border outline-none font-semibold text-sm transition-all focus:ring-4 focus:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] text-white focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)]'}`}>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
-                          <div className="space-y-2"><label className="text-xs font-bold opacity-40 ml-4">Identificação</label><input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Nome (opcional)" className={`w-full p-4 rounded-2xl border outline-none font-semibold text-sm transition-all focus:ring-4 focus:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] text-white focus:border-[var(--color-accent)]' : 'bg-white border-gray-200 focus:border-[var(--color-accent)]'}`} /></div>
+                      <div className="p-5 space-y-4">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5"><label className="text-xs text-muted ml-1">Atendente</label><select value={selectedWaiterId} onChange={e => setSelectedWaiterId(e.target.value)} className={`w-full h-10 px-3 rounded-control border outline-none text-sm transition-all focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] text-white' : 'bg-white border-gray-200'}`}>{waiters.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></div>
+                          <div className="space-y-1.5"><label className="text-xs text-muted ml-1">Identificação</label><input type="text" value={customerName} onChange={e => setCustomerName(e.target.value)} placeholder="Nome (opcional)" className={`w-full h-10 px-3 rounded-control border outline-none text-sm transition-all focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] text-white' : 'bg-white border-gray-200'}`} /></div>
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-3">
                           <CountInput label="Adultos" value={adultCount} onChange={setAdultCount} isDark={isDark} min={1} />
                           <CountInput label="Crianças" value={childrenCount} onChange={setChildrenCount} isDark={isDark} min={0} />
                         </div>
-                        <button onClick={handleOpenTable} className="w-full mt-6 py-5 bg-[var(--color-accent)] rounded-2xl text-white font-bold text-sm shadow-lg shadow-[var(--color-accent)]/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Abrir Mesa</button>
+                        <button onClick={handleOpenTable} className="w-full h-10 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] rounded-panel text-white font-medium text-sm shadow-lg shadow-[var(--color-accent)]/20 transition-all">Abrir Mesa</button>
                       </div>
                     </div>
                   ) : isManaging ? (
-                    <div className={`w-full max-w-lg rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
-                      <div className={`p-8 flex justify-between items-center border-b ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
-                         <div><h3 className="font-bold text-2xl">Gestão Operacional</h3><p className="text-xs font-semibold opacity-40">Mesa {tableNumber}</p></div>
-                         <button onClick={() => setIsManaging(false)} className="p-3 rounded-2xl hover:bg-black/5 transition-colors"><X className="w-6 h-6 opacity-40" /></button>
+                    <div className={`w-full max-w-lg rounded-panel border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
+                      <div className={`px-5 py-4 flex justify-between items-center border-b ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
+                         <div><h3 className="text-base font-semibold">Gestão Operacional</h3><p className="text-xs text-muted">Mesa {tableNumber}</p></div>
+                         <button onClick={() => setIsManaging(false)} className="p-2 rounded-control hover:bg-black/5 transition-colors"><X className="w-4 h-4 opacity-40" /></button>
                       </div>
-                      <div className="p-10 space-y-10 overflow-y-auto max-h-[75vh] custom-scrollbar">
-                        <div><h4 className="text-xs font-bold uppercase tracking-wider mb-6 opacity-40 flex items-center gap-3"><Users className="w-5 h-5" /> Pessoas na Mesa</h4><div className="grid grid-cols-2 gap-6"><CountInput label="Adultos" value={adultCount} onChange={(v:number) => { setAdultCount(v); handleUpdateCounts(v, childrenCount); }} isDark={isDark} min={1} /><CountInput label="Crianças" value={childrenCount} onChange={(v:number) => { setChildrenCount(v); handleUpdateCounts(adultCount, v); }} isDark={isDark} min={0} /></div></div>
-                        <div><h4 className="text-xs font-bold uppercase tracking-wider mb-6 flex items-center gap-3 text-[var(--color-accent)]"><MoveRight className="w-5 h-5" /> Transferir Mesa</h4><div className="grid grid-cols-6 gap-3">{tables.filter(t => t.status === 'livre' && t.number !== tableNumber).map(t => (<button key={t.number} onClick={() => { transferTable(tableNumber!, t.number); onClose(); }} className={`aspect-square rounded-2xl border flex items-center justify-center text-sm font-bold transition-all hover:bg-[var(--color-accent)] hover:text-white hover:border-[var(--color-accent)] hover:scale-110 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>{t.number}</button>))}</div></div>
+                      <div className="p-5 space-y-5 overflow-y-auto max-h-[75vh] custom-scrollbar">
+                        <div><h4 className="text-xs font-medium text-muted mb-3 flex items-center gap-2"><Users className="w-4 h-4" /> Pessoas na Mesa</h4><div className="grid grid-cols-2 gap-3"><CountInput label="Adultos" value={adultCount} onChange={(v:number) => { setAdultCount(v); handleUpdateCounts(v, childrenCount); }} isDark={isDark} min={1} /><CountInput label="Crianças" value={childrenCount} onChange={(v:number) => { setChildrenCount(v); handleUpdateCounts(adultCount, v); }} isDark={isDark} min={0} /></div></div>
+                        <div><h4 className="text-xs font-medium text-[var(--color-accent)] mb-3 flex items-center gap-2"><MoveRight className="w-4 h-4" /> Transferir Mesa</h4><div className="grid grid-cols-6 gap-2">{tables.filter(t => t.status === 'livre' && t.number !== tableNumber).map(t => (<button key={t.number} onClick={() => { transferTable(tableNumber!, t.number); onClose(); }} className={`aspect-square rounded-control border flex items-center justify-center text-sm font-semibold transition-all hover:bg-[var(--color-accent)] hover:text-white hover:border-[var(--color-accent)] ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>{t.number}</button>))}</div></div>
                       </div>
                     </div>
                   ) : (
-                    <div className={`w-full max-w-sm rounded-3xl border p-12 flex flex-col items-center text-center space-y-6 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl'}`}>
-                      <div className="w-20 h-20 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center"><AlertTriangle className="w-10 h-10" /></div>
-                      <div className="space-y-2"><h3 className="text-xl font-bold">Erro de Sincronia</h3><p className="text-sm font-medium opacity-40 leading-relaxed px-4">Esta mesa está sem comanda ativa no sistema.</p></div>
-                      <div className="w-full pt-4 space-y-3"><button onClick={() => { clearTable(tableNumber!); setIsOpening(true); }} className="w-full py-5 bg-amber-500 text-white rounded-2xl font-bold text-xs shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"><RefreshCw className="w-4 h-4" /> Resetar Mesa</button><button onClick={onClose} className="w-full py-4 rounded-2xl font-bold text-xs opacity-40 hover:opacity-100 transition-opacity">Voltar</button></div>
+                    <div className={`w-full max-w-sm rounded-panel border p-6 flex flex-col items-center text-center gap-4 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl'}`}>
+                      <div className="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-panel flex items-center justify-center"><AlertTriangle className="w-6 h-6" /></div>
+                      <div><h3 className="text-base font-semibold">Erro de Sincronia</h3><p className="text-xs text-muted mt-1 leading-relaxed">Esta mesa está sem comanda ativa no sistema.</p></div>
+                      <div className="w-full space-y-2"><button onClick={() => { clearTable(tableNumber!); setIsOpening(true); }} className="w-full h-10 bg-amber-500 text-white rounded-panel text-xs font-medium shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 hover:bg-amber-600 transition-all"><RefreshCw className="w-3.5 h-3.5" /> Resetar Mesa</button><button onClick={onClose} className="w-full h-9 rounded-panel text-xs font-medium opacity-40 hover:opacity-100 transition-opacity">Voltar</button></div>
                     </div>
                   )}
                </div>
@@ -186,24 +186,24 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
               <div className="flex w-full gap-6 h-full items-stretch">
                 {/* Product Selection (Left Side - Larger) */}
                 <div className={`flex-1 rounded-3xl border flex flex-col overflow-hidden shadow-2xl ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
-                  <div className="p-8 border-b space-y-6">
+                  <div className="px-5 py-4 border-b space-y-3">
                     <div className="flex justify-between items-center">
-                       <h4 className="text-sm font-bold uppercase tracking-wider opacity-40">Cardápio Digital</h4>
-                       <div className="flex gap-2"><button className="p-2.5 rounded-xl bg-current/5"><LayoutGrid className="w-4 h-4" /></button><button className="p-2.5 opacity-20"><List className="w-4 h-4" /></button></div>
+                       <h4 className="text-xs font-medium text-muted">Cardápio Digital</h4>
+                       <div className="flex gap-1.5"><button className="p-1.5 rounded-control bg-current/5"><LayoutGrid className="w-3.5 h-3.5" /></button><button className="p-1.5 opacity-20"><List className="w-3.5 h-3.5" /></button></div>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div className={`flex items-center px-5 py-3 rounded-2xl border flex-1 transition-all focus-within:ring-4 focus-within:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus-within:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus-within:border-pink-300'}`}>
-                        <Search className="w-5 h-5 mr-4 opacity-40" />
-                        <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar por nome ou categoria..." className="bg-transparent border-none outline-none w-full text-sm font-semibold placeholder:opacity-20" />
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className={`flex items-center px-3 h-9 rounded-control border flex-1 transition-all focus-within:ring-2 focus-within:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}>
+                        <Search className="w-3.5 h-3.5 mr-2.5 opacity-40 shrink-0" />
+                        <input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Pesquisar..." className="bg-transparent border-none outline-none w-full text-xs placeholder:opacity-40" />
                       </div>
-                      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                      <div className="flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
                         {categories.map(cat => (
-                          <button key={cat} onClick={() => setCategory(cat)} className={`shrink-0 px-5 py-2.5 rounded-2xl text-xs font-bold border transition-all ${category === cat ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white shadow-lg shadow-[var(--color-accent)]/20' : 'border-current/10 opacity-60 hover:opacity-100'}`}>{cat}</button>
+                          <button key={cat} onClick={() => setCategory(cat)} className={`shrink-0 px-3 h-9 rounded-control text-xs font-medium border transition-all ${category === cat ? 'bg-[var(--color-accent)] border-[var(--color-accent)] text-white' : 'border-current/10 opacity-60 hover:opacity-100'}`}>{cat}</button>
                         ))}
                       </div>
                     </div>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
                     <MenuList category={category} searchTerm={searchTerm} onSelect={addItemToOrder} />
                   </div>
                 </div>
@@ -211,37 +211,37 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                 {/* Active Order (Right Side - Sidebar style but taller) */}
                 <div className={`w-[450px] rounded-3xl border flex flex-col overflow-hidden shadow-2xl relative z-10 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
                   {/* Order Header */}
-                  <div className={`p-8 border-b flex justify-between items-start ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>
-                    <div className="space-y-1">
-                      <h3 className="font-black uppercase tracking-tighter text-3xl leading-none">Mesa {tableNumber?.toString().padStart(2, '0')}</h3>
-                      <div className="flex flex-wrap items-center gap-2 pt-3">
-                        <span className="flex items-center gap-1.5 text-[9px] font-black bg-blue-500/10 text-blue-500 px-3 py-1 rounded-full border border-blue-500/20 uppercase tracking-widest"><Clock className="w-3 h-3" /> {timeStr}</span>
-                        <span className="flex items-center gap-1.5 text-[9px] font-black bg-emerald-500/10 text-emerald-500 px-3 py-1 rounded-full border border-emerald-500/20 uppercase tracking-widest"><User className="w-3 h-3" /> {activeOrder.adultCount} ADT</span>
-                        {activeOrder.childrenCount! > 0 && <span className="flex items-center gap-1.5 text-[9px] font-black bg-amber-500/10 text-amber-500 px-3 py-1 rounded-full border border-amber-500/20 uppercase tracking-widest"><Baby className="w-3 h-3" /> {activeOrder.childrenCount} CRI</span>}
+                  <div className={`px-5 py-4 border-b flex justify-between items-center ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>
+                    <div>
+                      <h3 className="text-base font-semibold leading-none">Mesa {tableNumber?.toString().padStart(2, '0')}</h3>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                        <span className="flex items-center gap-1 text-[10px] font-medium bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full border border-blue-500/20"><Clock className="w-3 h-3" /> {timeStr}</span>
+                        <span className="flex items-center gap-1 text-[10px] font-medium bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded-full border border-emerald-500/20"><User className="w-3 h-3" /> {activeOrder.adultCount} ADT</span>
+                        {activeOrder.childrenCount! > 0 && <span className="flex items-center gap-1 text-[10px] font-medium bg-amber-500/10 text-amber-500 px-2 py-0.5 rounded-full border border-amber-500/20"><Baby className="w-3 h-3" /> {activeOrder.childrenCount} CRI</span>}
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <button onClick={() => setIsManaging(true)} className={`p-3 rounded-2xl border transition-all hover:scale-110 active:scale-95 ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-gray-200 shadow-sm'}`}><Settings className="w-5 h-5 opacity-60" /></button>
-                      <button onClick={onClose} className={`p-3 rounded-2xl border transition-all hover:scale-110 active:scale-95 ${isDark ? 'bg-white/5 border-white/10 text-white' : 'bg-white border-gray-200 shadow-sm'}`}><X className="w-5 h-5 opacity-60" /></button>
+                    <div className="flex gap-1.5">
+                      <button onClick={() => setIsManaging(true)} className={`p-2 rounded-control border transition-all ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}><Settings className="w-4 h-4 opacity-60" /></button>
+                      <button onClick={onClose} className={`p-2 rounded-control border transition-all ${isDark ? 'bg-white/5 border-white/10' : 'bg-white border-gray-200 shadow-sm'}`}><X className="w-4 h-4 opacity-60" /></button>
                     </div>
                   </div>
 
                   {/* Order Items */}
-                  <div className="flex-1 overflow-y-auto p-8 space-y-4 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1.5 custom-scrollbar">
                     <AnimatePresence initial={false}>
                       {activeOrder.items.length === 0 ? (
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col items-center justify-center opacity-10 py-20 text-center space-y-4">
-                          <ShoppingBag className="w-20 h-20" />
-                          <p className="text-[12px] font-black uppercase tracking-[0.3em]">Comanda Vazia</p>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-full flex flex-col items-center justify-center opacity-20 py-12 text-center space-y-3">
+                          <ShoppingBag className="w-12 h-12" />
+                          <p className="text-xs font-medium">Comanda Vazia</p>
                         </motion.div>
                       ) : activeOrder.items.map(item => (
-                        <motion.div layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} key={item.id} className={`flex items-center gap-4 p-5 rounded-panel group transition-all ${isDark ? 'bg-[var(--color-app-base)] hover:bg-[var(--color-app-base)]/80' : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-100/50'}`}>
-                          <div className={`w-12 h-12 rounded-panel flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}><Package className="w-5 h-5 text-[var(--color-accent)]" /></div>
-                          <div className="flex-1 min-w-0"><p className="text-sm font-black uppercase truncate group-hover:text-[var(--color-accent)] transition-colors">{item.product.name}</p><p className="text-[10px] font-black opacity-40">R$ {item.price.toFixed(2)}</p></div>
-                          <div className="flex items-center gap-3">
-                            <button onClick={() => changeItemQty(item.id, -1)} className={`w-9 h-9 rounded-xl flex items-center justify-center border transition-all ${item.quantity === 1 ? 'text-red-500 border-red-500/20' : 'border-current/10'}`}>{item.quantity === 1 ? <Trash2 className="w-4 h-4" /> : <Minus className="w-4 h-4" />}</button>
-                            <span className="w-5 text-center font-black text-sm tracking-tighter">{item.quantity}</span>
-                            <button onClick={() => addItemToOrder(item.product)} className="w-9 h-9 rounded-xl flex items-center justify-center border border-current/10 hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-all"><Plus className="w-4 h-4" /></button>
+                        <motion.div layout initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} key={item.id} className={`flex items-center gap-3 px-3 py-2.5 rounded-control group transition-all ${isDark ? 'bg-[var(--color-app-base)] hover:bg-[var(--color-app-base)]/80' : 'bg-gray-50/50 hover:bg-gray-50 border border-gray-100/50'}`}>
+                          <div className={`w-8 h-8 rounded-control flex items-center justify-center shrink-0 ${isDark ? 'bg-white/5' : 'bg-white shadow-sm'}`}><Package className="w-3.5 h-3.5 text-[var(--color-accent)]" /></div>
+                          <div className="flex-1 min-w-0"><p className="text-xs font-semibold truncate">{item.product.name}</p><p className="text-[10px] text-muted">R$ {item.price.toFixed(2)}</p></div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => changeItemQty(item.id, -1)} className={`w-7 h-7 rounded-control flex items-center justify-center border transition-all ${item.quantity === 1 ? 'text-red-500 border-red-500/20' : 'border-current/10'}`}>{item.quantity === 1 ? <Trash2 className="w-3 h-3" /> : <Minus className="w-3 h-3" />}</button>
+                            <span className="w-4 text-center font-semibold text-sm">{item.quantity}</span>
+                            <button onClick={() => addItemToOrder(item.product)} className="w-7 h-7 rounded-control flex items-center justify-center border border-current/10 hover:border-[var(--color-accent)] hover:text-[var(--color-accent)] transition-all"><Plus className="w-3 h-3" /></button>
                           </div>
                         </motion.div>
                       ))}
@@ -249,14 +249,12 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                   </div>
 
                   {/* Order Footer */}
-                  <div className={`p-10 border-t space-y-8 ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>
-                    <div className="flex justify-between items-end">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Total da Mesa</p>
-                        <div className="flex items-baseline gap-1.5"><span className="text-2xl font-black text-[var(--color-accent)] opacity-50">R$</span><span className="text-5xl font-black text-[var(--color-accent)] tracking-tighter">{activeOrder.total.toFixed(2)}</span></div>
-                      </div>
-                      <button disabled={activeOrder.items.length === 0} onClick={() => setCheckoutOpen(true)} className="px-10 py-6 bg-[var(--color-accent)] text-white rounded-section font-black uppercase tracking-widest text-[12px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-105 active:scale-95 disabled:opacity-30 disabled:scale-100 disabled:shadow-none transition-all">Pagar Conta</button>
+                  <div className={`px-5 py-4 border-t flex justify-between items-center gap-4 ${isDark ? 'bg-[var(--color-elevated)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>
+                    <div>
+                      <p className="text-xs text-muted">Total da Mesa</p>
+                      <div className="flex items-baseline gap-1"><span className="text-sm font-medium text-[var(--color-accent)] opacity-60">R$</span><span className="text-2xl font-semibold text-[var(--color-accent)]">{activeOrder.total.toFixed(2)}</span></div>
                     </div>
+                    <button disabled={activeOrder.items.length === 0} onClick={() => setCheckoutOpen(true)} className="px-5 h-10 bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white rounded-panel text-xs font-semibold shadow-lg shadow-[var(--color-accent)]/20 disabled:opacity-30 disabled:shadow-none transition-all">Pagar Conta</button>
                   </div>
                 </div>
               </div>
@@ -273,5 +271,12 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
 };
 
 const CountInput = ({ label, value, onChange, isDark, min }: any) => (
-  <div className={`p-6 rounded-panel border transition-all ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-sm'}`}><p className="text-[10px] uppercase font-black mb-5 opacity-40 text-center tracking-widest">{label}</p><div className="flex items-center justify-between px-2"><button onClick={() => onChange(Math.max(min, value - 1))} className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl transition-all ${value === min ? 'opacity-10' : 'bg-current/5 hover:bg-current/10'}`}>-</button><span className="text-2xl font-black tracking-tighter">{value}</span><button onClick={() => onChange(value + 1)} className="w-12 h-12 rounded-2xl bg-current/5 hover:bg-current/10 flex items-center justify-center font-black text-xl transition-all">+</button></div></div>
+  <div className={`p-3 rounded-control border ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-sm'}`}>
+    <p className="text-[10px] text-muted text-center mb-2">{label}</p>
+    <div className="flex items-center justify-between">
+      <button onClick={() => onChange(Math.max(min, value - 1))} className={`w-8 h-8 rounded-control flex items-center justify-center font-semibold text-lg transition-all ${value === min ? 'opacity-10' : 'bg-current/5 hover:bg-current/10'}`}>-</button>
+      <span className="text-lg font-semibold">{value}</span>
+      <button onClick={() => onChange(value + 1)} className="w-8 h-8 rounded-control bg-current/5 hover:bg-current/10 flex items-center justify-center font-semibold text-lg transition-all">+</button>
+    </div>
+  </div>
 );

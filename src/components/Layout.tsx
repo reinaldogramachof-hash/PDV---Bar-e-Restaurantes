@@ -55,7 +55,7 @@ const navGroups = [
   {
     title: 'Operacional',
     items: [
-      { id: 'pdv', icon: MonitorPlay, label: 'PDV (Balcão)', plan: true },
+      { id: 'pdv', icon: MonitorPlay, label: 'PDV (Balcão)' },
       { id: 'mesas', icon: Table2, label: 'Mesas' },
       { id: 'cozinha', icon: ChefHat, label: 'Cozinha' },
       { id: 'caixa', icon: Wallet, label: 'Caixa' },
@@ -64,21 +64,21 @@ const navGroups = [
   {
     title: 'Gestão',
     items: [
-      { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard', plan: true },
+      { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { id: 'clientes', icon: Users, label: 'Clientes' },
       { id: 'colaboradores', icon: UserCheck, label: 'Colaboradores' },
       { id: 'fornecedores', icon: Truck, label: 'Fornecedores' },
-      { id: 'produtos', icon: BookOpen, label: 'Cardápio', plan: true },
-      { id: 'relatorios', icon: LineChart, label: 'Financeiro', plan: true },
+      { id: 'produtos', icon: BookOpen, label: 'Cardápio' },
+      { id: 'relatorios', icon: LineChart, label: 'Financeiro' },
       { id: 'estoque', icon: Package, label: 'Estoque' },
     ],
   },
   {
     title: 'Sistema',
     items: [
-      { id: 'manual', icon: BookOpen, label: 'Manual de Uso', plan: true },
+      { id: 'manual', icon: BookOpen, label: 'Manual de Uso' },
       { id: 'seguranca', icon: Shield, label: 'Segurança' },
-      { id: 'configuracoes', icon: Settings, label: 'Configurações', plan: true },
+      { id: 'configuracoes', icon: Settings, label: 'Configurações' },
       { id: 'suporte', icon: LifeBuoy, label: 'Suporte' },
     ],
   },
@@ -196,20 +196,10 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
                               : 'text-muted-light hover:bg-elevated-light hover:text-text-light'
                         } ${isCollapsed ? 'justify-center' : ''}`}
                       >
-                        <div className="relative">
-                          <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${active ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} />
-                          {item.plan && isCollapsed && (
-                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-success rounded-full border-2 border-white dark:border-surface" />
-                          )}
-                        </div>
+                        <Icon className={`w-4.5 h-4.5 flex-shrink-0 ${active ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'}`} />
                         {!isCollapsed && (
                           <div className="flex-1 flex items-center justify-between overflow-hidden">
                             <span className="font-medium text-sm transition-opacity duration-300 truncate">{item.label}</span>
-                            {item.plan && (
-                              <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-success/10 text-success'}`}>
-                                Plano
-                              </span>
-                            )}
                           </div>
                         )}
                       </button>
