@@ -5,6 +5,7 @@ import { MenuList } from './MenuList';
 import { ArrowRight, Minus, Package, Plus, Search, ShoppingBag, Trash2, User } from 'lucide-react';
 import { CheckoutModal } from './CheckoutModal';
 import { AnimatePresence, motion } from 'motion/react';
+import { useAudit } from '../hooks/useAudit';
 
 export const PDV: React.FC = () => {
   const { currentEmpresa, waiters, theme } = useApp();
@@ -28,6 +29,7 @@ export const PDV: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('Todos');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const { log } = useAudit();
 
   const categories = ['Todos', 'Drinks', 'Petiscos', 'Pratos', 'Sobremesas'];
   const totalItems = activeOrder.items.reduce((acc, item) => acc + item.quantity, 0);
@@ -66,6 +68,16 @@ export const PDV: React.FC = () => {
 
   const handleSuccess = () => {
     setCheckoutOpen(false);
+    setActiveOrder(createOrder());
+  };
+
+  const handleCancelOrder = () => {
+    if (activeOrder.items.length > 0) {
+      log('order_cancel', 'Pedido/Carrinho foi cancelado no balcão', { 
+        subtotal: activeOrder.subtotal,
+        itemsCount: activeOrder.items.length
+      });
+    }
     setActiveOrder(createOrder());
   };
 
@@ -126,7 +138,7 @@ export const PDV: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={handleSuccess}
+            onClick={handleCancelOrder}
             className="p-2 rounded-control transition-all hover:bg-danger/10 hover:text-danger text-muted"
             aria-label="Limpar carrinho"
           >

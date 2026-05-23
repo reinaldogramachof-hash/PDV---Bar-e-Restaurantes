@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { Search, UserPlus, Shield, Briefcase, Calendar, Edit3, Trash2, CheckCircle2, XCircle, User, Clock, Zap, X, LayoutGrid, List, LogIn, LogOut, FileText, Banknote, CreditCard, MapPin, UserCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useAudit } from '../hooks/useAudit';
 
 
 export const Collaborators: React.FC = () => {
   const { theme, collaborators, deleteCollaborator, addCollaborator, updateCollaborator } = useApp();
   const isDark = theme === 'dark';
+  const { log } = useAudit();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => (localStorage.getItem('viewMode_collaborators') as any) || 'list');
 
@@ -92,6 +94,13 @@ export const Collaborators: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingMember) {
+      if (editingMember.permissions !== formData.permissions) {
+        log('permission_change', `Permissão de ${formData.name} alterada para ${formData.permissions}`, { 
+          collaboratorId: editingMember.id, 
+          oldRole: editingMember.permissions, 
+          newRole: formData.permissions 
+        });
+      }
       updateCollaborator({ ...editingMember, ...formData });
     } else {
       addCollaborator({

@@ -6,6 +6,7 @@ import {
   Globe, Phone, MapPin, FileText, Layout, Crown 
 } from 'lucide-react';
 import { getPlanModules } from '../domain/saas';
+import { useAudit } from '../hooks/useAudit';
 import { motion } from 'motion/react';
 import { AppSettings } from '../types';
 
@@ -16,6 +17,7 @@ export const Settings: React.FC = () => {
   const [formData, setFormData] = useState<AppSettings>(settings);
   const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'data' | 'plan'>('store');
   const [isSaving, setIsSaving] = useState(false);
+  const { log } = useAudit();
 
   const handleSave = () => {
     setIsSaving(true);
@@ -31,6 +33,7 @@ export const Settings: React.FC = () => {
     a.href = url;
     a.download = `backup_gestao_gastro_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
+    log('data_export', 'Backup completo dos dados exportado pelo usuário.', { filename: a.download });
   };
 
   const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {

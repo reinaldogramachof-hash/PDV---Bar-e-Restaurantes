@@ -7,10 +7,12 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, RecipeItem } from '../types';
+import { useAudit } from '../hooks/useAudit';
 
 export const Products: React.FC = () => {
   const { currentEmpresa, products, stockItems, updateProduct, addProduct, deleteProduct, theme } = useApp();
   const isDark = theme === 'dark';
+  const { log } = useAudit();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas');
@@ -64,6 +66,11 @@ export const Products: React.FC = () => {
     else addProduct(product);
 
     setIsModalOpen(false);
+  };
+
+  const handleDeleteProduct = (p: Product) => {
+    deleteProduct(p.id);
+    log('product_delete', `Produto excluído: ${p.name}`, { productId: p.id, category: p.category });
   };
 
   const addRecipeItem = () => {
@@ -172,7 +179,7 @@ export const Products: React.FC = () => {
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                     <button onClick={() => openModal(p)} className="p-2.5 rounded-control hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] transition-all"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => deleteProduct(p.id)} className="p-2.5 rounded-control hover:bg-red-500/10 hover:text-red-500 transition-all"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => handleDeleteProduct(p)} className="p-2.5 rounded-control hover:bg-red-500/10 hover:text-red-500 transition-all"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
 
@@ -247,7 +254,7 @@ export const Products: React.FC = () => {
                     <td className="px-8 py-5 text-right">
                        <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
                           <button onClick={() => openModal(p)} className="p-2 rounded-lg hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)]"><Edit2 className="w-4 h-4" /></button>
-                          <button onClick={() => deleteProduct(p.id)} className="p-2 rounded-lg hover:bg-red-500/10 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => handleDeleteProduct(p)} className="p-2 rounded-lg hover:bg-red-500/10 hover:text-red-500"><Trash2 className="w-4 h-4" /></button>
                        </div>
                     </td>
                   </tr>

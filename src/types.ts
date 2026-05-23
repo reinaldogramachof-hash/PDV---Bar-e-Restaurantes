@@ -47,15 +47,15 @@ export interface Licenca extends BaseEntity {
   validUntil?: string;
 }
 
-export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'close_order' | 'close_cashier' | 'license_check';
+export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'close_order' | 'close_cashier' | 'license_check' | 'cashier_open' | 'order_cancel' | 'product_delete' | 'data_export' | 'permission_change';
 
 export interface AuditLogEntry extends BaseEntity {
+  type: string;
   userId: string;
-  action: AuditAction;
-  entity: string;
-  entityId?: string;
+  userName: string;
+  detail: string;
   timestamp: string;
-  details?: string;
+  extra?: Record<string, unknown>;
 }
 
 export interface StockItem extends BaseEntity {
