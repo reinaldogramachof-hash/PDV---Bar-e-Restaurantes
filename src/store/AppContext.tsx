@@ -104,9 +104,14 @@ const parseScopedJSON = <T,>(key: string, empresaId: string, fallback: T, withEm
 };
 
 const clearAppStorage = (empresaId: string) => {
-  const legacyKeys = [...scopedCollections, 'theme', 'viewMode_products', 'viewMode_customers', 'viewMode_collaborators', 'viewMode_suppliers'];
+  const prefix = `gestao-gastro:${empresaId}:`;
+  const legacyKeys = [
+    ...scopedCollections,
+    'theme', 'viewMode_products',
+    'viewMode_customers', 'viewMode_collaborators', 'viewMode_suppliers'
+  ];
   Object.keys(localStorage).forEach(key => {
-    if (key.startsWith(`gestao-gastro:${empresaId}:`) || legacyKeys.includes(key)) {
+    if (key.startsWith(prefix) || legacyKeys.includes(key)) {
       localStorage.removeItem(key);
     }
   });
