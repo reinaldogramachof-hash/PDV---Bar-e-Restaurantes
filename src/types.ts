@@ -1,8 +1,64 @@
 export type OrderMode = 'mesa' | 'balcao';
 export type PaymentMethod = 'dinheiro' | 'credito' | 'debito' | 'pix' | 'vr' | 'va' | 'voucher';
+export type Plano = 'essencial' | 'profissional' | 'gestao';
+export type LicenseStatus = 'active' | 'suspended' | 'trial';
+export type UserRole = 'master' | 'gerente' | 'caixa' | 'garcom' | 'cozinha' | 'estoque' | 'suporte';
+export type Permission =
+  | 'dashboard:read'
+  | 'pdv:write'
+  | 'mesas:write'
+  | 'cozinha:write'
+  | 'estoque:write'
+  | 'caixa:write'
+  | 'produtos:write'
+  | 'clientes:write'
+  | 'colaboradores:write'
+  | 'fornecedores:write'
+  | 'relatorios:read'
+  | 'configuracoes:write'
+  | 'seguranca:read'
+  | 'suporte:read'
+  | 'master:write';
 
-export interface StockItem {
+export interface BaseEntity {
   id: string;
+  empresaId: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Empresa extends BaseEntity {
+  name: string;
+  document: string;
+  plano: Plano;
+  licenseStatus: LicenseStatus;
+}
+
+export interface Usuario extends BaseEntity {
+  name: string;
+  email: string;
+  role: UserRole;
+  active: boolean;
+}
+
+export interface Licenca extends BaseEntity {
+  status: LicenseStatus;
+  plano: Plano;
+  validUntil?: string;
+}
+
+export type AuditAction = 'create' | 'update' | 'delete' | 'login' | 'close_order' | 'close_cashier' | 'license_check';
+
+export interface AuditLogEntry extends BaseEntity {
+  userId: string;
+  action: AuditAction;
+  entity: string;
+  entityId?: string;
+  timestamp: string;
+  details?: string;
+}
+
+export interface StockItem extends BaseEntity {
   name: string;
   category: string;
   unit: string; // kg, L, un, g, ml
@@ -17,8 +73,7 @@ export interface RecipeItem {
   quantity: number; // quantidade do insumo consumida
 }
 
-export interface Product {
-  id: string;
+export interface Product extends BaseEntity {
   name: string;
   description: string;
   price: number;
@@ -44,8 +99,7 @@ export interface PaymentItem {
   amount: number;
 }
 
-export interface Order {
-  id: string;
+export interface Order extends BaseEntity {
   mode: OrderMode;
   tableNumber?: number;
   customerName?: string;
@@ -64,19 +118,18 @@ export interface Order {
 }
 
 export interface Table {
+  empresaId: string;
   number: number;
   status: 'livre' | 'ocupada' | 'aguardando' | 'reservada';
   activeOrderId?: string;
   reservationReason?: string;
 }
 
-export interface Waiter {
-  id: string;
+export interface Waiter extends BaseEntity {
   name: string;
 }
 
-export interface Expense {
-  id: string;
+export interface Expense extends BaseEntity {
   description: string;
   amount: number;
   category: 'Insumos' | 'Pessoal' | 'Aluguel' | 'Utilidades' | 'Marketing' | 'Impostos' | 'Outros';
@@ -86,8 +139,7 @@ export interface Expense {
   timestamp: string;
 }
 
-export interface CashierSession {
-  id: string;
+export interface CashierSession extends BaseEntity {
   openedAt: string;
   closedAt?: string;
   initialBalance: number;
@@ -100,8 +152,7 @@ export interface CashierSession {
   status: 'open' | 'closed';
 }
 
-export interface Customer {
-  id: string;
+export interface Customer extends BaseEntity {
   name: string;
   email: string;
   phone: string;
@@ -110,8 +161,7 @@ export interface Customer {
   loyaltyPoints: number;
 }
 
-export interface Collaborator {
-  id: string;
+export interface Collaborator extends BaseEntity {
   name: string;
   role: string;
   email: string;
@@ -130,8 +180,7 @@ export interface Collaborator {
   bankDetails?: string;
 }
 
-export interface Supplier {
-  id: string;
+export interface Supplier extends BaseEntity {
   companyName: string;
   category: string;
   contactName: string;
@@ -147,8 +196,7 @@ export interface Supplier {
   rating?: number; // 1-5 stars
 }
 
-export interface StockMovement {
-  id: string;
+export interface StockMovement extends BaseEntity {
   stockItemId: string; // Aponta para o insumo
   type: 'in' | 'out' | 'loss';
   quantity: number;
@@ -159,6 +207,7 @@ export interface StockMovement {
 }
 
 export interface AppSettings {
+  empresaId: string;
   establishment: {
     name: string;
     address: string;

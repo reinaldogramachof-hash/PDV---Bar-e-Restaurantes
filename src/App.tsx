@@ -18,6 +18,7 @@ import { Kitchen } from './components/Kitchen';
 import { Settings } from './components/Settings';
 import { Security } from './components/Security';
 import { LicenseLock } from './components/LicenseLock';
+import { LICENSE_STATUS_URL } from './domain/saas';
 
 const AppContent = () => {
   const { currentView, setCurrentView } = useNavigation();
@@ -27,7 +28,11 @@ const AppContent = () => {
     const checkLicense = async () => {
       try {
         // LINK DO CONTROLE DE LICENÇA (GITHUB RAW OU GIST)
-        const LICENSE_URL = 'https://raw.githubusercontent.com/reinaldogramachof-hash/PDV---Bar-e-Restaurantes/main/license.status';
+        const LICENSE_URL = LICENSE_STATUS_URL;
+        if (!LICENSE_URL) {
+          setIsAuthorized(true);
+          return;
+        }
         
         const response = await fetch(LICENSE_URL + '?t=' + Date.now());
         const status = await response.text();

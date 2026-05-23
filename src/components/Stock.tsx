@@ -12,7 +12,7 @@ import { StockMovement, StockItem } from '../types';
 type TabType = 'overview' | 'movements' | 'losses';
 
 export const Stock: React.FC = () => {
-  const { stockItems, updateStockItem, addStockItem, deleteStockItem, suppliers, stockMovements, addStockMovement, theme } = useApp();
+  const { currentEmpresa, stockItems, updateStockItem, addStockItem, deleteStockItem, suppliers, stockMovements, addStockMovement, theme } = useApp();
   const isDark = theme === 'dark';
 
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -88,6 +88,7 @@ export const Stock: React.FC = () => {
     
     const item: StockItem = {
       id: editingItem?.id || Date.now().toString(),
+      empresaId: editingItem?.empresaId || currentEmpresa.id,
       name: formData.name,
       category: formData.category,
       unit: formData.unit,
@@ -107,6 +108,7 @@ export const Stock: React.FC = () => {
     if (Number(formData.addQuantity) > 0) {
       addStockMovement({
         id: Date.now().toString() + 'mv',
+        empresaId: currentEmpresa.id,
         stockItemId: item.id,
         type: 'in',
         quantity: Number(formData.addQuantity),
@@ -126,6 +128,7 @@ export const Stock: React.FC = () => {
       updateStockItem({ ...si, currentStock: Math.max(0, si.currentStock - lossData.quantity) });
       addStockMovement({
         id: Date.now().toString(),
+        empresaId: currentEmpresa.id,
         stockItemId: si.id,
         type: 'loss',
         quantity: lossData.quantity,

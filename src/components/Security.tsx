@@ -6,6 +6,7 @@ import {
   ArrowRight, HardDrive, Info
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { APP_NAME } from '../domain/saas';
 
 export const Security: React.FC = () => {
   const { theme } = useApp();
@@ -16,13 +17,13 @@ export const Security: React.FC = () => {
       title: "Segurança do Sistema",
       icon: Lock,
       color: "text-blue-500",
-      content: "O Bar Manager Pro utiliza criptografia de ponta a ponta para armazenamento local. Seus dados de vendas, clientes e estoque são processados e mantidos no ambiente seguro do seu navegador, garantindo que informações sensíveis nunca saiam do seu controle sem autorização."
+      content: `${APP_NAME} utiliza armazenamento local segmentado por empresa nesta fase de preparação SaaS. Seus dados de vendas, clientes e estoque permanecem no navegador até a evolução para API autenticada e banco relacional.`
     },
     {
-      title: "Políticas Plena Informática",
+      title: "Políticas de Produto",
       icon: ShieldCheck,
       color: "text-emerald-500",
-      content: "Nossa compromisso é com a integridade do seu negócio. A Plena Informática não coleta, vende ou processa seus dados operacionais para fins externos. O sistema é projetado para ser uma ferramenta privada de gestão ERP dedicada exclusivamente à sua operação."
+      content: "O produto é desenhado para proteger dados operacionais por empresa, preparar auditoria futura e reduzir dependência de customizações individuais por restaurante."
     },
     {
       title: "Responsabilidade de Backup",
@@ -122,7 +123,7 @@ export const Security: React.FC = () => {
       <div className="flex justify-center">
         <div className={`px-8 py-4 rounded-2xl border flex items-center gap-4 ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
           <ShieldCheck className="w-6 h-6 text-emerald-500" />
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">Sistema em conformidade com LGPD - Plena Informática 2026</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] opacity-40">{APP_NAME} - base preparada para LGPD e isolamento multiempresa</span>
         </div>
       </div>
     </div>

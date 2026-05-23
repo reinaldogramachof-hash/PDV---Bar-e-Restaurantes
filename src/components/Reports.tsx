@@ -22,7 +22,7 @@ const downloadCSV = (filename: string, rows: string[][]) => {
 };
 
 export const Reports: React.FC = () => {
-  const { orders, waiters, theme, expenses, addExpense, deleteExpense, stockItems } = useApp();
+  const { currentEmpresa, orders, waiters, theme, expenses, addExpense, deleteExpense, stockItems } = useApp();
   const isDark = theme === 'dark';
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [period, setPeriod] = useState<Period>('mes');
@@ -132,6 +132,7 @@ export const Reports: React.FC = () => {
 
     const expense: Expense = {
       id: Date.now().toString(),
+      empresaId: currentEmpresa.id,
       description: newExpense.description,
       amount: Number(newExpense.amount),
       category: newExpense.category as any,

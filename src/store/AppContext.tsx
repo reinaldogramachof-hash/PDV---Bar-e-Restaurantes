@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings } from '../types';
+import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission } from '../types';
 import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers, mockSettings } from './mock';
+import { DEFAULT_EMPRESA_ID, buildScopedStorageKey, ensureEmpresaId, hasForeignEmpresaId, hasRolePermission, migrateLegacyCollection, normalizeImportedCollection, scopedCollections } from '../domain/saas';
 
 interface AppState {
+  currentEmpresa: Empresa;
+  currentUser: Usuario;
   products: Product[];
   stockItems: StockItem[];
   suppliers: Supplier[];
@@ -21,6 +24,7 @@ interface AppState {
 }
 
 interface AppContextType extends AppState {
+  hasPermission: (permission: Permission) => boolean;
   setTheme: (theme: 'dark' | 'light') => void;
   updateProduct: (product: Product) => void;
   addProduct: (product: Product) => void;
@@ -72,51 +76,106 @@ const parseJSON = <T,>(key: string, fallback: T): T => {
   }
 };
 
+const parseScopedJSON = <T,>(key: string, empresaId: string, fallback: T, withEmpresa = false): T => {
+  const scopedKey = buildScopedStorageKey(key, empresaId);
+  const scoped = parseJSON<T | undefined>(scopedKey, undefined);
+  if (scoped !== undefined) {
+    if (withEmpresa && Array.isArray(scoped)) {
+      return migrateLegacyCollection(scoped as Array<Record<string, unknown>>, empresaId).filter(item => item.empresaId === empresaId) as T;
+    }
+    if (withEmpresa && scoped && typeof scoped === 'object') {
+      return ensureEmpresaId(scoped as Record<string, unknown>, empresaId) as T;
+    }
+    return scoped;
+  }
+
+  const legacy = parseJSON(key, fallback);
+  if (!withEmpresa) return legacy;
+
+  if (Array.isArray(legacy)) {
+    return migrateLegacyCollection(legacy as Array<Record<string, unknown>>, empresaId).filter(item => item.empresaId === empresaId) as T;
+  }
+
+  if (legacy && typeof legacy === 'object') {
+    return ensureEmpresaId(legacy as Record<string, unknown>, empresaId) as T;
+  }
+
+  return legacy;
+};
+
+const clearAppStorage = () => {
+  const legacyKeys = [...scopedCollections, 'theme', 'viewMode_products', 'viewMode_customers', 'viewMode_collaborators', 'viewMode_suppliers'];
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('gestao-gastro:') || legacyKeys.includes(key)) {
+      localStorage.removeItem(key);
+    }
+  });
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [products, setProducts] = useState<Product[]>(() => parseJSON('products', mockProducts));
-  const [stockItems, setStockItems] = useState<StockItem[]>(() => parseJSON('stockItems', mockStockItems));
-  const [suppliers, setSuppliers] = useState<Supplier[]>(() => parseJSON('suppliers', mockSuppliers));
+  // Fase 1: sessão demo local. Na Fase 3, substituir por empresa/usuário vindos da autenticação real.
+  const currentEmpresa: Empresa = {
+    id: DEFAULT_EMPRESA_ID,
+    empresaId: DEFAULT_EMPRESA_ID,
+    name: 'Gestao Gastro Demo',
+    document: '00.000.000/0001-00',
+    plano: 'gestao',
+    licenseStatus: 'active',
+  };
+
+  const currentUser: Usuario = {
+    id: 'user-master-demo',
+    empresaId: DEFAULT_EMPRESA_ID,
+    name: 'Administrador Demo',
+    email: 'admin@gestaogastro.local',
+    role: 'master',
+    active: true,
+  };
+
+  const [products, setProducts] = useState<Product[]>(() => parseScopedJSON('products', currentEmpresa.id, mockProducts, true));
+  const [stockItems, setStockItems] = useState<StockItem[]>(() => parseScopedJSON('stockItems', currentEmpresa.id, mockStockItems, true));
+  const [suppliers, setSuppliers] = useState<Supplier[]>(() => parseScopedJSON('suppliers', currentEmpresa.id, mockSuppliers, true));
   const [tables, setTables] = useState<Table[]>(() => {
-    const saved = parseJSON<Table[]>('tables', mockTables);
+    const saved = parseScopedJSON<Table[]>('tables', currentEmpresa.id, mockTables, true);
     return saved.length !== mockTables.length ? mockTables : saved;
   });
-  const [waiters] = useState<Waiter[]>(() => parseJSON('waiters', mockWaiters));
-  const [orders, setOrders] = useState<Order[]>(() => parseJSON('orders', []));
-  const [expenses, setExpenses] = useState<Expense[]>(() => parseJSON('expenses', []));
-  const [cashierSession, setCashierSession] = useState<CashierSession | null>(() => parseJSON('cashierSession', null));
-  const [cashierHistory, setCashierHistory] = useState<CashierSession[]>(() => parseJSON('cashierHistory', []));
-  const [customers, setCustomers] = useState<Customer[]>(() => parseJSON('customers', mockCustomers));
-  const [collaborators, setCollaborators] = useState<Collaborator[]>(() => parseJSON('collaborators', mockCollaborators));
-  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => parseJSON('stockMovements', []));
-  const [settings, setSettings] = useState<AppSettings>(() => parseJSON('settings', mockSettings));
-  const [readGuides, setReadGuides] = useState<string[]>(() => parseJSON('readGuides', []));
+  const [waiters] = useState<Waiter[]>(() => parseScopedJSON('waiters', currentEmpresa.id, mockWaiters, true));
+  const [orders, setOrders] = useState<Order[]>(() => parseScopedJSON('orders', currentEmpresa.id, [], true));
+  const [expenses, setExpenses] = useState<Expense[]>(() => parseScopedJSON('expenses', currentEmpresa.id, [], true));
+  const [cashierSession, setCashierSession] = useState<CashierSession | null>(() => parseScopedJSON('cashierSession', currentEmpresa.id, null, true));
+  const [cashierHistory, setCashierHistory] = useState<CashierSession[]>(() => parseScopedJSON('cashierHistory', currentEmpresa.id, [], true));
+  const [customers, setCustomers] = useState<Customer[]>(() => parseScopedJSON('customers', currentEmpresa.id, mockCustomers, true));
+  const [collaborators, setCollaborators] = useState<Collaborator[]>(() => parseScopedJSON('collaborators', currentEmpresa.id, mockCollaborators, true));
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => parseScopedJSON('stockMovements', currentEmpresa.id, [], true));
+  const [settings, setSettings] = useState<AppSettings>(() => parseScopedJSON('settings', currentEmpresa.id, mockSettings, true));
+  const [readGuides, setReadGuides] = useState<string[]>(() => parseScopedJSON('readGuides', currentEmpresa.id, []));
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     const th = localStorage.getItem('theme');
     return th === 'dark' || th === 'light' ? th : 'dark';
   });
 
   useEffect(() => {
-    localStorage.setItem('products', JSON.stringify(products));
-    localStorage.setItem('stockItems', JSON.stringify(stockItems));
-    localStorage.setItem('suppliers', JSON.stringify(suppliers));
-    localStorage.setItem('tables', JSON.stringify(tables));
-    localStorage.setItem('waiters', JSON.stringify(waiters));
-    localStorage.setItem('orders', JSON.stringify(orders));
-    localStorage.setItem('expenses', JSON.stringify(expenses));
-    localStorage.setItem('cashierSession', JSON.stringify(cashierSession));
-    localStorage.setItem('cashierHistory', JSON.stringify(cashierHistory));
-    localStorage.setItem('customers', JSON.stringify(customers));
-    localStorage.setItem('collaborators', JSON.stringify(collaborators));
-    localStorage.setItem('stockMovements', JSON.stringify(stockMovements));
-    localStorage.setItem('settings', JSON.stringify(settings));
-    localStorage.setItem('readGuides', JSON.stringify(readGuides));
+    localStorage.setItem(buildScopedStorageKey('products', currentEmpresa.id), JSON.stringify(products));
+    localStorage.setItem(buildScopedStorageKey('stockItems', currentEmpresa.id), JSON.stringify(stockItems));
+    localStorage.setItem(buildScopedStorageKey('suppliers', currentEmpresa.id), JSON.stringify(suppliers));
+    localStorage.setItem(buildScopedStorageKey('tables', currentEmpresa.id), JSON.stringify(tables));
+    localStorage.setItem(buildScopedStorageKey('waiters', currentEmpresa.id), JSON.stringify(waiters));
+    localStorage.setItem(buildScopedStorageKey('orders', currentEmpresa.id), JSON.stringify(orders));
+    localStorage.setItem(buildScopedStorageKey('expenses', currentEmpresa.id), JSON.stringify(expenses));
+    localStorage.setItem(buildScopedStorageKey('cashierSession', currentEmpresa.id), JSON.stringify(cashierSession));
+    localStorage.setItem(buildScopedStorageKey('cashierHistory', currentEmpresa.id), JSON.stringify(cashierHistory));
+    localStorage.setItem(buildScopedStorageKey('customers', currentEmpresa.id), JSON.stringify(customers));
+    localStorage.setItem(buildScopedStorageKey('collaborators', currentEmpresa.id), JSON.stringify(collaborators));
+    localStorage.setItem(buildScopedStorageKey('stockMovements', currentEmpresa.id), JSON.stringify(stockMovements));
+    localStorage.setItem(buildScopedStorageKey('settings', currentEmpresa.id), JSON.stringify(settings));
+    localStorage.setItem(buildScopedStorageKey('readGuides', currentEmpresa.id), JSON.stringify(readGuides));
     localStorage.setItem('theme', theme);
-  }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme]);
+  }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme, currentEmpresa.id]);
 
   const resetToMocks = () => {
-    localStorage.clear();
+    clearAppStorage();
     window.location.reload();
   };
 
@@ -131,16 +190,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const importData = (json: string) => {
     try {
       const data = JSON.parse(json);
-      if (data.products) setProducts(data.products);
-      if (data.stockItems) setStockItems(data.stockItems);
-      if (data.suppliers) setSuppliers(data.suppliers);
-      if (data.tables) setTables(data.tables);
-      if (data.orders) setOrders(data.orders);
-      if (data.expenses) setExpenses(data.expenses);
-      if (data.customers) setCustomers(data.customers);
-      if (data.collaborators) setCollaborators(data.collaborators);
-      if (data.stockMovements) setStockMovements(data.stockMovements);
-      if (data.settings) setSettings(data.settings);
+      if (data.settings?.empresaId && data.settings.empresaId !== currentEmpresa.id) {
+        alert('Backup pertence a outra empresa e não pode ser importado neste ambiente.');
+        return;
+      }
+
+      if (hasForeignEmpresaId(data, currentEmpresa.id)) {
+        alert('Backup contém dados de outra empresa. Apenas registros compatíveis com a empresa atual serão importados.');
+      }
+
+      if (data.products) setProducts(normalizeImportedCollection(data.products, currentEmpresa.id));
+      if (data.stockItems) setStockItems(normalizeImportedCollection(data.stockItems, currentEmpresa.id));
+      if (data.suppliers) setSuppliers(normalizeImportedCollection(data.suppliers, currentEmpresa.id));
+      if (data.tables) setTables(normalizeImportedCollection(data.tables, currentEmpresa.id));
+      if (data.orders) setOrders(normalizeImportedCollection(data.orders, currentEmpresa.id));
+      if (data.expenses) setExpenses(normalizeImportedCollection(data.expenses, currentEmpresa.id));
+      if (data.cashierHistory) setCashierHistory(normalizeImportedCollection(data.cashierHistory, currentEmpresa.id));
+      if (data.customers) setCustomers(normalizeImportedCollection(data.customers, currentEmpresa.id));
+      if (data.collaborators) setCollaborators(normalizeImportedCollection(data.collaborators, currentEmpresa.id));
+      if (data.stockMovements) setStockMovements(normalizeImportedCollection(data.stockMovements, currentEmpresa.id));
+      if (data.cashierSession) {
+        setCashierSession(hasForeignEmpresaId(data.cashierSession, currentEmpresa.id) ? null : ensureEmpresaId(data.cashierSession, currentEmpresa.id));
+      }
+      if (data.settings) setSettings(ensureEmpresaId(data.settings, currentEmpresa.id));
       if (data.readGuides) setReadGuides(data.readGuides);
       alert('Dados importados com sucesso!');
     } catch (e) {
@@ -148,7 +220,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const updateSettings = (newSettings: AppSettings) => setSettings(newSettings);
+  const hasPermission = (permission: Permission) => hasRolePermission(currentUser.role, permission);
+
+  const updateSettings = (newSettings: AppSettings) => setSettings(ensureEmpresaId(newSettings, currentEmpresa.id));
 
   const toggleGuideRead = (guideId: string) => {
     setReadGuides(prev => 
@@ -157,11 +231,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateProduct = (updatedProduct: Product) => {
-    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? ensureEmpresaId(updatedProduct, currentEmpresa.id) : p));
   };
 
   const addProduct = (product: Product) => {
-    setProducts(prev => [...prev, product]);
+    setProducts(prev => [...prev, ensureEmpresaId(product, currentEmpresa.id)]);
   };
 
   const deleteProduct = (id: string) => {
@@ -169,11 +243,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateStockItem = (updatedItem: StockItem) => {
-    setStockItems(prev => prev.map(i => i.id === updatedItem.id ? updatedItem : i));
+    setStockItems(prev => prev.map(i => i.id === updatedItem.id ? ensureEmpresaId(updatedItem, currentEmpresa.id) : i));
   };
 
   const addStockItem = (item: StockItem) => {
-    setStockItems(prev => [...prev, item]);
+    setStockItems(prev => [...prev, ensureEmpresaId(item, currentEmpresa.id)]);
   };
 
   const deleteStockItem = (id: string) => {
@@ -181,11 +255,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateSupplier = (updatedSupplier: Supplier) => {
-    setSuppliers(prev => prev.map(s => s.id === updatedSupplier.id ? updatedSupplier : s));
+    setSuppliers(prev => prev.map(s => s.id === updatedSupplier.id ? ensureEmpresaId(updatedSupplier, currentEmpresa.id) : s));
   };
 
   const addSupplier = (supplier: Supplier) => {
-    setSuppliers(prev => [...prev, supplier]);
+    setSuppliers(prev => [...prev, ensureEmpresaId(supplier, currentEmpresa.id)]);
   };
 
   const deleteSupplier = (id: string) => {
@@ -193,25 +267,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateTable = (updatedTable: Table) => {
-    setTables(prev => prev.map(t => t.number === updatedTable.number ? updatedTable : t));
+    setTables(prev => prev.map(t => t.number === updatedTable.number ? ensureEmpresaId(updatedTable, currentEmpresa.id) : t));
   };
 
   const addOrder = (order: Order) => {
-    setOrders(prev => [...prev, order]);
+    const scopedOrder = ensureEmpresaId(order, currentEmpresa.id);
+    setOrders(prev => [...prev, scopedOrder]);
     if (order.mode === 'mesa' && order.tableNumber) {
       setTables(prev => prev.map(t =>
-        t.number === order.tableNumber ? { ...t, status: 'ocupada', activeOrderId: order.id } : t
+        t.number === order.tableNumber ? { ...t, status: 'ocupada', activeOrderId: scopedOrder.id } : t
       ));
     }
   };
 
   const updateOrder = (updatedOrder: Order) => {
-    setOrders(prev => prev.map(o => o.id === updatedOrder.id ? updatedOrder : o));
+    setOrders(prev => prev.map(o => o.id === updatedOrder.id ? ensureEmpresaId(updatedOrder, currentEmpresa.id) : o));
   };
 
   const closeOrder = (order: Order, payments: PaymentItem[], serviceCharge: number) => {
     const closedOrder: Order = {
       ...order,
+      empresaId: order.empresaId || currentEmpresa.id,
       payments,
       serviceCharge,
       status: 'closed',
@@ -249,6 +325,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               
               newMovements.push({
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                empresaId: currentEmpresa.id,
                 stockItemId: recipeItem.stockItemId,
                 type: 'out',
                 quantity: quantityToAbate,
@@ -283,11 +360,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addExpense = (expense: Expense) => {
-    setExpenses(prev => [...prev, expense]);
+    setExpenses(prev => [...prev, ensureEmpresaId(expense, currentEmpresa.id)]);
   };
 
   const updateExpense = (updatedExpense: Expense) => {
-    setExpenses(prev => prev.map(e => e.id === updatedExpense.id ? updatedExpense : e));
+    setExpenses(prev => prev.map(e => e.id === updatedExpense.id ? ensureEmpresaId(updatedExpense, currentEmpresa.id) : e));
   };
 
   const deleteExpense = (id: string) => {
@@ -297,6 +374,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const openCashier = () => {
     const newSession: CashierSession = {
       id: Date.now().toString(),
+      empresaId: currentEmpresa.id,
       openedAt: new Date().toISOString(),
       initialBalance: 0,
       salesTotal: 0,
@@ -311,10 +389,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const closeCashier = (tipsTotal: number) => {
     if (!cashierSession) return;
-    const closedOrders = orders.filter(o => o.status === 'closed');
+    const openedAt = new Date(cashierSession.openedAt).getTime();
+    const belongsToCurrentSession = (timestamp: string, empresaId?: string) =>
+      (empresaId || currentEmpresa.id) === currentEmpresa.id && new Date(timestamp).getTime() >= openedAt;
+
+    const closedOrders = orders.filter(o => o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId));
     const salesTotal = closedOrders.reduce((acc, o) => acc + o.subtotal, 0);
     const serviceTaxTotal = closedOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
-    const expensesTotal = expenses.reduce((acc, e) => acc + e.amount, 0);
+    const sessionExpenses = expenses.filter(e => belongsToCurrentSession(e.timestamp, e.empresaId));
+    const expensesTotal = sessionExpenses.reduce((acc, e) => acc + e.amount, 0);
     const finalBalance = salesTotal + serviceTaxTotal - expensesTotal + tipsTotal;
     const closedSession: CashierSession = {
       ...cashierSession,
@@ -329,8 +412,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setCashierHistory(prev => [...prev, closedSession]);
     setCashierSession(null);
-    setOrders([]);
-    setExpenses([]);
+    setOrders(prev => prev.filter(o => !(o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId))));
+    setExpenses(prev => prev.filter(e => !belongsToCurrentSession(e.timestamp, e.empresaId)));
   };
 
   const transferTable = (fromNumber: number, toNumber: number) => {
@@ -409,11 +492,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addCustomer = (customer: Customer) => {
-    setCustomers(prev => [...prev, customer]);
+    setCustomers(prev => [...prev, ensureEmpresaId(customer, currentEmpresa.id)]);
   };
 
   const updateCustomer = (updatedCustomer: Customer) => {
-    setCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
+    setCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? ensureEmpresaId(updatedCustomer, currentEmpresa.id) : c));
   };
 
   const deleteCustomer = (id: string) => {
@@ -421,11 +504,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addCollaborator = (collaborator: Collaborator) => {
-    setCollaborators(prev => [...prev, collaborator]);
+    setCollaborators(prev => [...prev, ensureEmpresaId(collaborator, currentEmpresa.id)]);
   };
 
   const updateCollaborator = (updatedCollaborator: Collaborator) => {
-    setCollaborators(prev => prev.map(c => c.id === updatedCollaborator.id ? updatedCollaborator : c));
+    setCollaborators(prev => prev.map(c => c.id === updatedCollaborator.id ? ensureEmpresaId(updatedCollaborator, currentEmpresa.id) : c));
   };
 
   const deleteCollaborator = (id: string) => {
@@ -433,13 +516,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const addStockMovement = (movement: StockMovement) => {
-    setStockMovements(prev => [...prev, movement]);
+    setStockMovements(prev => [...prev, ensureEmpresaId(movement, currentEmpresa.id)]);
   };
 
   return (
     <AppContext.Provider value={{
-      products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme,
-      setTheme, updateProduct, addProduct, deleteProduct, 
+      currentEmpresa, currentUser, products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme,
+      hasPermission, setTheme, updateProduct, addProduct, deleteProduct, 
       updateStockItem, addStockItem, deleteStockItem,
       updateSupplier, addSupplier, deleteSupplier,
       updateTable, addOrder, updateOrder, closeOrder, addExpense, updateExpense, deleteExpense, openCashier, closeCashier,

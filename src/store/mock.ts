@@ -1,6 +1,10 @@
 import { Product, Table, Waiter, StockItem, Supplier, Collaborator, Customer, AppSettings } from '../types';
+import { DEFAULT_EMPRESA_ID } from '../domain/saas';
 
-export const mockStockItems: StockItem[] = [
+const withEmpresa = <T extends object>(items: T[]) =>
+  items.map(item => ({ empresaId: DEFAULT_EMPRESA_ID, ...item }));
+
+export const mockStockItems: StockItem[] = withEmpresa([
   // Proteínas
   { id: 'si1', name: 'Carne Moída (Blend)', category: 'Proteínas', unit: 'kg', currentStock: 45, minStock: 10, costPrice: 38.50, supplierId: '3' },
   { id: 'si2', name: 'Filé de Frango', category: 'Proteínas', unit: 'kg', currentStock: 30, minStock: 5, costPrice: 22.00, supplierId: '3' },
@@ -33,16 +37,16 @@ export const mockStockItems: StockItem[] = [
   { id: 'si19', name: 'Água Tônica (Lata)', category: 'Bebidas Prontas', unit: 'un', currentStock: 72, minStock: 24, costPrice: 3.40, supplierId: '1' },
   { id: 'si20', name: 'Coca-Cola (Lata)', category: 'Bebidas Prontas', unit: 'un', currentStock: 120, minStock: 48, costPrice: 2.80, supplierId: '1' },
   { id: 'si21', name: 'Heineken Long Neck', category: 'Bebidas Prontas', unit: 'un', currentStock: 144, minStock: 72, costPrice: 5.50, supplierId: '1' },
-];
+]);
 
-export const mockSuppliers: Supplier[] = [
+export const mockSuppliers: Supplier[] = withEmpresa([
   { id: '1', companyName: 'Bebidas Prime Distribuidora', category: 'Bebidas', contactName: 'Ricardo L.', phone: '(11) 4004-9000', email: 'vendas@prime.com.br', lastDelivery: '2026-05-02', deliveryPerformance: 98, rating: 5, paymentTerms: '30 dias', document: '12.345.678/0001-90', address: 'Av. Industrial, 1500 - SP' },
   { id: '2', companyName: 'Hortifruti da Fazenda', category: 'Perecíveis', contactName: 'Dona Maria', phone: '(11) 91234-5678', email: 'fazenda@email.com', lastDelivery: '2026-05-04', deliveryPerformance: 100, rating: 5, paymentTerms: 'À vista', document: '98.765.432/0001-10', address: 'Rua das Flores, 45 - Cotia/SP' },
   { id: '3', companyName: 'Atacadão Carnes & Cia', category: 'Proteínas', contactName: 'Carlos M.', phone: '(11) 3322-1100', email: 'comercial@atacadao.com', lastDelivery: '2026-04-30', deliveryPerformance: 85, rating: 3, paymentTerms: '15 dias', document: '45.678.901/0001-22', address: 'Marginal Tietê, KM 12 - SP' },
   { id: '4', companyName: 'Limpeza Express S/A', category: 'Limpeza', contactName: 'Felipe G.', phone: '(11) 2211-4433', email: 'contato@limpezaexpress.com', lastDelivery: '2026-04-15', deliveryPerformance: 92, rating: 4, paymentTerms: 'Boleto 21 dias', document: '33.221.100/0001-55', address: 'Rua Limpa, 100 - Barueri/SP' },
-];
+]);
 
-export const mockProducts: Product[] = [
+export const mockProducts: Product[] = withEmpresa([
   // --- DRINKS ---
   { 
     id: 'p1', name: 'Caipirinha Tradicional', description: 'Cachaça prata, limão e açúcar', price: 24, category: 'Drinks',
@@ -131,34 +135,35 @@ export const mockProducts: Product[] = [
   },
   { id: 'p19', name: 'Brownie de Chocolate', description: 'Nacional com nozes', price: 22, category: 'Sobremesas', recipe: [] },
   { id: 'p20', name: 'Água Mineral 500ml', description: 'Sem gás', price: 6, category: 'Drinks', recipe: [] },
-];
+]);
 
-export const mockTables: Table[] = Array.from({ length: 20 }, (_, i) => ({
+export const mockTables: Table[] = withEmpresa(Array.from({ length: 20 }, (_, i) => ({
   number: i + 1,
   status: 'livre' as const,
-}));
+})));
 
-export const mockWaiters: Waiter[] = [
+export const mockWaiters: Waiter[] = withEmpresa([
   { id: 'w1', name: 'Ana Silva' },
   { id: 'w2', name: 'Carlos Ferreira' },
   { id: 'w3', name: 'Mariana Costa' },
   { id: 'w4', name: 'Ricardo Mendes' },
-];
+]);
 
-export const mockCustomers: Customer[] = [
+export const mockCustomers: Customer[] = withEmpresa([
   { id: '1', name: 'Ana Silva', email: 'ana.silva@email.com', phone: '(11) 98888-7777', totalSpent: 2250.50, lastVisit: '2026-05-01', loyaltyPoints: 225 },
   { id: '2', name: 'Bruno Oliveira', email: 'bruno.o@email.com', phone: '(11) 97777-6666', totalSpent: 450.00, lastVisit: '2026-03-15', loyaltyPoints: 45 },
   { id: '3', name: 'Carla Santos', email: 'carla.s@email.com', phone: '(11) 96666-5555', totalSpent: 3100.20, lastVisit: '2026-05-04', loyaltyPoints: 310 },
-];
+]);
 
-export const mockCollaborators: Collaborator[] = [
-  { id: '1', name: 'Reinaldogramacho', role: 'Administrador', email: 'admin@gestaogastro.com', status: 'active', joinedAt: '2025-01-15', permissions: 'admin', totalSales: 15400 },
+export const mockCollaborators: Collaborator[] = withEmpresa([
+  { id: '1', name: 'Administrador Demo', role: 'Administrador', email: 'admin@gestaogastro.com', status: 'active', joinedAt: '2025-01-15', permissions: 'admin', totalSales: 15400 },
   { id: '2', name: 'Maria Souza', role: 'Garçom Lead', email: 'maria.s@email.com', status: 'active', joinedAt: '2025-03-10', permissions: 'waiter', totalSales: 9200 },
-];
+]);
 
 export const mockSettings: AppSettings = {
+  empresaId: DEFAULT_EMPRESA_ID,
   establishment: {
-    name: 'Gastro Bar & Restaurante',
+    name: 'Restaurante Demo',
     address: 'Rua Gastronômica, 123 - Centro, São Paulo/SP',
     phone: '(11) 98765-4321',
     document: '12.345.678/0001-90',

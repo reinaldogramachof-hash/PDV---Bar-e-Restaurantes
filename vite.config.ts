@@ -1,22 +1,21 @@
-import tailwindcss from '@tailwindcss/vite';
+﻿import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
-import {defineConfig, loadEnv} from 'vite';
+import { defineConfig } from 'vite';
 
-export default defineConfig(({mode}) => {
-  const env = loadEnv(mode, '.', '');
+export default defineConfig(() => {
   return {
     plugins: [
-      react(), 
+      react(),
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['pwa-512x512.png', 'favicon.ico', 'robots.txt'],
         manifest: {
-          name: 'Bar Manager Pro',
-          short_name: 'GastroPro',
-          description: 'Sistema Profissional de Gestão para Bares e Restaurantes',
+          name: 'Gestão Gastro',
+          short_name: 'GestaoGastro',
+          description: 'Plataforma de gestão operacional para bares e restaurantes',
           theme_color: '#121214',
           background_color: '#121214',
           display: 'standalone',
@@ -26,15 +25,12 @@ export default defineConfig(({mode}) => {
               src: 'pwa-512x512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'any maskable'
-            }
-          ]
-        }
-      })
+              purpose: 'any maskable',
+            },
+          ],
+        },
+      }),
     ],
-    define: {
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
@@ -46,8 +42,8 @@ export default defineConfig(({mode}) => {
       host: '0.0.0.0',
       hmr: {
         protocol: 'wss',
-        clientPort: 443 // Vercel/Production uses 443 for wss
-      }
+        clientPort: 443,
+      },
     },
   };
 });

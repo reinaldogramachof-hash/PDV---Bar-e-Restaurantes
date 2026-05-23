@@ -13,7 +13,7 @@ interface OrderModalProps {
 }
 
 export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClose }) => {
-  const { tables, orders, waiters, theme, addOrder, updateOrder, transferTable, mergeTables, clearTable } = useApp();
+  const { currentEmpresa, tables, orders, waiters, theme, addOrder, updateOrder, transferTable, mergeTables, clearTable } = useApp();
   const isDark = theme === 'dark';
 
   const table = useMemo(() => tableNumber ? tables.find(t => t.number === tableNumber) : null, [tableNumber, tables]);
@@ -53,6 +53,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
   const handleOpenTable = () => {
     const newOrder: Order = {
       id: Date.now().toString(),
+      empresaId: currentEmpresa.id,
       mode: 'mesa',
       tableNumber: tableNumber!,
       customerName,

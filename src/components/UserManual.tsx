@@ -102,7 +102,7 @@ export const UserManual: React.FC = () => {
           </div>
           <h1 className="text-5xl font-black tracking-tighter uppercase italic leading-none">Manual de <span className="text-[#E85D75]">Alta Performance</span></h1>
           <p className="text-sm font-bold opacity-40 uppercase tracking-[0.2em] max-w-lg">
-            Domine as ferramentas do Bar Manager Pro e transforme sua gestão.
+            Domine as ferramentas do Gestão Gastro e transforme sua gestão.
           </p>
         </div>
 

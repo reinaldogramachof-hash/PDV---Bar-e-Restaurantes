@@ -11,6 +11,7 @@ import {
   Facebook
 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { APP_NAME } from '../domain/saas';
 
 export const Support: React.FC = () => {
   const { theme } = useApp();
@@ -55,7 +56,7 @@ export const Support: React.FC = () => {
         </div>
         <h1 className="text-4xl font-black tracking-tighter uppercase">Central de Suporte</h1>
         <p className="text-sm font-bold opacity-40 uppercase tracking-[0.2em] max-w-lg mx-auto">
-          Estamos aqui para ajudar você a tirar o máximo proveito do Bar Manager Pro.
+          Estamos aqui para ajudar você a tirar o máximo proveito do {APP_NAME}.
         </p>
       </div>
 
@@ -92,7 +93,7 @@ export const Support: React.FC = () => {
         <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
           <div className="space-y-6 flex-1 text-center md:text-left">
             <div>
-              <h2 className="text-2xl font-black tracking-tighter uppercase mb-2">Plena Informática</h2>
+              <h2 className="text-2xl font-black tracking-tighter uppercase mb-2">Suporte Plena Informática</h2>
               <p className="text-sm font-bold opacity-60 leading-relaxed max-w-md uppercase tracking-tight">
                 Acesse nosso site e conheça outras soluções.
               </p>
@@ -115,7 +116,7 @@ export const Support: React.FC = () => {
 
       {/* Footer Text */}
       <div className="text-center opacity-30 py-8">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em]">Bar Manager Pro - Versão 1.0.0</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em]">{APP_NAME} - Versão 1.0.0</p>
         <p className="text-[8px] font-bold uppercase tracking-[0.2em] mt-2">© 2026 Plena Informática. Todos os direitos reservados.</p>
       </div>
     </div>

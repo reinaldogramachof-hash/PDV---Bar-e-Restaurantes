@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Product, RecipeItem } from '../types';
 
 export const Products: React.FC = () => {
-  const { products, stockItems, updateProduct, addProduct, deleteProduct, theme } = useApp();
+  const { currentEmpresa, products, stockItems, updateProduct, addProduct, deleteProduct, theme } = useApp();
   const isDark = theme === 'dark';
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,6 +52,7 @@ export const Products: React.FC = () => {
     const formData = new FormData(e.target as HTMLFormElement);
     const product: Product = {
       id: editingProduct?.id || Date.now().toString(),
+      empresaId: editingProduct?.empresaId || currentEmpresa.id,
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       price: parseFloat(formData.get('price') as string),

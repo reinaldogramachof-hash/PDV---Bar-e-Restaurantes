@@ -5,7 +5,7 @@ import { Search, Plus, Truck, Phone, Mail, Edit3, Trash2, Box, User, LayoutGrid,
 import { motion, AnimatePresence } from 'motion/react';
 
 export const Suppliers: React.FC = () => {
-  const { theme, suppliers, addSupplier, updateSupplier, deleteSupplier } = useApp();
+  const { currentEmpresa, theme, suppliers, addSupplier, updateSupplier, deleteSupplier } = useApp();
   const isDark = theme === 'dark';
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => (localStorage.getItem('viewMode_suppliers') as any) || 'list');
@@ -47,6 +47,7 @@ export const Suppliers: React.FC = () => {
 
     const supplier: Supplier = {
       id: editingSupplier?.id || Date.now().toString(),
+      empresaId: editingSupplier?.empresaId || currentEmpresa.id,
       companyName: formData.companyName,
       category: formData.category || 'Geral',
       contactName: formData.contactName || '',

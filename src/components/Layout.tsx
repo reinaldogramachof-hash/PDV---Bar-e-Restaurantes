@@ -26,6 +26,7 @@ import {
   Download,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { APP_NAME } from '../domain/saas';
 
 interface LayoutProps {
   currentView: View;
@@ -142,7 +143,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
                   animate={{ opacity: 1, x: 0 }}
                   className="font-bold text-lg tracking-tight whitespace-nowrap"
                 >
-                  Bar Manager Pro
+                  {APP_NAME}
                 </motion.span>
               )}
             </div>
@@ -286,9 +287,9 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, chi
                   </AnimatePresence>
                 </button>
                 <div className={`flex items-center gap-3 px-4 py-2 rounded-xl ${isDark ? 'bg-white/5 border border-white/10' : 'bg-gray-100'}`}>
-                  <div className="w-8 h-8 rounded-lg bg-[#E85D75] flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-[#E85D75]/20">R</div>
+                  <div className="w-8 h-8 rounded-lg bg-[#E85D75] flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-[#E85D75]/20">GG</div>
                   <div className="hidden md:block leading-none">
-                    <p className="text-[10px] font-black uppercase tracking-widest">Reinaldo</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest">Admin Demo</p>
                     <p className="text-[8px] font-bold opacity-30 uppercase tracking-[0.2em] mt-0.5">Administrador</p>
                   </div>
                 </div>
