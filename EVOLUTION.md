@@ -186,15 +186,28 @@ Cliente (/cardapio/:empresaId)
 
 ---
 
+## [2026-05-24] Revisão e Fechamento de Módulos — Sessão Final Fase 2
+
+**Contexto:** Revisão módulo a módulo dos pendentes antes do merge para main.
+
+**Resultado da revisão:**
+- `Security.tsx` — filtros de audit e export CSV já estavam implementados ✅ (falso positivo no backlog)
+- `Settings.tsx` — tabs Dados & Backup e Plano Atual já existiam ✅ (falso positivo no backlog)
+- `Collaborators.tsx` — campo `password` adicionado na aba Geral do formulário ✅ SecurityGate habilitado
+- `Support.tsx` — migração completa para densidade desktop (p-5, rounded-panel, h-10) ✅
+- `UserManual.tsx` — migração completa para densidade desktop, hero e cards compactos ✅
+
+**Commit:** `6f099ff`
+
+---
+
 ## Módulos Pendentes de Revisão (Gestão)
 
-| Módulo | Pendência | Prioridade |
-|--------|-----------|------------|
-| `Collaborators.tsx` | Campo `password` visível na UI | Alta (habilita SecurityGate) |
-| `Security.tsx` | Filtros de audit + export CSV (F6 ROADMAP) | Média |
-| `Settings.tsx` | Tab Backup + visibilidade do plano atual | Média |
-| `Support.tsx` | Migração densidade desktop (F8) | Baixa |
-| `UserManual.tsx` | Migração densidade desktop (F8) | Baixa |
+Todos os módulos da Fase 2 estão completos. Nenhuma pendência aberta.
+
+| Módulo | Status |
+|--------|--------|
+| Todos os 24 módulos | ✅ Completo |
 
 ---
 
