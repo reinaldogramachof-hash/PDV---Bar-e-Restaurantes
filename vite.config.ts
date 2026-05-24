@@ -45,5 +45,8 @@ export default defineConfig(() => {
         clientPort: 443,
       },
     },
+    build: {
+      chunkSizeWarningLimit: 600,
+    },
   };
 });
