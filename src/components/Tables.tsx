@@ -4,6 +4,15 @@ import { OrderModal } from './OrderModal';
 import { CalendarCheck, Check, CheckCircle2, Clock, Search, Users, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
+interface StatCardProps {
+  label: string;
+  value: string;
+  subValue: string;
+  icon: React.ElementType;
+  tone: string;
+  panelClass: string;
+}
+
 const TableTimer: React.FC<{ timestamp: string; status: string }> = ({ timestamp, status }) => {
   const [now, setNow] = useState(Date.now());
 
@@ -90,7 +99,7 @@ export const Tables: React.FC = () => {
             {['todos', 'livre', 'ocupada', 'aguardando', 'reservada'].map(item => (
               <button
                 key={item}
-                onClick={() => setFilter(item as any)}
+                onClick={() => setFilter(item as 'todos' | 'livre' | 'ocupada' | 'aguardando' | 'reservada')}
                 className={`flex-1 lg:flex-none px-4 py-2 rounded-control text-sm font-medium transition-all ${filter === item ? 'bg-accent text-white' : isDark ? 'text-muted hover:bg-surface hover:text-text' : 'text-muted-light hover:bg-surface-light hover:text-text-light'}`}
               >
                 {item}
@@ -119,6 +128,7 @@ export const Tables: React.FC = () => {
             </button>
           </div>
         </div>
+
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -202,18 +212,19 @@ export const Tables: React.FC = () => {
   );
 };
 
-const StatCard = ({ label, value, subValue, icon: Icon, tone, panelClass }: any) => {
-  const tones = {
+const StatCard = ({ label, value, subValue, icon: Icon, tone, panelClass }: StatCardProps) => {
+  const tones: Record<string, string> = {
     success: 'text-success bg-success/10 border-success/20',
     warning: 'text-warning bg-warning/10 border-warning/20',
     accent: 'text-accent bg-accent/10 border-accent/20',
     purple: 'text-accent bg-accent/10 border-purple-500/20',
-  }[tone as 'success' | 'warning' | 'accent' | 'purple'];
+  };
+  const toneClass = tones[tone] ?? tones.accent;
 
   return (
     <div className={`p-4 rounded-panel border ${panelClass}`}>
       <div className="flex justify-between items-start mb-3">
-        <div className={`p-2 rounded-panel border ${tones}`}><Icon className="w-4 h-4" /></div>
+        <div className={`p-2 rounded-panel border ${toneClass}`}><Icon className="w-4 h-4" /></div>
         <div className="text-right">
           <p className="text-xs text-muted mb-1">{label}</p>
           <p className="text-xl font-semibold">{value}</p>
