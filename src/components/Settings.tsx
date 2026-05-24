@@ -3,7 +3,7 @@ import { useApp } from '../store/AppContext';
 import { 
   Settings as SettingsIcon, Store, Printer, Database, Save, 
   Download, Upload, RefreshCw, Check, AlertTriangle, ShieldCheck, 
-  Globe, Phone, MapPin, FileText, Layout, Crown 
+  Globe, Phone, MapPin, FileText, Layout, Crown, ChefHat
 } from 'lucide-react';
 import { getPlanModules } from '../domain/saas';
 import { useAudit } from '../hooks/useAudit';
@@ -15,7 +15,7 @@ export const Settings: React.FC = () => {
   const isDark = theme === 'dark';
 
   const [formData, setFormData] = useState<AppSettings>(settings);
-  const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'data' | 'plan'>('store');
+  const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'kitchen' | 'data' | 'plan'>('store');
   const [isSaving, setIsSaving] = useState(false);
   const { log } = useAudit();
 
@@ -51,6 +51,7 @@ export const Settings: React.FC = () => {
   const tabs = [
     { id: 'store', label: 'Estabelecimento', icon: Store },
     { id: 'printer', label: 'Impressão', icon: Printer },
+    { id: 'kitchen', label: 'Cozinha', icon: ChefHat },
     { id: 'data', label: 'Dados & Backup', icon: Database },
     { id: 'plan', label: 'Plano Atual', icon: Crown },
   ];
@@ -85,7 +86,7 @@ export const Settings: React.FC = () => {
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-panel transition-all text-xs font-medium
                 ${activeTab === tab.id
                   ? 'bg-[var(--color-accent)] text-white'
@@ -239,6 +240,55 @@ export const Settings: React.FC = () => {
                         <option value="58mm">58mm (Portátil)</option>
                       </select>
                    </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'kitchen' && (
+            <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="flex items-center gap-3 border-b border-dashed border-current/10 pb-4">
+                <div className="w-9 h-9 rounded-control bg-[var(--color-accent)]/10 flex items-center justify-center">
+                  <ChefHat className="w-4 h-4 text-[var(--color-accent)]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold">Configuração da Cozinha</h3>
+                  <p className="text-xs text-muted">Defina como o KDS opera no salão e na produção.</p>
+                </div>
+              </div>
+
+              <div className={`p-5 rounded-panel border space-y-4 ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                <div className="space-y-1.5">
+                  <h4 className="text-sm font-semibold">Modo do KDS</h4>
+                  <p className="text-xs text-muted">
+                    O modo visualização mantém o painel passivo. O modo interativo libera avanço de status por item diretamente na cozinha.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setFormData({ ...formData, kitchenMode: 'display' })}
+                    className={`text-left rounded-panel border p-4 transition-all ${
+                      (formData.kitchenMode ?? 'display') === 'display'
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                        : isDark ? 'border-[var(--color-border)] bg-[var(--color-app-base)]' : 'border-gray-200 bg-white'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold">Modo Visualização</p>
+                    <p className="text-xs text-muted mt-1">Painel passivo, sem botões de interação nos cards.</p>
+                  </button>
+
+                  <button
+                    onClick={() => setFormData({ ...formData, kitchenMode: 'interactive' })}
+                    className={`text-left rounded-panel border p-4 transition-all ${
+                      formData.kitchenMode === 'interactive'
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                        : isDark ? 'border-[var(--color-border)] bg-[var(--color-app-base)]' : 'border-gray-200 bg-white'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold">Modo Interativo</p>
+                    <p className="text-xs text-muted mt-1">Cozinheiro altera o status dos itens direto no KDS.</p>
+                  </button>
                 </div>
               </div>
             </div>
