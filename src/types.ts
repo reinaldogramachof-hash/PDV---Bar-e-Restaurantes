@@ -7,6 +7,7 @@ export type Permission =
   | 'dashboard:read'
   | 'pdv:write'
   | 'mesas:write'
+  | 'delivery:write'
   | 'cozinha:write'
   | 'estoque:write'
   | 'caixa:write'

@@ -17,6 +17,7 @@ const Cashier = lazy(() => import('./components/Cashier').then(module => ({ defa
 const Reports = lazy(() => import('./components/Reports').then(module => ({ default: module.Reports })));
 const UserManual = lazy(() => import('./components/UserManual').then(module => ({ default: module.UserManual })));
 const Tables = lazy(() => import('./components/Tables').then(module => ({ default: module.Tables })));
+const Delivery = lazy(() => import('./components/Delivery').then(module => ({ default: module.Delivery })));
 const Customers = lazy(() => import('./components/Customers').then(module => ({ default: module.Customers })));
 const Collaborators = lazy(() => import('./components/Collaborators').then(module => ({ default: module.Collaborators })));
 const Suppliers = lazy(() => import('./components/Suppliers').then(module => ({ default: module.Suppliers })));
@@ -87,6 +88,7 @@ const AppContent = () => {
       case 'dashboard': return <PlanGuard moduleId="dashboard"><Dashboard /></PlanGuard>;
       case 'pdv': return <PlanGuard moduleId="pdv"><PDV /></PlanGuard>;
       case 'mesas': return <PlanGuard moduleId="mesas"><Tables /></PlanGuard>;
+      case 'delivery': return <PlanGuard moduleId="delivery"><Delivery /></PlanGuard>;
       case 'cozinha': return <PlanGuard moduleId="cozinha"><Kitchen /></PlanGuard>;
       case 'estoque': return <PlanGuard moduleId="estoque"><Stock /></PlanGuard>;
       case 'caixa': return <PlanGuard moduleId="caixa"><Cashier /></PlanGuard>;

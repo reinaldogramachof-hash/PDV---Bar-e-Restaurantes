@@ -11,6 +11,7 @@ export type ModuleId =
   | 'dashboard'
   | 'pdv'
   | 'mesas'
+  | 'delivery'
   | 'cozinha'
   | 'estoque'
   | 'caixa'
@@ -31,6 +32,7 @@ export const planModules: Record<Plano, ModuleId[]> = {
     'dashboard',
     'pdv',
     'mesas',
+    'delivery',
     'caixa',
     'produtos',
     'relatorios',
@@ -51,6 +53,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'dashboard:read',
     'pdv:write',
     'mesas:write',
+    'delivery:write',
     'cozinha:write',
     'estoque:write',
     'caixa:write',
@@ -68,6 +71,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'dashboard:read',
     'pdv:write',
     'mesas:write',
+    'delivery:write',
     'cozinha:write',
     'estoque:write',
     'caixa:write',
@@ -91,6 +95,7 @@ export const modulePermissions: Record<ModuleId, Permission> = {
   dashboard: 'dashboard:read',
   pdv: 'pdv:write',
   mesas: 'mesas:write',
+  delivery: 'delivery:write',
   cozinha: 'cozinha:write',
   estoque: 'estoque:write',
   caixa: 'caixa:write',

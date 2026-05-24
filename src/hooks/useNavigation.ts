@@ -5,6 +5,7 @@ export type View =
   | 'dashboard' 
   | 'pdv' 
   | 'mesas' 
+  | 'delivery'
   | 'estoque' 
   | 'caixa' 
   | 'relatorios' 

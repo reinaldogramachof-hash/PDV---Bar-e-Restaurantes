@@ -11,6 +11,7 @@ const moduleNames: Record<ModuleId, string> = {
   dashboard: 'Dashboard',
   pdv: 'PDV',
   mesas: 'Mesas',
+  delivery: 'Delivery',
   cozinha: 'Cozinha',
   estoque: 'Estoque',
   caixa: 'Caixa',

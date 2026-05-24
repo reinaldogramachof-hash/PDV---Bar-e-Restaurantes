@@ -3,6 +3,7 @@ import { View } from '../hooks/useNavigation';
 import { useApp } from '../store/AppContext';
 import {
   BookOpen,
+  Bike,
   ChefHat,
   ChevronLeft,
   Crown,
@@ -61,6 +62,7 @@ const navGroups = [
     items: [
       { id: 'pdv', icon: MonitorPlay, label: 'PDV (Balcão)' },
       { id: 'mesas', icon: Table2, label: 'Mesas' },
+      { id: 'delivery', icon: Bike, label: 'Delivery' },
       { id: 'cozinha', icon: ChefHat, label: 'Cozinha' },
       { id: 'caixa', icon: Wallet, label: 'Caixa' },
     ],
@@ -94,6 +96,7 @@ const viewLabels: Record<View, string> = {
   dashboard: 'Dashboard',
   pdv: 'PDV Balcão',
   mesas: 'Mesas',
+  delivery: 'Delivery',
   cozinha: 'Cozinha',
   estoque: 'Estoque',
   caixa: 'Caixa',
