@@ -183,6 +183,12 @@ export interface PaymentItem {
   amount: number;
 }
 
+export interface PartialPaymentItem {
+  amount: number;
+  method: PaymentMethod;
+  paidAt: string;
+}
+
 export interface Order extends BaseEntity {
   mode: OrderMode;
   tableNumber?: number;
@@ -195,6 +201,7 @@ export interface Order extends BaseEntity {
   serviceCharge: number;
   total: number;
   payments: PaymentItem[];
+  partialPayments?: PartialPaymentItem[];
   status: 'open' | 'closed';
   waiterId: string;
   customerId?: string;
