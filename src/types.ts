@@ -1,5 +1,6 @@
 export type OrderMode = 'mesa' | 'balcao';
 export type PaymentMethod = 'dinheiro' | 'credito' | 'debito' | 'pix' | 'vr' | 'va' | 'voucher';
+export type KitchenItemStatus = 'aguardando' | 'preparo' | 'pronto';
 export type Plano = 'essencial' | 'profissional' | 'gestao';
 export type LicenseStatus = 'active' | 'suspended' | 'trial';
 export type UserRole = 'master' | 'gerente' | 'caixa' | 'garcom' | 'cozinha' | 'estoque' | 'suporte';
@@ -112,6 +113,8 @@ export interface OrderItem {
   discount?: number;
   promotionName?: string;
   comboId?: string;
+  addedAt?: string;
+  kitchenStatus?: KitchenItemStatus;
 }
 
 export interface Promotion {
@@ -229,6 +232,7 @@ export interface Expense extends BaseEntity {
   amount: number;
   category: 'Insumos' | 'Pessoal' | 'Aluguel' | 'Utilidades' | 'Marketing' | 'Impostos' | 'Outros';
   status: 'pago' | 'pendente';
+  entryType?: 'saida' | 'entrada'; // CAI-003: default 'saida'; 'entrada' = suprimento de troco
   paymentMethod?: PaymentMethod;
   dueDate?: string;
   timestamp: string;
@@ -245,6 +249,8 @@ export interface CashierSession extends BaseEntity {
   finalBalance?: number;
   ordersCount: number;
   status: 'open' | 'closed';
+  countedCash?: number;    // CAI-001: valor declarado pelo operador na contagem física
+  cashBreakdown?: number;  // CAI-001: diferença calculada: countedCash - valor esperado em espécie
 }
 
 export interface Customer extends BaseEntity {
@@ -311,7 +317,7 @@ export interface DeliveryOrder {
   phone: string;
   address: string;
   neighborhood: string;
-  items: { name: string; qty: number; price: number }[];
+  items: DeliveryOrderItem[];
   subtotal: number;
   deliveryFee: number;
   discount: number;
@@ -428,7 +434,18 @@ export interface CartItem {
   name: string;
   qty: number;
   price: number;
+  category?: string;
   notes?: string;
+  addedAt?: string;
+  kitchenStatus?: KitchenItemStatus;
+}
+
+export interface DeliveryOrderItem {
+  name: string;
+  qty: number;
+  price: number;
+  addedAt?: string;
+  kitchenStatus?: KitchenItemStatus;
 }
 
 export interface OnlineOrder extends BaseEntity {
@@ -454,6 +471,7 @@ export interface OnlineOrder extends BaseEntity {
 
 export interface AppSettings {
   empresaId: string;
+  kitchenMode?: 'display' | 'interactive';
   establishment: {
     name: string;
     address: string;

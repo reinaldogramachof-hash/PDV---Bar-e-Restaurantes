@@ -84,6 +84,7 @@ export const PDV: React.FC = () => {
         originalPrice: discountInfo ? product.price : undefined,
         discount: discountInfo?.discount,
         promotionName: discountInfo?.promotionName,
+        addedAt: new Date().toISOString(),
       });
     }
 
@@ -111,6 +112,7 @@ export const PDV: React.FC = () => {
       discount: item.discount,
       promotionName: item.promotionName,
       comboId: item.comboId,
+      addedAt: new Date().toISOString(),
     }));
 
     if (comboItems.length === 0) return;

@@ -162,6 +162,7 @@ export const mockCollaborators: Collaborator[] = withEmpresa([
 
 export const mockSettings: AppSettings = {
   empresaId: DEFAULT_EMPRESA_ID,
+  kitchenMode: 'display',
   establishment: {
     name: 'Restaurante Demo',
     address: 'Rua Gastronômica, 123 - Centro, São Paulo/SP',

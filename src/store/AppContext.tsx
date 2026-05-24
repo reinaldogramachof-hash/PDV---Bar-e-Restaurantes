@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission, DeliveryOrder, Entregador, MenuConfig, MenuDigitalConfig, Promotion, Combo, LoyaltyConfig, LoyaltyEntry, Campaign, OnlineOrder, OnlineOrderStatus } from '../types';
+import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission, DeliveryOrder, Entregador, MenuConfig, MenuDigitalConfig, Promotion, Combo, LoyaltyConfig, LoyaltyEntry, Campaign, OnlineOrder, OnlineOrderStatus, KitchenItemStatus } from '../types';
 import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers, mockSettings } from './mock';
 import { DEFAULT_EMPRESA_ID, buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, hasRolePermission, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId } from '../domain/saas';
 import { buildOnlineOrderStockAdjustments, getDeliveredOnlineOrdersInWindow, getOnlineSalesTotal } from '../services/onlineOrdersService';
@@ -57,7 +57,7 @@ interface AppContextType extends AppState {
   updateExpense: (expense: Expense) => void;
   deleteExpense: (id: string) => void;
   openCashier: (initialBalance?: number) => void;
-  closeCashier: (tipsTotal: number) => void;
+  closeCashier: (tipsTotal: number, countedCash?: number) => void;
   transferTable: (from: number, to: number) => void;
   mergeTables: (source: number, target: number) => void;
   reserveTable: (numbers: number[], reason: string) => void;
@@ -90,6 +90,7 @@ interface AppContextType extends AppState {
   addOnlineOrder: (order: Omit<OnlineOrder, 'id' | 'empresaId' | 'createdAt' | 'updatedAt'>) => void;
   updateOnlineOrderStatus: (id: string, status: OnlineOrderStatus, extra?: Partial<OnlineOrder>) => void;
   cancelOnlineOrder: (id: string, reason: string) => void;
+  updateOrderItemKitchenStatus: (orderId: string, itemIndex: number, status: KitchenItemStatus) => void;
   applyOnlineOrderStockDeduction: (id: string) => void;
   registerOnlineSale: (id: string) => void;
   updateSettings: (settings: AppSettings) => void;
@@ -498,20 +499,40 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCashierSession(newSession);
   };
 
-  const closeCashier = (tipsTotal: number) => {
+  // CAI-001/002/003: closeCashier expandido para incluir delivery, suprimentos e contagem física
+  const closeCashier = (tipsTotal: number, countedCash?: number) => {
     if (!cashierSession) return;
     const openedAt = new Date(cashierSession.openedAt).getTime();
     const belongsToCurrentSession = (timestamp: string, empresaId?: string) =>
       (empresaId || currentEmpresa.id) === currentEmpresa.id && new Date(timestamp).getTime() >= openedAt;
 
+    // Pedidos de mesa/balcão fechados na sessão
     const closedOrders = orders.filter(o => o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId));
+
+    // CAI-002: Pedidos online entregues na janela da sessão
     const deliveredOnlineOrders = getDeliveredOnlineOrdersInWindow(onlineOrders, cashierSession.openedAt);
     const onlineSalesTotal = getOnlineSalesTotal(deliveredOnlineOrders);
-    const salesTotal = closedOrders.reduce((acc, o) => acc + o.subtotal, 0) + onlineSalesTotal;
+
+    // CAI-002: Pedidos de delivery entregues na janela da sessão
+    const deliveredDeliveryOrders = deliveryOrders.filter(
+      d => d.status === 'entregue' && d.empresaId === currentEmpresa.id && new Date(d.createdAt).getTime() >= openedAt
+    );
+    const deliverySalesTotal = deliveredDeliveryOrders.reduce((acc, d) => acc + d.total, 0);
+
+    const salesTotal = closedOrders.reduce((acc, o) => acc + o.subtotal, 0) + onlineSalesTotal + deliverySalesTotal;
     const serviceTaxTotal = closedOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
+
+    // CAI-003: suprimentos (entryType='entrada') somam ao saldo; saídas subtraem
     const sessionExpenses = getSessionScopedExpenses(expenses, cashierSession.openedAt, currentEmpresa.id);
-    const expensesTotal = sessionExpenses.reduce((acc, e) => acc + e.amount, 0);
+    const expensesTotal = sessionExpenses.reduce((acc, e) => {
+      return e.entryType === 'entrada' ? acc - e.amount : acc + e.amount;
+    }, 0);
+
     const finalBalance = cashierSession.initialBalance + salesTotal + serviceTaxTotal - expensesTotal + tipsTotal;
+
+    // CAI-001: calcular quebra de caixa se contagem física foi informada
+    const cashBreakdown = countedCash !== undefined ? countedCash - finalBalance : undefined;
+
     const closedSession: CashierSession = {
       ...cashierSession,
       status: 'closed',
@@ -520,10 +541,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       salesTotal,
       serviceTaxTotal,
       expensesTotal,
-      ordersCount: closedOrders.length + deliveredOnlineOrders.length,
+      ordersCount: closedOrders.length + deliveredOnlineOrders.length + deliveredDeliveryOrders.length,
       finalBalance,
+      countedCash,
+      cashBreakdown,
     };
-    setCashierHistory(prev => [...prev, closedSession]);
+    setCashierHistory(prev => [...prev.slice(-30), closedSession]);
     setCashierSession(null);
     setOrders(prev => prev.filter(o => !(o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId))));
     setExpenses(prev => prev.filter(e => !belongsToCurrentSession(e.timestamp, e.empresaId)));
@@ -742,6 +765,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ));
   };
 
+  const updateOrderItemKitchenStatus = (orderId: string, itemIndex: number, status: KitchenItemStatus) => {
+    const now = new Date().toISOString();
+
+    setOrders(prev => prev.map(order => {
+      if (order.id !== orderId) return order;
+
+      return ensureEmpresaId({
+        ...order,
+        items: order.items.map((item, index) =>
+          index === itemIndex
+            ? { ...item, kitchenStatus: status, addedAt: item.addedAt ?? order.timestamp }
+            : item
+        ),
+      }, currentEmpresa.id);
+    }));
+
+    setDeliveryOrders(prev => prev.map(order => {
+      if (order.id !== orderId) return order;
+
+      return ensureEmpresaId({
+        ...order,
+        items: order.items.map((item, index) =>
+          index === itemIndex
+            ? { ...item, kitchenStatus: status, addedAt: item.addedAt ?? order.createdAt }
+            : item
+        ),
+      }, currentEmpresa.id);
+    }));
+
+    setOnlineOrders(prev => prev.map(order => {
+      if (order.id !== orderId) return order;
+
+      return ensureEmpresaId({
+        ...order,
+        updatedAt: now,
+        items: order.items.map((item, index) =>
+          index === itemIndex
+            ? { ...item, kitchenStatus: status, addedAt: item.addedAt ?? order.createdAt }
+            : item
+        ),
+      }, currentEmpresa.id);
+    }));
+  };
+
   const applyOnlineOrderStockDeduction = (id: string) => {
     const order = onlineOrders.find(item => item.id === id);
     if (!order || order.stockDeductedAt) return;
@@ -800,7 +867,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addCombo, updateCombo, deleteCombo,
       updateLoyaltyConfig, addLoyaltyEntry,
       addCampaign, updateCampaign, deleteCampaign,
-      addOnlineOrder, updateOnlineOrderStatus, cancelOnlineOrder, applyOnlineOrderStockDeduction, registerOnlineSale,
+      addOnlineOrder, updateOnlineOrderStatus, cancelOnlineOrder, updateOrderItemKitchenStatus, applyOnlineOrderStockDeduction, registerOnlineSale,
       updateSettings, toggleGuideRead, importData, exportData, resetToMocks
     }}>
       {children}

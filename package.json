@@ -10,7 +10,7 @@
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit",
-    "test": "tsx src/domain/saas.test.ts && tsx src/services/deliveryService.test.ts && tsx src/services/intelligenceService.test.ts && tsx src/services/notificationService.test.ts && tsx src/services/menuDigitalService.test.ts && tsx src/services/salesService.test.ts && tsx src/services/onlineOrdersService.test.ts"
+    "test": "tsx src/domain/saas.test.ts && tsx src/services/deliveryService.test.ts && tsx src/services/intelligenceService.test.ts && tsx src/services/notificationService.test.ts && tsx src/services/menuDigitalService.test.ts && tsx src/services/salesService.test.ts && tsx src/services/onlineOrdersService.test.ts && tsx src/services/kitchenBoard.test.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",

@@ -96,7 +96,13 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
     if (existingIdx !== -1) {
       updatedItems[existingIdx] = { ...updatedItems[existingIdx], quantity: updatedItems[existingIdx].quantity + 1 };
     } else {
-      updatedItems.push({ id: Date.now().toString() + Math.random(), product, quantity: 1, price: product.price });
+      updatedItems.push({
+        id: Date.now().toString() + Math.random(),
+        product,
+        quantity: 1,
+        price: product.price,
+        addedAt: new Date().toISOString(),
+      });
     }
     const subtotal = updatedItems.reduce((acc, i) => acc + i.price * i.quantity, 0);
     const updated = { ...activeOrder, items: updatedItems, subtotal, total: subtotal };
