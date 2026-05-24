@@ -1,5 +1,22 @@
 import { Campaign, Combo, LoyaltyConfig, LoyaltyEntry, Product, Promotion } from '../types';
 
+interface ComboAllocationInput {
+  id: string;
+  name: string;
+  comboPrice: number;
+  items: Combo['items'];
+}
+
+interface AllocatedComboItem {
+  product: Product;
+  quantity: number;
+  unitPrice: number;
+  originalPrice: number;
+  discount: number;
+  promotionName: string;
+  comboId: string;
+}
+
 const now = () => new Date();
 
 const isWithinRange = (startsAt: string, endsAt: string, reference = now()) => {
@@ -75,6 +92,34 @@ export function calcComboOriginalPrice(combo: Combo, products: Product[]): numbe
     const product = products.find(p => p.id === item.productId);
     return total + (product?.price || 0) * item.qty;
   }, 0);
+}
+
+export function allocateComboItems(combo: ComboAllocationInput, products: Product[]): AllocatedComboItem[] {
+  const originalTotal = combo.items.reduce((total, item) => {
+    const product = products.find(candidate => candidate.id === item.productId);
+    return total + (product?.price || 0) * item.qty;
+  }, 0);
+
+  if (originalTotal <= 0) return [];
+
+  return combo.items.flatMap(comboItem => {
+    const product = products.find(candidate => candidate.id === comboItem.productId);
+    if (!product || comboItem.qty <= 0) return [];
+
+    const lineOriginal = product.price * comboItem.qty;
+    const distributedLineTotal = combo.comboPrice * (lineOriginal / originalTotal);
+    const unitPrice = Number((distributedLineTotal / comboItem.qty).toFixed(2));
+
+    return [{
+      product,
+      quantity: comboItem.qty,
+      unitPrice,
+      originalPrice: product.price,
+      discount: Math.max(0, Number((product.price - unitPrice).toFixed(2))),
+      promotionName: `Combo: ${combo.name}`,
+      comboId: combo.id,
+    }];
+  });
 }
 
 export function calcComboSaving(combo: Combo, products: Product[]): number {

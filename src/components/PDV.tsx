@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { Product, Order } from '../types';
 import { MenuList } from './MenuList';
@@ -6,15 +6,15 @@ import { ArrowRight, Check, ChevronDown, Minus, Package, Plus, Search, ShoppingB
 import { CheckoutModal } from './CheckoutModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAudit } from '../hooks/useAudit';
-import { calcComboOriginalPrice, getProductDiscount } from '../services/salesService';
+import { allocateComboItems, calcComboOriginalPrice, getProductDiscount } from '../services/salesService';
 
 export const PDV: React.FC = () => {
-  const { collaborators, currentEmpresa, waiters, theme, promotions, campaigns, combos, products, customers } = useApp();
+  const { collaborators, currentEmpresa, waiters, theme, promotions, campaigns, combos, products, customers, draftOrder, setDraftOrder, clearDraftOrder } = useApp();
   const isDark = theme === 'dark';
   const activeOperators = collaborators.filter(c => c.status === 'active');
   const initialOperatorId = activeOperators[0]?.id ?? waiters[0]?.id ?? '';
   const [selectedOperatorId, setSelectedOperatorId] = useState<string>(
-    () => initialOperatorId
+    () => draftOrder?.waiterId ?? initialOperatorId
   );
   const [waiterMenuOpen, setWaiterMenuOpen] = useState(false);
   const [comboMenuOpen, setComboMenuOpen] = useState(false);
@@ -36,19 +36,29 @@ export const PDV: React.FC = () => {
     timestamp: new Date().toISOString(),
   });
 
-  const [activeOrder, setActiveOrder] = useState<Order>(createOrder);
-  const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('Todos');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { log } = useAudit();
 
+  useEffect(() => {
+    if (!draftOrder) {
+      setDraftOrder(createOrder(selectedOperatorId));
+    }
+  }, [draftOrder, selectedOperatorId, setDraftOrder]);
+
   const categories = ['Todos', 'Drinks', 'Petiscos', 'Pratos', 'Sobremesas'];
+  const activeOrder = draftOrder ?? createOrder(selectedOperatorId);
+  const selectedCustomerId = activeOrder.customerId ?? '';
   const totalItems = activeOrder.items.reduce((acc, item) => acc + item.quantity, 0);
   const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
   const fieldClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
   const selectedOperatorName =
     activeOperators.find(c => c.id === selectedOperatorId)?.name ?? 'Operador';
+
+  const updateActiveOrder = (updater: (order: Order) => Order) => {
+    setDraftOrder(previous => updater(previous ?? createOrder(selectedOperatorId)));
+  };
 
   const addItemToOrder = (product: Product) => {
     const discountInfo = getProductDiscount(product, promotions, campaigns);
@@ -78,7 +88,7 @@ export const PDV: React.FC = () => {
     }
 
     const subtotal = updatedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    setActiveOrder({ ...activeOrder, items: updatedItems, subtotal, total: subtotal });
+    updateActiveOrder(order => ({ ...order, items: updatedItems, subtotal, total: subtotal }));
   };
 
   const changeItemQty = (itemId: string, delta: number) => {
@@ -86,50 +96,39 @@ export const PDV: React.FC = () => {
       .map(item => item.id === itemId ? { ...item, quantity: item.quantity + delta } : item)
       .filter(item => item.quantity > 0);
     const subtotal = updatedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    setActiveOrder({ ...activeOrder, items: updatedItems, subtotal, total: subtotal });
+    updateActiveOrder(order => ({ ...order, items: updatedItems, subtotal, total: subtotal }));
   };
 
   const addComboToOrder = (comboId: string) => {
     const combo = combos.find(item => item.id === comboId);
     if (!combo) return;
-    const originalTotal = calcComboOriginalPrice(combo, products);
-    if (originalTotal <= 0) return;
-
-    const comboItems = combo.items.flatMap(comboItem => {
-      const product = products.find(item => item.id === comboItem.productId);
-      if (!product || comboItem.qty <= 0) return [];
-      const lineOriginal = product.price * comboItem.qty;
-      const distributedLineTotal = combo.comboPrice * (lineOriginal / originalTotal);
-      const unitPrice = distributedLineTotal / comboItem.qty;
-      return [{
-        id: Date.now().toString() + Math.random(),
-        product,
-        quantity: comboItem.qty,
-        price: Number(unitPrice.toFixed(2)),
-        originalPrice: product.price,
-        discount: Math.max(0, Number((product.price - unitPrice).toFixed(2))),
-        promotionName: `Combo: ${combo.name}`,
-        comboId: combo.id,
-      }];
-    });
+    const comboItems = allocateComboItems(combo, products).map(item => ({
+      id: Date.now().toString() + Math.random(),
+      product: item.product,
+      quantity: item.quantity,
+      price: item.unitPrice,
+      originalPrice: item.originalPrice,
+      discount: item.discount,
+      promotionName: item.promotionName,
+      comboId: item.comboId,
+    }));
 
     if (comboItems.length === 0) return;
     const updatedItems = [...activeOrder.items, ...comboItems];
     const subtotal = updatedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    setActiveOrder({ ...activeOrder, items: updatedItems, subtotal, total: subtotal });
+    updateActiveOrder(order => ({ ...order, items: updatedItems, subtotal, total: subtotal }));
     setComboMenuOpen(false);
   };
 
   const handleSelectOperator = (id: string) => {
     setSelectedOperatorId(id);
     setWaiterMenuOpen(false);
-    setActiveOrder(prev => ({ ...prev, waiterId: id }));
+    updateActiveOrder(order => ({ ...order, waiterId: id }));
   };
 
   const handleSelectCustomer = (id: string) => {
-    setSelectedCustomerId(id);
     const customer = customers.find(item => item.id === id);
-    setActiveOrder(prev => ({ ...prev, customerId: id || undefined, customerName: customer?.name }));
+    updateActiveOrder(order => ({ ...order, customerId: id || undefined, customerName: customer?.name }));
   };
 
   const addManualItem = () => {
@@ -154,19 +153,20 @@ export const PDV: React.FC = () => {
 
   const handleSuccess = () => {
     setCheckoutOpen(false);
-    setActiveOrder(createOrder(selectedOperatorId));
-    setSelectedCustomerId('');
+    clearDraftOrder();
   };
 
   const handleCancelOrder = () => {
+    if (activeOrder.items.length > 0 && !window.confirm('Deseja cancelar o pedido? Todos os itens serão removidos.')) {
+      return;
+    }
     if (activeOrder.items.length > 0) {
       log('order_cancel', 'Pedido/Carrinho foi cancelado no balcão', { 
         subtotal: activeOrder.subtotal,
         itemsCount: activeOrder.items.length
       });
     }
-    setActiveOrder(createOrder(selectedOperatorId));
-    setSelectedCustomerId('');
+    clearDraftOrder();
   };
 
   return (

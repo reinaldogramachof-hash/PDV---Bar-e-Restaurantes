@@ -12,6 +12,7 @@ interface AppState {
   tables: Table[];
   waiters: Waiter[];
   orders: Order[];
+  draftOrder: Order | null;
   expenses: Expense[];
   cashierSession: CashierSession | null;
   cashierHistory: CashierSession[];
@@ -46,6 +47,8 @@ interface AppContextType extends AppState {
   deleteSupplier: (id: string) => void;
   updateTable: (table: Table) => void;
   updateOrder: (order: Order) => void;
+  setDraftOrder: React.Dispatch<React.SetStateAction<Order | null>>;
+  clearDraftOrder: () => void;
   deleteOrder: (id: string) => void;
   addOrder: (order: Order) => void;
   closeOrder: (order: Order, payments: PaymentItem[], serviceCharge: number) => void;
@@ -179,6 +182,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
   const [waiters] = useState<Waiter[]>(() => parseScopedJSON('waiters', currentEmpresa.id, mockWaiters, true));
   const [orders, setOrders] = useState<Order[]>(() => parseScopedJSON('orders', currentEmpresa.id, [], true));
+  const [draftOrder, setDraftOrderState] = useState<Order | null>(() => parseScopedJSON('draftOrder', currentEmpresa.id, null, true));
   const [expenses, setExpenses] = useState<Expense[]>(() => parseScopedJSON('expenses', currentEmpresa.id, [], true));
   const [cashierSession, setCashierSession] = useState<CashierSession | null>(() => parseScopedJSON('cashierSession', currentEmpresa.id, null, true));
   const [cashierHistory, setCashierHistory] = useState<CashierSession[]>(() => parseScopedJSON('cashierHistory', currentEmpresa.id, [], true));
@@ -221,6 +225,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(buildScopedStorageKey('tables', currentEmpresa.id), JSON.stringify(tables));
     localStorage.setItem(buildScopedStorageKey('waiters', currentEmpresa.id), JSON.stringify(waiters));
     localStorage.setItem(buildScopedStorageKey('orders', currentEmpresa.id), JSON.stringify(orders));
+    localStorage.setItem(buildScopedStorageKey('draftOrder', currentEmpresa.id), JSON.stringify(draftOrder));
     localStorage.setItem(buildScopedStorageKey('expenses', currentEmpresa.id), JSON.stringify(expenses));
     localStorage.setItem(buildScopedStorageKey('cashierSession', currentEmpresa.id), JSON.stringify(cashierSession));
     localStorage.setItem(buildScopedStorageKey('cashierHistory', currentEmpresa.id), JSON.stringify(cashierHistory));
@@ -239,7 +244,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(buildScopedStorageKey('settings', currentEmpresa.id), JSON.stringify(settings));
     localStorage.setItem(buildScopedStorageKey('readGuides', currentEmpresa.id), JSON.stringify(readGuides));
     localStorage.setItem(buildScopedStorageKey('theme', currentEmpresa.id), theme);
-  }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, settings, readGuides, theme, currentEmpresa.id]);
+  }, [products, stockItems, suppliers, tables, waiters, orders, draftOrder, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, settings, readGuides, theme, currentEmpresa.id]);
 
   const resetToMocks = () => {
     clearAppStorage(currentEmpresa.id);
@@ -249,7 +254,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const exportData = () => {
     const data = {
       empresaId: currentEmpresa.id,
-      products, stockItems, suppliers, tables, waiters, orders, expenses, 
+      products, stockItems, suppliers, tables, waiters, orders, draftOrder, expenses, 
       cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, settings, readGuides
     };
     return JSON.stringify(data, null, 2);
@@ -265,6 +270,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (data.suppliers) setSuppliers(normalizeImportedCollection(data.suppliers, currentEmpresa.id));
       if (data.tables) setTables(normalizeImportedCollection(data.tables, currentEmpresa.id));
       if (data.orders) setOrders(normalizeImportedCollection(data.orders, currentEmpresa.id));
+      if ('draftOrder' in data) setDraftOrderState(data.draftOrder ? ensureEmpresaId(data.draftOrder, currentEmpresa.id) : null);
       if (data.expenses) setExpenses(normalizeImportedCollection(data.expenses, currentEmpresa.id));
       if (data.cashierHistory) setCashierHistory(normalizeImportedCollection(data.cashierHistory, currentEmpresa.id));
       if (data.customers) setCustomers(normalizeImportedCollection(data.customers, currentEmpresa.id));
@@ -353,6 +359,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const updateTable = (updatedTable: Table) => {
     setTables(prev => prev.map(t => t.number === updatedTable.number ? ensureEmpresaId(updatedTable, currentEmpresa.id) : t));
+  };
+
+  const setDraftOrder: React.Dispatch<React.SetStateAction<Order | null>> = value => {
+    setDraftOrderState(prev => {
+      const next = typeof value === 'function'
+        ? (value as (previous: Order | null) => Order | null)(prev)
+        : value;
+      return next ? ensureEmpresaId(next, currentEmpresa.id) : null;
+    });
+  };
+
+  const clearDraftOrder = () => {
+    setDraftOrderState(null);
   };
 
   const addOrder = (order: Order) => {
@@ -720,11 +739,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{
-      currentEmpresa, currentUser, products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, settings, readGuides, theme,
+      currentEmpresa, currentUser, products, stockItems, suppliers, tables, waiters, orders, draftOrder, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, settings, readGuides, theme,
       hasPermission, setTheme, updateProduct, addProduct, deleteProduct, 
       updateStockItem, addStockItem, deleteStockItem,
       updateSupplier, addSupplier, deleteSupplier,
-      updateTable, addOrder, updateOrder, deleteOrder, closeOrder, addExpense, updateExpense, deleteExpense, openCashier, closeCashier,
+      updateTable, addOrder, updateOrder, setDraftOrder, clearDraftOrder, deleteOrder, closeOrder, addExpense, updateExpense, deleteExpense, openCashier, closeCashier,
       transferTable, mergeTables, reserveTable, clearTable,
       addCustomer, updateCustomer, deleteCustomer,
       addCollaborator, updateCollaborator, deleteCollaborator,

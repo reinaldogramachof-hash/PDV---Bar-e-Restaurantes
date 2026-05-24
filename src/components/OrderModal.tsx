@@ -12,6 +12,14 @@ interface OrderModalProps {
   onClose: () => void;
 }
 
+interface CountInputProps {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  isDark: boolean;
+  min: number;
+}
+
 export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClose }) => {
   const { currentEmpresa, tables, orders, waiters, theme, addOrder, updateOrder, transferTable, mergeTables, clearTable } = useApp();
   const isDark = theme === 'dark';
@@ -270,7 +278,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
   );
 };
 
-const CountInput = ({ label, value, onChange, isDark, min }: any) => (
+const CountInput = ({ label, value, onChange, isDark, min }: CountInputProps) => (
   <div className={`p-3 rounded-control border ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-sm'}`}>
     <p className="text-[10px] text-muted text-center mb-2">{label}</p>
     <div className="flex items-center justify-between">
