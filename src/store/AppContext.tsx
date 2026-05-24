@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission, DeliveryOrder, Entregador, MenuConfig, MenuDigitalConfig, Promotion, Combo, LoyaltyConfig, LoyaltyEntry, Campaign, OnlineOrder, OnlineOrderStatus } from '../types';
 import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers, mockSettings } from './mock';
 import { DEFAULT_EMPRESA_ID, buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, hasRolePermission, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId } from '../domain/saas';
+import { buildOnlineOrderStockAdjustments, getDeliveredOnlineOrdersInWindow, getOnlineSalesTotal } from '../services/onlineOrdersService';
 
 interface AppState {
   currentEmpresa: Empresa;
@@ -89,6 +90,8 @@ interface AppContextType extends AppState {
   addOnlineOrder: (order: Omit<OnlineOrder, 'id' | 'empresaId' | 'createdAt' | 'updatedAt'>) => void;
   updateOnlineOrderStatus: (id: string, status: OnlineOrderStatus, extra?: Partial<OnlineOrder>) => void;
   cancelOnlineOrder: (id: string, reason: string) => void;
+  applyOnlineOrderStockDeduction: (id: string) => void;
+  registerOnlineSale: (id: string) => void;
   updateSettings: (settings: AppSettings) => void;
   toggleGuideRead: (guideId: string) => void;
   importData: (json: string) => void;
@@ -502,7 +505,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       (empresaId || currentEmpresa.id) === currentEmpresa.id && new Date(timestamp).getTime() >= openedAt;
 
     const closedOrders = orders.filter(o => o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId));
-    const salesTotal = closedOrders.reduce((acc, o) => acc + o.subtotal, 0);
+    const deliveredOnlineOrders = getDeliveredOnlineOrdersInWindow(onlineOrders, cashierSession.openedAt);
+    const onlineSalesTotal = getOnlineSalesTotal(deliveredOnlineOrders);
+    const salesTotal = closedOrders.reduce((acc, o) => acc + o.subtotal, 0) + onlineSalesTotal;
     const serviceTaxTotal = closedOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
     const sessionExpenses = getSessionScopedExpenses(expenses, cashierSession.openedAt, currentEmpresa.id);
     const expensesTotal = sessionExpenses.reduce((acc, e) => acc + e.amount, 0);
@@ -515,7 +520,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       salesTotal,
       serviceTaxTotal,
       expensesTotal,
-      ordersCount: closedOrders.length,
+      ordersCount: closedOrders.length + deliveredOnlineOrders.length,
       finalBalance,
     };
     setCashierHistory(prev => [...prev, closedSession]);
@@ -737,6 +742,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ));
   };
 
+  const applyOnlineOrderStockDeduction = (id: string) => {
+    const order = onlineOrders.find(item => item.id === id);
+    if (!order || order.stockDeductedAt) return;
+
+    const timestamp = new Date().toISOString();
+    let movements: StockMovement[] = [];
+
+    setStockItems(prev => {
+      const result = buildOnlineOrderStockAdjustments(order, prev, currentEmpresa.id, timestamp);
+      movements = result.movements;
+      return result.updatedStockItems;
+    });
+
+    if (movements.length > 0) {
+      setStockMovements(prev => [...prev, ...movements]);
+    }
+
+    setOnlineOrders(prev => prev.map(item =>
+      item.id === id ? { ...item, stockDeductedAt: timestamp, updatedAt: timestamp } : item
+    ));
+  };
+
+  const registerOnlineSale = (id: string) => {
+    const order = onlineOrders.find(item => item.id === id);
+    if (!order || order.cashierRecordedAt) return;
+
+    const timestamp = new Date().toISOString();
+
+    if (cashierSession) {
+      setCashierSession(prev => prev ? {
+        ...prev,
+        salesTotal: prev.salesTotal + order.total,
+        ordersCount: prev.ordersCount + 1,
+      } : prev);
+    }
+
+    setOnlineOrders(prev => prev.map(item =>
+      item.id === id ? { ...item, cashierRecordedAt: timestamp, updatedAt: timestamp } : item
+    ));
+  };
+
   return (
     <AppContext.Provider value={{
       currentEmpresa, currentUser, products, stockItems, suppliers, tables, waiters, orders, draftOrder, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, settings, readGuides, theme,
@@ -754,7 +800,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addCombo, updateCombo, deleteCombo,
       updateLoyaltyConfig, addLoyaltyEntry,
       addCampaign, updateCampaign, deleteCampaign,
-      addOnlineOrder, updateOnlineOrderStatus, cancelOnlineOrder,
+      addOnlineOrder, updateOnlineOrderStatus, cancelOnlineOrder, applyOnlineOrderStockDeduction, registerOnlineSale,
       updateSettings, toggleGuideRead, importData, exportData, resetToMocks
     }}>
       {children}

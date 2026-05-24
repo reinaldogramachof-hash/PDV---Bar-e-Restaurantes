@@ -441,12 +441,15 @@ export interface OnlineOrder extends BaseEntity {
   address?: string;
   notes?: string;
   total: number;
+  paymentMethod?: PaymentMethod;
   createdAt: string;
   confirmedAt?: string;
   readyAt?: string;
   deliveredAt?: string;
   canceledAt?: string;
   cancelReason?: string;
+  stockDeductedAt?: string;
+  cashierRecordedAt?: string;
 }
 
 export interface AppSettings {

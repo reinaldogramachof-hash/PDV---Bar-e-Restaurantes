@@ -98,7 +98,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ cart, menuConfig, onClose
   if (submitted) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
-        <div className="w-full max-w-sm rounded-2xl bg-[#1A1A1E] p-8 text-center">
+        <div className="w-full max-w-sm rounded-2xl bg-[var(--color-surface)] p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-emerald-400" />
           </div>
@@ -118,7 +118,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ cart, menuConfig, onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70">
-      <div className="w-full sm:max-w-md bg-[#1A1A1E] rounded-t-3xl sm:rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+      <div className="w-full sm:max-w-md bg-[var(--color-surface)] rounded-t-3xl sm:rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-base font-semibold text-white">Finalizar Pedido</h3>
           <button onClick={onClose} className="text-white/40 hover:text-white">
@@ -137,7 +137,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ cart, menuConfig, onClose
                 className="h-10 rounded-xl text-xs font-semibold border transition-all"
                 style={{
                   borderColor: channel === ch ? menuConfig.accentColor : 'rgba(255,255,255,0.1)',
-                  backgroundColor: channel === ch ? `${menuConfig.accentColor}22` : '#242428',
+                  backgroundColor: channel === ch ? `${menuConfig.accentColor}22` : 'var(--color-elevated)',
                   color: channel === ch ? menuConfig.accentColor : 'rgba(255,255,255,0.6)',
                 }}
               >
@@ -153,20 +153,20 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ cart, menuConfig, onClose
             value={customerName}
             onChange={e => setCustomerName(e.target.value)}
             placeholder="Seu nome *"
-            className="w-full h-11 px-4 rounded-xl bg-[#242428] text-white text-sm border border-white/10 focus:outline-none focus:border-white/30"
+            className="w-full h-11 px-4 rounded-xl bg-[var(--color-elevated)] text-[var(--color-text)] text-sm border border-white/10 focus:outline-none focus:border-white/30"
           />
           <input
             value={customerPhone}
             onChange={e => setCustomerPhone(e.target.value)}
             placeholder="Telefone (opcional)"
-            className="w-full h-11 px-4 rounded-xl bg-[#242428] text-white text-sm border border-white/10 focus:outline-none focus:border-white/30"
+            className="w-full h-11 px-4 rounded-xl bg-[var(--color-elevated)] text-[var(--color-text)] text-sm border border-white/10 focus:outline-none focus:border-white/30"
           />
           {channel === 'mesa' && (
             <input
               value={tableRef}
               onChange={e => setTableRef(e.target.value)}
               placeholder="Número da mesa"
-              className="w-full h-11 px-4 rounded-xl bg-[#242428] text-white text-sm border border-white/10 focus:outline-none focus:border-white/30"
+              className="w-full h-11 px-4 rounded-xl bg-[var(--color-elevated)] text-[var(--color-text)] text-sm border border-white/10 focus:outline-none focus:border-white/30"
             />
           )}
           {channel === 'delivery' && (
@@ -174,7 +174,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ cart, menuConfig, onClose
               value={address}
               onChange={e => setAddress(e.target.value)}
               placeholder="Endereço de entrega"
-              className="w-full h-11 px-4 rounded-xl bg-[#242428] text-white text-sm border border-white/10 focus:outline-none focus:border-white/30"
+              className="w-full h-11 px-4 rounded-xl bg-[var(--color-elevated)] text-[var(--color-text)] text-sm border border-white/10 focus:outline-none focus:border-white/30"
             />
           )}
           <textarea
@@ -182,12 +182,12 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({ cart, menuConfig, onClose
             onChange={e => setOrderNotes(e.target.value)}
             placeholder="Observações (opcional)"
             rows={2}
-            className="w-full px-4 py-3 rounded-xl bg-[#242428] text-white text-sm border border-white/10 focus:outline-none focus:border-white/30 resize-none"
+            className="w-full px-4 py-3 rounded-xl bg-[var(--color-elevated)] text-[var(--color-text)] text-sm border border-white/10 focus:outline-none focus:border-white/30 resize-none"
           />
         </div>
 
         {/* Resumo */}
-        <div className="rounded-xl bg-[#0F0F11] p-4 mb-4 space-y-1">
+        <div className="rounded-xl bg-[var(--color-app-base)] p-4 mb-4 space-y-1">
           {cart.map(item => (
             <div key={item.productId} className="flex justify-between text-sm text-white/70">
               <span>{item.qty}x {item.name}</span>
@@ -275,7 +275,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
   };
 
   return (
-    <div className={`${preview ? 'min-h-full' : 'min-h-screen'} bg-[#0F0F11] text-white font-sans`}>
+    <div className={`${preview ? 'min-h-full' : 'min-h-screen'} bg-[var(--color-app-base)] text-[var(--color-text)] font-sans`}>
       <header className="px-5 pt-8 pb-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${menuConfig.accentColor}22`, color: menuConfig.accentColor }}>
@@ -296,7 +296,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
         </p>
       </header>
 
-      <nav className="sticky top-0 z-10 bg-[#0F0F11]/95 backdrop-blur border-y border-white/10 overflow-x-auto">
+      <nav className="sticky top-0 z-10 bg-[var(--color-app-base)]/95 backdrop-blur border-y border-white/10 overflow-x-auto">
         <div className="flex gap-2 px-4 py-3 min-w-max">
           {categories.map(category => (
             <button
@@ -305,7 +305,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
               className="h-9 px-4 rounded-full text-xs font-semibold border transition-all"
               style={{
                 borderColor: activeCategory === category ? menuConfig.accentColor : 'rgba(255,255,255,0.1)',
-                backgroundColor: activeCategory === category ? `${menuConfig.accentColor}22` : '#1A1A1E',
+                backgroundColor: activeCategory === category ? `${menuConfig.accentColor}22` : 'var(--color-surface)',
                 color: activeCategory === category ? menuConfig.accentColor : 'rgba(255,255,255,0.72)',
               }}
             >
@@ -335,7 +335,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
                 const finalPrice = Math.max(0, product.price - (discountInfo?.discount || 0));
                 const cartQty = cart.find(i => i.productId === product.id)?.qty ?? 0;
                 return (
-                  <article key={product.id} className="rounded-xl p-4 bg-[#1A1A1E] border border-white/5">
+                  <article key={product.id} className="rounded-xl p-4 bg-[var(--color-surface)] border border-white/5">
                     <div className="flex gap-4">
                       {product.menuDigital?.imageBase64 ? (
                         <img src={product.menuDigital.imageBase64} alt={product.name} className="w-20 h-20 rounded-lg object-cover shrink-0" />
@@ -411,7 +411,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
           <button
             onClick={handleCallWaiter}
             className="w-full h-12 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all"
-            style={{ backgroundColor: menuConfig.accentColor, color: '#0F0F11' }}
+            style={{ backgroundColor: menuConfig.accentColor, color: 'var(--color-app-base)' }}
           >
             {calledWaiter ? (
               <><CheckCircle2 className="w-5 h-5 animate-pulse" />Garcom a caminho!</>
@@ -442,7 +442,7 @@ export const CustomerMenuView: React.FC<CustomerMenuViewProps> = ({
       {cartOpen && (
         <div className="fixed inset-0 z-40 flex items-end">
           <div className="absolute inset-0 bg-black/60" onClick={() => setCartOpen(false)} />
-          <div className="relative w-full bg-[#1A1A1E] rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto">
+          <div className="relative w-full bg-[var(--color-surface)] rounded-t-3xl p-6 max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-5">
               <h3 className="text-base font-semibold text-white">Seu pedido</h3>
               <button onClick={() => setCartOpen(false)} className="text-white/40">

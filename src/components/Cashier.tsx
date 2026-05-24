@@ -20,9 +20,10 @@ import {
 } from 'lucide-react';
 import { useAudit } from '../hooks/useAudit';
 import { Expense } from '../types';
+import { getDeliveredOnlineOrdersInWindow, getOnlinePaymentBreakdown, getOnlineSalesTotal } from '../services/onlineOrdersService';
 
 export const Cashier: React.FC = () => {
-  const { currentEmpresa, cashierSession, cashierHistory, expenses, orders, tables, theme, openCashier, closeCashier, addExpense, updateExpense, deleteExpense } = useApp();
+  const { currentEmpresa, cashierSession, cashierHistory, expenses, orders, onlineOrders, tables, theme, openCashier, closeCashier, addExpense, updateExpense, deleteExpense } = useApp();
   const isDark = theme === 'dark';
   const [expenseDesc, setExpenseDesc] = useState('');
   const [expenseVal, setExpenseVal] = useState('');
@@ -34,10 +35,12 @@ export const Cashier: React.FC = () => {
   const { log } = useAudit();
 
   const closedOrders = orders.filter(order => order.status === 'closed');
+  const onlineSessionOrders = getDeliveredOnlineOrdersInWindow(onlineOrders, cashierSession?.openedAt || null);
   const activeOrdersCount = orders.filter(order => order.status === 'open').length;
   const occupiedTablesCount = tables.filter(table => table.status !== 'livre').length;
 
-  const salesToday = closedOrders.reduce((acc, order) => acc + order.subtotal, 0);
+  const onlineSalesToday = getOnlineSalesTotal(onlineSessionOrders);
+  const salesToday = closedOrders.reduce((acc, order) => acc + order.subtotal, 0) + onlineSalesToday;
   const serviceChargeToday = closedOrders.reduce((acc, order) => acc + order.serviceCharge, 0);
   const expensesToday = expenses.reduce((acc, expense) => acc + expense.amount, 0);
   const expectedBalance = (cashierSession?.initialBalance ?? 0) + salesToday + serviceChargeToday - expensesToday;
@@ -47,6 +50,10 @@ export const Cashier: React.FC = () => {
     });
     return acc;
   }, {});
+  const onlinePaymentBreakdown = getOnlinePaymentBreakdown(onlineSessionOrders);
+  Object.entries(onlinePaymentBreakdown).forEach(([method, value]) => {
+    paymentBreakdown[method] = (paymentBreakdown[method] || 0) + value;
+  });
   const canCloseCashier = activeOrdersCount === 0 && occupiedTablesCount === 0;
   const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
   const fieldClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle, ArrowDownUp, CheckCircle2, ChevronDown, Clock,
   Download, Filter, Package, ReceiptText, ShoppingBag, X, Zap,
@@ -6,10 +6,20 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../store/AppContext';
 import type { OnlineOrder, OnlineOrderChannel, OnlineOrderStatus } from '../types';
+import { getIdleReceivedOrderIds } from '../services/onlineOrdersService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Tab = 'kanban' | 'lista' | 'historico';
+
+const IDLE_ALERT_SOUND = 'data:audio/wav;base64,UklGRlQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YTAAAAAAgICAf39/f39/gICAgH9/f39/f4CAgIB/f39/f3+AgICAf39/f39/gICA';
+const CANCEL_REASON_OPTIONS = [
+  'Falta de produto',
+  'Cliente não respondeu',
+  'Endereço não encontrado',
+  'Pedido duplicado',
+  'Outro',
+] as const;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -79,7 +89,12 @@ interface CancelModalProps {
 }
 
 const CancelModal: React.FC<CancelModalProps> = ({ order, onConfirm, onClose, isDark, elevatedClass, panelClass }) => {
-  const [reason, setReason] = useState('');
+  const [selectedReason, setSelectedReason] = useState<(typeof CANCEL_REASON_OPTIONS)[number] | ''>('');
+  const [customReason, setCustomReason] = useState('');
+  const resolvedReason = selectedReason === 'Outro'
+    ? (customReason.trim() ? `Outro - ${customReason.trim()}` : 'Outro')
+    : selectedReason;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
       <motion.div
@@ -94,23 +109,40 @@ const CancelModal: React.FC<CancelModalProps> = ({ order, onConfirm, onClose, is
         </div>
         <div className="p-5 space-y-4">
           <p className="text-xs text-muted">Pedido de <strong className="text-text">{order.customerName}</strong></p>
-          <div>
+          <div className="space-y-2">
             <label className="block text-xs text-muted mb-1">Motivo do cancelamento</label>
-            <textarea
-              id="cancel-reason"
-              value={reason}
-              onChange={e => setReason(e.target.value)}
-              rows={3}
-              className={`w-full px-3 py-2 rounded-control border text-sm resize-none ${elevatedClass}`}
-              placeholder="Ex: Produto indisponível, cliente solicitou..."
-            />
+            <div className="flex flex-wrap gap-2">
+              {CANCEL_REASON_OPTIONS.map(option => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setSelectedReason(option)}
+                  className={`h-10 px-4 text-xs rounded-control border transition-all ${
+                    selectedReason === option ? 'border-danger bg-danger/10 text-danger' : elevatedClass
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+            {selectedReason === 'Outro' && (
+              <textarea
+                id="cancel-reason"
+                value={customReason}
+                onChange={e => setCustomReason(e.target.value)}
+                rows={3}
+                className={`w-full px-3 py-2 rounded-control border text-sm resize-none ${elevatedClass}`}
+                placeholder="Detalhe adicional (opcional)"
+              />
+            )}
           </div>
           <div className="flex gap-3">
             <button onClick={onClose} className={`flex-1 h-10 rounded-control border text-xs font-medium ${elevatedClass}`}>Voltar</button>
             <button
+              type="button"
               id="confirm-cancel"
-              onClick={() => onConfirm(reason)}
-              disabled={!reason.trim()}
+              onClick={() => onConfirm(resolvedReason)}
+              disabled={!resolvedReason}
               className="flex-1 h-10 rounded-control bg-danger text-white text-xs font-medium disabled:opacity-40"
             >
               Cancelar pedido
@@ -122,7 +154,7 @@ const CancelModal: React.FC<CancelModalProps> = ({ order, onConfirm, onClose, is
   );
 };
 
-// ─── Order Card (Kanban) ──────────────────────────────────────────────────────
+// Order Card (Kanban) ──────────────────────────────────────────────────────
 
 interface OrderCardProps {
   order: OnlineOrder;
@@ -222,7 +254,7 @@ const exportCSV = (orders: OnlineOrder[]) => {
 
 export const OnlineOrders: React.FC = () => {
   const {
-    onlineOrders, updateOnlineOrderStatus, cancelOnlineOrder, theme,
+    onlineOrders, updateOnlineOrderStatus, cancelOnlineOrder, applyOnlineOrderStockDeduction, registerOnlineSale, theme,
   } = useApp();
 
   const isDark = theme === 'dark';
@@ -231,6 +263,8 @@ export const OnlineOrders: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<Tab>('kanban');
   const [cancelTarget, setCancelTarget] = useState<OnlineOrder | null>(null);
+  const [nowMs, setNowMs] = useState(Date.now());
+  const alertedOrderIdsRef = useRef<Set<string>>(new Set());
 
   // Filters (lista tab)
   const [filterStatus, setFilterStatus] = useState<OnlineOrderStatus | 'todos'>('todos');
@@ -275,16 +309,53 @@ export const OnlineOrders: React.FC = () => {
   const cancelPct = histOrders.length > 0
     ? Math.round((histOrders.filter(o => o.status === 'cancelado').length / histOrders.length) * 100)
     : 0;
+  const idleReceivedOrderIds = useMemo(
+    () => getIdleReceivedOrderIds(onlineOrders, nowMs),
+    [onlineOrders, nowMs]
+  );
+
+  useEffect(() => {
+    const interval = window.setInterval(() => setNowMs(Date.now()), 30000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const activeReceivedIds = new Set(onlineOrders.filter(order => order.status === 'recebido').map(order => order.id));
+    alertedOrderIdsRef.current.forEach(orderId => {
+      if (!activeReceivedIds.has(orderId)) {
+        alertedOrderIdsRef.current.delete(orderId);
+      }
+    });
+  }, [onlineOrders]);
+
+  useEffect(() => {
+    const newIdleOrderIds = idleReceivedOrderIds.filter(orderId => !alertedOrderIdsRef.current.has(orderId));
+    if (newIdleOrderIds.length === 0) return;
+
+    newIdleOrderIds.forEach(orderId => alertedOrderIdsRef.current.add(orderId));
+    const audio = new Audio(IDLE_ALERT_SOUND);
+    void audio.play().catch(() => undefined);
+  }, [idleReceivedOrderIds]);
 
   const handleAdvance = (order: OnlineOrder) => {
     const next = NEXT_STATUS[order.status];
     if (!next) return;
-    updateOnlineOrderStatus(order.id, next.status, {
-      ...next.extra,
-      [next.status === 'confirmado' ? 'confirmedAt' :
-       next.status === 'pronto' ? 'readyAt' :
-       next.status === 'entregue' ? 'deliveredAt' : '']: new Date().toISOString(),
-    });
+
+    const timestamp = new Date().toISOString();
+    const extra: Partial<OnlineOrder> = { ...next.extra };
+    if (next.status === 'confirmado') extra.confirmedAt = timestamp;
+    if (next.status === 'pronto') extra.readyAt = timestamp;
+    if (next.status === 'entregue') extra.deliveredAt = timestamp;
+
+    if (next.status === 'confirmado') {
+      applyOnlineOrderStockDeduction(order.id);
+    }
+
+    updateOnlineOrderStatus(order.id, next.status, extra);
+
+    if (next.status === 'entregue') {
+      registerOnlineSale(order.id);
+    }
   };
 
   const handleCancel = (reason: string) => {
@@ -352,9 +423,10 @@ export const OnlineOrders: React.FC = () => {
                 <div className="flex gap-4 min-w-max">
                   {KANBAN_COLS.map(col => {
                     const colOrders = onlineOrders.filter(o => o.status === col.status);
+                    const isReceivedIdleColumn = col.status === 'recebido' && idleReceivedOrderIds.length > 0;
                     return (
                       <div key={col.status} className="w-72 shrink-0">
-                        <div className="flex items-center gap-2 mb-3 px-1">
+                        <div className={`flex items-center gap-2 mb-3 px-1 ${isReceivedIdleColumn ? 'animate-pulse' : ''}`}>
                           <span className={`text-xs font-semibold ${col.accent}`}>{col.label}</span>
                           <span className={`text-xs rounded-full px-1.5 py-0.5 font-medium ${isDark ? 'bg-elevated text-muted' : 'bg-elevated-light text-muted'}`}>
                             {colOrders.length}
