@@ -57,12 +57,6 @@ const DateTimeDisplay = () => {
 
 const navGroups = [
   {
-    title: 'Plena',
-    items: [
-      { id: 'master', icon: Crown, label: 'Painel Master' },
-    ],
-  },
-  {
     title: 'Operacional',
     items: [
       { id: 'pdv', icon: MonitorPlay, label: 'PDV (Balcão)' },
@@ -90,6 +84,7 @@ const navGroups = [
       { id: 'seguranca', icon: Shield, label: 'Segurança' },
       { id: 'configuracoes', icon: Settings, label: 'Configurações' },
       { id: 'suporte', icon: Headset, label: 'Suporte' },
+      { id: 'master', icon: Crown, label: 'Painel Master' },
     ],
   },
 ] as const;
@@ -121,10 +116,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
 
   const isDark = theme === 'dark';
 
-  // Filtrar navGroups para ocultar "Plena" se role !== 'master'
-  const visibleNavGroups = navGroups.filter(group =>
-    group.title !== 'Plena' || currentUser.role === 'master'
-  );
+  const visibleNavGroups = navGroups;
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -194,7 +186,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
           <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 scrollbar-none">
             {visibleNavGroups.map((group) => {
               const filteredItems = group.items.filter(item => {
-                if (item.id === 'master') return true;
+                if (item.id === 'master') return currentUser.role === 'master';
                 return canAccessModule(currentEmpresa.plano, currentUser.role, item.id as ModuleId);
               });
 
