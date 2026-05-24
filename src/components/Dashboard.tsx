@@ -4,6 +4,7 @@ import {
   Clock,
   Edit3,
   Package,
+  Printer,
   Save,
   ShoppingBag,
   Table as TableIcon,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { SecurityGate } from './SecurityGate';
+import { ReceiptModal } from './ReceiptModal';
 import { buildEditedClosedOrder, getAttendanceRanking } from '../services/dashboardOrderTools';
 import { Order, PaymentMethod } from '../types';
 
@@ -37,6 +39,7 @@ export const Dashboard: React.FC = () => {
   const [gateOpen, setGateOpen] = useState(false);
   const [gateTitle, setGateTitle] = useState('');
   const [onGateSuccess, setOnGateSuccess] = useState<() => void>(() => () => {});
+  const [reprintOrder, setReprintOrder] = useState<Order | null>(null);
 
   const categorySales = closedOrders.flatMap(o => o.items).reduce<Record<string, number>>((acc, item) => {
     acc[item.product.category] = (acc[item.product.category] || 0) + item.price * item.quantity;
@@ -213,6 +216,10 @@ export const Dashboard: React.FC = () => {
                             className="w-7 h-7 rounded-control flex items-center justify-center text-accent hover:bg-accent/10 transition-all">
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
+                          <button onClick={() => setReprintOrder(order)} title="Reimprimir"
+                            className="w-7 h-7 rounded-control flex items-center justify-center text-muted hover:bg-accent/10 hover:text-accent transition-all">
+                            <Printer className="w-3.5 h-3.5" />
+                          </button>
                           <button onClick={() => handleDeleteOrder(order)} title="Excluir"
                             className="w-7 h-7 rounded-control flex items-center justify-center text-danger hover:bg-danger/10 transition-all">
                             <Trash2 className="w-3.5 h-3.5" />
@@ -294,6 +301,10 @@ export const Dashboard: React.FC = () => {
       </div>
 
       <SecurityGate isOpen={gateOpen} onClose={() => setGateOpen(false)} onSuccess={onGateSuccess} title={gateTitle} />
+
+      {reprintOrder && (
+        <ReceiptModal order={reprintOrder} onClose={() => setReprintOrder(null)} copyLabel="2ª VIA" />
+      )}
 
       <AnimatePresence>
         {editingOrder && (

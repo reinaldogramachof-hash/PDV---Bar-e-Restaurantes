@@ -7,9 +7,10 @@ import { motion } from 'motion/react';
 interface ReceiptModalProps {
   order: Order;
   onClose: () => void;
+  copyLabel?: string;
 }
 
-export const ReceiptModal: React.FC<ReceiptModalProps> = ({ order, onClose }) => {
+export const ReceiptModal: React.FC<ReceiptModalProps> = ({ order, onClose, copyLabel }) => {
   const { theme, waiters, settings } = useApp();
   const isDark = theme === 'dark';
   
@@ -30,7 +31,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ order, onClose }) =>
         animate={{ opacity: 1, scale: 1, y: 0 }}
         id="receipt-print-area"
         className={`relative w-full max-w-sm rounded-3xl border flex flex-col overflow-hidden shadow-2xl print:shadow-none print:border-none print:w-full print:max-w-none my-auto
-        ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-[#fffdfa] border-gray-200'} print:bg-white`}
+        ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light'} print:bg-white`}
       >
         
         <div className="flex justify-end p-4 border-b border-dashed print:hidden">
@@ -65,6 +66,7 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({ order, onClose }) =>
              <div className="space-y-0.5 mb-4 text-[10px] print:text-[11px] uppercase">
                <div className="flex justify-between"><span>DATA:</span> <span>{dateStr}</span></div>
                <div className="flex justify-between"><span>EXTRATO:</span> <span className="font-bold">#{order.id.slice(-8).toUpperCase()}</span></div>
+               {copyLabel && <div className="flex justify-between"><span>VIA:</span> <span className="font-bold">{copyLabel}</span></div>}
                <div className="flex justify-between"><span>OPERADOR:</span> <span>{waiter}</span></div>
                <div className="flex justify-between"><span>MODO:</span> <span className="font-bold">{order.mode} {order.tableNumber ? `| MESA ${order.tableNumber}` : ''}</span></div>
              </div>
