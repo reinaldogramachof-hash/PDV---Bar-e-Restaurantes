@@ -13,6 +13,9 @@ interface StatCardProps {
   panelClass: string;
 }
 
+const formatCurrency = (value: number) =>
+  `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 const TableTimer: React.FC<{ timestamp: string; status: string }> = ({ timestamp, status }) => {
   const [now, setNow] = useState(Date.now());
 
@@ -165,6 +168,11 @@ export const Tables: React.FC = () => {
                 >
                   <span className="text-4xl font-semibold tracking-tight">{table.number.toString().padStart(2, '0')}</span>
                   {order && (isOcupada || isAguardando) && <TableTimer timestamp={order.timestamp} status={table.status} />}
+                  {order && (isOcupada || isAguardando) && (
+                    <span className="absolute bottom-3 text-[10px] text-muted">
+                      {formatCurrency(order.subtotal)}
+                    </span>
+                  )}
                   {isReservada && (
                     <div className="flex flex-col items-center text-accent max-w-[80%] text-center mt-1">
                       <CalendarCheck className="w-4 h-4 mb-1" />
