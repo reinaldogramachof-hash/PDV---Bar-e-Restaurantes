@@ -299,6 +299,8 @@ export interface Entregador {
   phone: string;
   vehicle: 'moto' | 'bike' | 'carro' | 'a_pe';
   status: 'disponivel' | 'em_rota' | 'inativo';
+  repasseType?: 'por_entrega' | 'fixo_diario';
+  repasseValue?: number;
   createdAt: string;
 }
 
@@ -314,10 +316,11 @@ export interface DeliveryOrder {
   deliveryFee: number;
   discount: number;
   total: number;
-  paymentMethod: 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debito';
+  paymentMethod: PaymentMethod;
   status: 'recebido' | 'preparo' | 'rota' | 'entregue' | 'cancelado';
   entregadorId?: string;
   notes?: string;
+  cancelReason?: string;
   createdAt: string;
   dispatchedAt?: string;
   deliveredAt?: string;

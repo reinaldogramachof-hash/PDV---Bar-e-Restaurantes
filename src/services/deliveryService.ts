@@ -1,6 +1,15 @@
 import { DeliveryOrder, Entregador } from '../types';
 import { buildScopedStorageKey } from '../domain/saas';
 
+interface EntregadorRepasseRow {
+  entregadorId: string;
+  entregadorName: string;
+  deliveries: number;
+  repasseType?: Entregador['repasseType'];
+  repasseValue?: number;
+  repasseAmount: number | null;
+}
+
 const readCollection = <T,>(collection: string, empresaId: string): T[] => {
   if (typeof localStorage === 'undefined') return [];
 
@@ -85,5 +94,49 @@ export const calcDeliveryFinancials = (orders: DeliveryOrder[]) => {
     taxas,
     cancelamentos,
     ticketMedio: delivered.length ? receita / delivered.length : 0,
+  };
+};
+
+export const calcEntregadorRepasseRows = (orders: DeliveryOrder[], entregadores: Entregador[]) => {
+  const deliveredOrders = syncToReports(orders);
+
+  const rows: EntregadorRepasseRow[] = entregadores.map(entregador => {
+    const deliveries = deliveredOrders.filter(order => order.entregadorId === entregador.id).length;
+
+    if (entregador.repasseType === 'por_entrega' && typeof entregador.repasseValue === 'number') {
+      return {
+        entregadorId: entregador.id,
+        entregadorName: entregador.name,
+        deliveries,
+        repasseType: entregador.repasseType,
+        repasseValue: entregador.repasseValue,
+        repasseAmount: deliveries * entregador.repasseValue,
+      };
+    }
+
+    if (entregador.repasseType === 'fixo_diario' && typeof entregador.repasseValue === 'number') {
+      return {
+        entregadorId: entregador.id,
+        entregadorName: entregador.name,
+        deliveries,
+        repasseType: entregador.repasseType,
+        repasseValue: entregador.repasseValue,
+        repasseAmount: entregador.repasseValue,
+      };
+    }
+
+    return {
+      entregadorId: entregador.id,
+      entregadorName: entregador.name,
+      deliveries,
+      repasseType: entregador.repasseType,
+      repasseValue: entregador.repasseValue,
+      repasseAmount: null,
+    };
+  });
+
+  return {
+    rows,
+    total: rows.reduce((sum, row) => sum + (row.repasseAmount ?? 0), 0),
   };
 };
