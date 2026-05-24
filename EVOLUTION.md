@@ -117,18 +117,87 @@ Sprint 5: Realtime (pedidos online → cozinha)
 
 ---
 
+## [2026-05-24] Central de Pedidos Online (OnlineOrders)
+
+**Contexto:** Fechamento do circuito cliente → cozinha. CustomerMenuView existia apenas como vitrine; faltava o fluxo de pedido.
+
+**Decisão estratégica:** Módulo implementado como infraestrutura de Fase 3.
+- Fase 2 (atual): cliente faz pedido via WhatsApp — funcional e sem backend
+- Fase 3 (Supabase): Realtime substitui WhatsApp automaticamente, estrutura de dados já compatível
+
+**Arquitetura do fluxo:**
+```
+Cliente (/cardapio/:empresaId)
+  → Carrinho + Checkout
+  → WhatsApp (Fase 2) / Supabase Realtime (Fase 3)
+    → OnlineOrders.tsx (dashboard staff)
+      → Kanban: recebido → confirmado → preparo → pronto → entregue
+```
+
+**Decisão WhatsApp:** `menuConfig.whatsappPhone` configurado em Cardápio Digital → Aparência. Número sem +55, sem espaços. Mensagem formatada com canal, itens, total e observações.
+
+**Tipos prontos para migração PostgreSQL:** `OnlineOrder`, `CartItem`, `OnlineOrderStatus`, `OnlineOrderChannel` — todos com `empresaId` e timestamps ISO.
+
+**Commit:** `d25bfa3`
+
+---
+
+## Inventário Completo de Módulos — Fase 2 (2026-05-24)
+
+### Operação
+| Módulo | Arquivo | Status |
+|--------|---------|--------|
+| PDV | `PDV.tsx` | ✅ Completo |
+| Mesas | `Tables.tsx` | ✅ Completo |
+| Cozinha | `Kitchen.tsx` | ✅ Completo |
+| Caixa | `CashRegister.tsx` | ✅ Completo |
+| Delivery | `Delivery.tsx` | ✅ Completo |
+| Pedidos Online | `OnlineOrders.tsx` | ✅ Completo (Fase 3 ready) |
+
+### Gestão
+| Módulo | Arquivo | Status |
+|--------|---------|--------|
+| Dashboard | `Dashboard.tsx` | ✅ Completo |
+| Relatórios | `Reports.tsx` | ✅ Completo |
+| Inteligência | `Intelligence.tsx` | ✅ Completo |
+| Estoque | `Stock.tsx` | ✅ Completo |
+| Produtos | `Products.tsx` | ✅ Completo |
+| Cardápio Digital | `MenuDigital.tsx` + `CustomerMenuView.tsx` | ✅ Completo |
+| Vendas | `SalesCenter.tsx` | ✅ Completo |
+| Clientes | `Customers.tsx` | ✅ Completo |
+| Fornecedores | `Suppliers.tsx` | ✅ Completo |
+| Colaboradores | `Collaborators.tsx` | ⚠️ Pendente: campo password na UI |
+
+### Sistema
+| Módulo | Arquivo | Status |
+|--------|---------|--------|
+| Segurança | `Security.tsx` | ⚠️ Pendente: filtros + export CSV |
+| Configurações | `Settings.tsx` | ⚠️ Pendente: tab Backup + visibilidade plano |
+| Notificações | `NotificationPanel.tsx` | ✅ Completo |
+| Suporte | `Support.tsx` | ⚠️ Pendente: densidade desktop |
+| Manual | `UserManual.tsx` | ⚠️ Pendente: densidade desktop |
+
+### Plena (role=master)
+| Módulo | Arquivo | Status |
+|--------|---------|--------|
+| Painel Master | `MasterDashboard.tsx` | ✅ Completo |
+| PlenaHub | `MasterDashboard.tsx` (tab) | ✅ Completo |
+| Composer | `MasterDashboard.tsx` (tab) | ✅ Completo |
+
+---
+
 ## Módulos Pendentes de Revisão (Gestão)
 
 | Módulo | Pendência | Prioridade |
 |--------|-----------|------------|
+| `Collaborators.tsx` | Campo `password` visível na UI | Alta (habilita SecurityGate) |
 | `Security.tsx` | Filtros de audit + export CSV (F6 ROADMAP) | Média |
 | `Settings.tsx` | Tab Backup + visibilidade do plano atual | Média |
-| `Collaborators.tsx` | Campo `password` visível na UI | Alta (habilita SecurityGate) |
-| `UserManual.tsx` | Migração densidade desktop (F8) | Baixa |
 | `Support.tsx` | Migração densidade desktop (F8) | Baixa |
+| `UserManual.tsx` | Migração densidade desktop (F8) | Baixa |
 
 ---
 
-**Versão:** 1.0  
+**Versão:** 1.1  
 **Última atualização:** 2026-05-24  
-**Próxima revisão:** Pós-implementação dos módulos aprovados em 2026-05-24
+**Próxima revisão:** Revisão dos módulos pendentes + merge feat/port-logica-negocio → main
