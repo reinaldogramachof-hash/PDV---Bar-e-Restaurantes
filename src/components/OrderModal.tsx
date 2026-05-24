@@ -116,6 +116,15 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
   const categories = ['Todos', 'Drinks', 'Petiscos', 'Pratos', 'Sobremesas'];
   const diffMin = activeOrder ? Math.floor((new Date().getTime() - new Date(activeOrder.timestamp).getTime()) / 60000) : 0;
   const timeStr = diffMin > 60 ? `${Math.floor(diffMin/60)}h ${diffMin%60}m` : `${diffMin}m`;
+  const occupiedMergeTargets = tables.filter(t => t.status === 'ocupada' && t.number !== tableNumber);
+
+  const handleMergeTable = (targetNumber: number) => {
+    if (!tableNumber) return;
+    const confirmed = window.confirm(`Juntar Mesa ${tableNumber} com Mesa ${targetNumber}? Os itens serão unificados na Mesa ${targetNumber}.`);
+    if (!confirmed) return;
+    mergeTables(tableNumber, targetNumber);
+    onClose();
+  };
 
   return (
     <div 
@@ -175,6 +184,7 @@ export const OrderModal: React.FC<OrderModalProps> = ({ tableNumber, mode, onClo
                       <div className="p-5 space-y-5 overflow-y-auto max-h-[75vh] custom-scrollbar">
                         <div><h4 className="text-xs font-medium text-muted mb-3 flex items-center gap-2"><Users className="w-4 h-4" /> Pessoas na Mesa</h4><div className="grid grid-cols-2 gap-3"><CountInput label="Adultos" value={adultCount} onChange={(v:number) => { setAdultCount(v); handleUpdateCounts(v, childrenCount); }} isDark={isDark} min={1} /><CountInput label="Crianças" value={childrenCount} onChange={(v:number) => { setChildrenCount(v); handleUpdateCounts(adultCount, v); }} isDark={isDark} min={0} /></div></div>
                         <div><h4 className="text-xs font-medium text-[var(--color-accent)] mb-3 flex items-center gap-2"><MoveRight className="w-4 h-4" /> Transferir Mesa</h4><div className="grid grid-cols-6 gap-2">{tables.filter(t => t.status === 'livre' && t.number !== tableNumber).map(t => (<button key={t.number} onClick={() => { transferTable(tableNumber!, t.number); onClose(); }} className={`aspect-square rounded-control border flex items-center justify-center text-sm font-semibold transition-all hover:bg-[var(--color-accent)] hover:text-white hover:border-[var(--color-accent)] ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>{t.number}</button>))}</div></div>
+                        <div><h4 className="text-xs font-medium text-[var(--color-accent)] mb-3 flex items-center gap-2"><Merge className="w-4 h-4" /> Juntar Mesas</h4><div className="grid grid-cols-6 gap-2">{occupiedMergeTargets.map(t => (<button key={t.number} onClick={() => handleMergeTable(t.number)} className={`aspect-square rounded-control border flex items-center justify-center text-sm font-semibold transition-all hover:bg-[var(--color-accent)] hover:text-white hover:border-[var(--color-accent)] ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)]' : 'bg-gray-50 border-gray-100'}`}>{t.number}</button>))}</div>{occupiedMergeTargets.length === 0 && <p className="text-xs text-muted">Nenhuma outra mesa ocupada disponível para junção.</p>}</div>
                       </div>
                     </div>
                   ) : (
