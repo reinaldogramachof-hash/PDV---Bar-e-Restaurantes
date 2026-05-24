@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Lock } from 'lucide-react';
-import { ModuleId } from '../domain/saas';
+import { ModuleId, planModules } from '../domain/saas';
 import { useApp } from '../store/AppContext';
+import { addLocalNotification } from '../services/notificationService';
 
 interface PlanUpgradeBannerProps {
   moduleId: ModuleId;
@@ -9,9 +10,12 @@ interface PlanUpgradeBannerProps {
 
 const moduleNames: Record<ModuleId, string> = {
   dashboard: 'Dashboard',
+  intelligence: 'Inteligencia',
   pdv: 'PDV',
   mesas: 'Mesas',
   delivery: 'Delivery',
+  'cardapio-digital': 'Cardapio Digital',
+  vendas: 'Vendas',
   cozinha: 'Cozinha',
   estoque: 'Estoque',
   caixa: 'Caixa',
@@ -26,9 +30,29 @@ const moduleNames: Record<ModuleId, string> = {
   manual: 'Manual',
 };
 
+const planOrder = ['essencial', 'profissional', 'gestao'] as const;
+const getMinimumPlan = (moduleId: ModuleId) =>
+  planOrder.find(plan => planModules[plan].includes(moduleId)) || 'gestao';
+
 export const PlanUpgradeBanner: React.FC<PlanUpgradeBannerProps> = ({ moduleId }) => {
   const { currentEmpresa, theme } = useApp();
   const isDark = theme === 'dark';
+  const moduleName = moduleNames[moduleId] || moduleId;
+  const minimumPlan = getMinimumPlan(moduleId);
+
+  useEffect(() => {
+    addLocalNotification({
+      id: `sales-${currentEmpresa.id}-${moduleId}`,
+      type: 'sales',
+      title: `Modulo ${moduleName} disponivel no plano ${minimumPlan}`,
+      body: `Voce tentou acessar ${moduleName}. Disponivel no plano ${minimumPlan}. Fale com a Plena para liberar esse recurso.`,
+      action: 'Falar com a Plena',
+      actionUrl: 'https://wa.me/5512992191018',
+      publishedAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      targetPlans: [currentEmpresa.plano],
+    }, currentEmpresa.id);
+  }, [currentEmpresa.id, currentEmpresa.plano, minimumPlan, moduleId, moduleName]);
 
   return (
     <div className="h-full w-full flex items-center justify-center p-6">

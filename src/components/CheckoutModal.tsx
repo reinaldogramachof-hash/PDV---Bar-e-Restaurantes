@@ -3,6 +3,7 @@ import { useApp } from '../store/AppContext';
 import { Order, PaymentMethod, PaymentItem } from '../types';
 import { X } from 'lucide-react';
 import { ReceiptModal } from './ReceiptModal';
+import { calcEarnedPoints, getCustomerPoints } from '../services/salesService';
 
 interface CheckoutModalProps {
   order: Order;
@@ -20,7 +21,7 @@ const PAYMENT_METHODS: { id: PaymentMethod; label: string }[] = [
 ];
 
 export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, onSuccess }) => {
-  const { theme, closeOrder, waiters } = useApp();
+  const { theme, closeOrder, waiters, customers, loyaltyConfig, loyaltyEntries, addLoyaltyEntry } = useApp();
   const isDark = theme === 'dark';
 
   const [includeService, setIncludeService] = useState(true);
@@ -30,9 +31,15 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
   const [currentMethod, setCurrentMethod] = useState<PaymentMethod>('credito');
   const [amountInput, setAmountInput] = useState('');
   const [showReceipt, setShowReceipt] = useState(false);
+  const [redeemLoyalty, setRedeemLoyalty] = useState(false);
 
   const serviceCharge = includeService && order.mode === 'mesa' ? order.subtotal * 0.1 : 0;
-  const totalAmount = order.subtotal + serviceCharge;
+  const customer = customers.find(item => item.id === order.customerId);
+  const currentPoints = customer ? getCustomerPoints(customer.id, loyaltyEntries) || customer.loyaltyPoints : 0;
+  const canRedeem = loyaltyConfig.active && !!customer && currentPoints >= loyaltyConfig.redeemThreshold;
+  const loyaltyDiscount = redeemLoyalty && canRedeem ? loyaltyConfig.redeemValue : 0;
+  const totalAmount = Math.max(0, order.subtotal + serviceCharge - loyaltyDiscount);
+  const earnedPoints = loyaltyConfig.active && customer ? calcEarnedPoints(totalAmount, loyaltyConfig) : 0;
 
   const amountPaid = payments.reduce((acc, p) => acc + p.amount, 0);
   const amountRemaining = Math.max(0, totalAmount - amountPaid);
@@ -57,14 +64,40 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
   };
 
   const handleFinish = () => {
-    closeOrder(order, payments, serviceCharge);
+    const closedOrder: Order = {
+      ...order,
+      loyaltyDiscount,
+      loyaltyPointsEarned: earnedPoints,
+      loyaltyPointsRedeemed: redeemLoyalty && canRedeem ? loyaltyConfig.redeemThreshold : 0,
+    };
+
+    if (loyaltyConfig.active && customer) {
+      if (redeemLoyalty && canRedeem) {
+        addLoyaltyEntry({
+          customerId: customer.id,
+          points: -loyaltyConfig.redeemThreshold,
+          orderId: order.id,
+          description: `Resgate - R$ ${loyaltyConfig.redeemValue.toFixed(2)} desconto`,
+        });
+      }
+      if (earnedPoints > 0) {
+        addLoyaltyEntry({
+          customerId: customer.id,
+          points: earnedPoints,
+          orderId: order.id,
+          description: `Pedido #${order.id}`,
+        });
+      }
+    }
+
+    closeOrder(closedOrder, payments, serviceCharge);
     setShowReceipt(true);
   };
 
   if (showReceipt) {
     return (
-      <ReceiptModal
-        order={{ ...order, serviceCharge, total: totalAmount, payments }}
+        <ReceiptModal
+        order={{ ...order, serviceCharge, total: totalAmount, payments, loyaltyDiscount, loyaltyPointsEarned: earnedPoints, loyaltyPointsRedeemed: redeemLoyalty && canRedeem ? loyaltyConfig.redeemThreshold : 0 }}
         onClose={() => { setShowReceipt(false); onSuccess(); }}
       />
     );
@@ -117,6 +150,36 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
                     <span>Taxa de serviço (10%)</span>
                     <span className="ml-auto">R$ {(order.subtotal * 0.1).toFixed(2)}</span>
                   </label>
+                )}
+                {customer && loyaltyConfig.active && (
+                  <div className={`pt-2 mt-2 border-t ${isDark ? 'border-[var(--color-border)]' : 'border-border-light'}`}>
+                    <div className="flex justify-between text-xs">
+                      <span className={isDark ? 'text-[var(--color-muted)]' : 'text-muted-light'}>{customer.name} · {currentPoints} pontos</span>
+                      <span className="font-semibold text-success">+{earnedPoints} pontos</span>
+                    </div>
+                    {canRedeem && (
+                      <label className="flex items-center gap-2 cursor-pointer pt-2 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={redeemLoyalty}
+                          onChange={event => {
+                            setRedeemLoyalty(event.target.checked);
+                            setPayments([]);
+                            setAmountInput('');
+                          }}
+                          className="accent-[var(--color-accent)]"
+                        />
+                        <span>Resgatar {loyaltyConfig.redeemThreshold} pontos</span>
+                        <span className="ml-auto text-warning">-R$ {loyaltyConfig.redeemValue.toFixed(2)}</span>
+                      </label>
+                    )}
+                  </div>
+                )}
+                {loyaltyDiscount > 0 && (
+                  <div className="flex justify-between text-warning">
+                    <span>Desconto fidelidade</span>
+                    <span>-R$ {loyaltyDiscount.toFixed(2)}</span>
+                  </div>
                 )}
                 <div className={`flex justify-between text-lg font-bold pt-3 mt-1 border-t ${isDark ? 'border-[var(--color-border)]' : 'border-border-light'}`}>
                   <span>Total</span>

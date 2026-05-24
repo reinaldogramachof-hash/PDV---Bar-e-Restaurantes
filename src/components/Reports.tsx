@@ -3,6 +3,7 @@ import { useApp } from '../store/AppContext';
 import { Download, TrendingUp, TrendingDown, Calendar, PieChart, Users, ShoppingBag, ArrowUpRight, DollarSign, Clock, FileText, ChevronRight, BarChart3, Target, Plus, Trash2, Receipt, CreditCard, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Expense } from '../types';
+import { syncToReports } from '../services/deliveryService';
 
 type Tab = 'dashboard' | 'fluxo' | 'vendas' | 'produtos' | 'atendentes';
 type Period = 'hoje' | 'semana' | 'mes' | 'total';
@@ -22,7 +23,7 @@ const downloadCSV = (filename: string, rows: string[][]) => {
 };
 
 export const Reports: React.FC = () => {
-  const { currentEmpresa, orders, waiters, theme, expenses, addExpense, deleteExpense, stockItems } = useApp();
+  const { currentEmpresa, orders, waiters, theme, expenses, addExpense, deleteExpense, stockItems, deliveryOrders } = useApp();
   const isDark = theme === 'dark';
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [period, setPeriod] = useState<Period>('mes');
@@ -70,10 +71,28 @@ export const Reports: React.FC = () => {
     });
   }, [expenses, period]);
 
+  const filteredDeliveryOrders = useMemo(() => {
+    const now = new Date();
+    return syncToReports(deliveryOrders).filter(order => {
+      const orderDate = new Date(order.deliveredAt || order.createdAt);
+      if (period === 'hoje') return orderDate.toDateString() === now.toDateString();
+      if (period === 'semana') {
+        const weekAgo = new Date();
+        weekAgo.setDate(now.getDate() - 7);
+        return orderDate >= weekAgo;
+      }
+      if (period === 'mes') {
+        return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+      }
+      return true;
+    });
+  }, [deliveryOrders, period]);
+
   const salesData = [...filteredOrders].reverse();
   const totalRevenue = filteredOrders.reduce((acc, o) => acc + o.subtotal, 0);
   const totalService = filteredOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
-  const totalSalesAmount = totalRevenue + totalService;
+  const totalDeliveryRevenue = filteredDeliveryOrders.reduce((acc, order) => acc + order.total, 0);
+  const totalSalesAmount = totalRevenue + totalService + totalDeliveryRevenue;
   const totalExpensesAmount = filteredExpenses.reduce((acc, e) => acc + e.amount, 0);
   
   const cmvTotal = filteredOrders.flatMap(o => o.items).reduce((acc, item) => {
@@ -209,7 +228,7 @@ export const Reports: React.FC = () => {
               {/* Main KPIs */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: 'Entradas (Vendas)', value: `R$ ${totalSalesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: DollarSign, color: 'text-success', bg: 'bg-success/10' },
+                  { label: 'Entradas (Vendas)', value: `R$ ${totalSalesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: DollarSign, color: 'text-success', bg: 'bg-success/10', hint: totalDeliveryRevenue > 0 ? 'inclui delivery' : undefined },
                   { label: 'Saídas (Despesas)', value: `R$ ${totalExpensesAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: TrendingDown, color: 'text-danger', bg: 'bg-danger/10' },
                   { label: 'Lucro Líquido Real', value: `R$ ${netProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`, icon: TrendingUp, color: netProfit >= 0 ? 'text-accent' : 'text-[var(--color-accent)]', bg: netProfit >= 0 ? 'bg-accent/10' : 'bg-[var(--color-accent)]/10' },
                   { label: 'Margem Líquida', value: `${totalSalesAmount ? ((netProfit / totalSalesAmount) * 100).toFixed(1) : 0}%`, icon: Target, color: 'text-accent', bg: 'bg-accent/10' },
@@ -219,7 +238,14 @@ export const Reports: React.FC = () => {
                       <kpi.icon className="w-4 h-4" />
                     </div>
                     <p className="text-xs font-medium text-muted mb-0.5">{kpi.label}</p>
-                    <p className="text-xl font-semibold">{kpi.value}</p>
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      <p className="text-xl font-semibold">{kpi.value}</p>
+                      {kpi.hint && (
+                        <span className="rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-medium text-accent">
+                          {kpi.hint}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -260,6 +286,12 @@ export const Reports: React.FC = () => {
                          <span className="text-xs text-muted">Faturamento</span>
                          <span className="text-sm font-semibold">R$ {totalSalesAmount.toLocaleString('pt-BR')}</span>
                       </div>
+                      {totalDeliveryRevenue > 0 && (
+                        <div className="flex justify-between items-center py-2 border-b border-current/5">
+                           <span className="text-xs text-muted">Delivery consolidado</span>
+                           <span className="text-sm font-medium text-accent">+ R$ {totalDeliveryRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center py-2 border-b border-current/5">
                          <span className="text-xs text-muted">CMV (Custo Produtos)</span>
                          <span className="text-sm font-medium text-red-400">-(R$ {cmvTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})</span>

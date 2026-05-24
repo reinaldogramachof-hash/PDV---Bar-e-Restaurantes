@@ -6,6 +6,7 @@ import { PlanGuard } from './components/PlanGuard';
 import { Dashboard } from './components/Dashboard';
 import { MasterDashboard } from './components/MasterDashboard';
 import { LicenseLock } from './components/LicenseLock';
+import { CustomerMenuView } from './components/CustomerMenuView';
 import { LICENSE_STATUS_URL } from './domain/saas';
 import { checkLicense, LicenseCheckResult } from './services/licenseService';
 import { purgeOldLogs } from './services/auditService';
@@ -15,9 +16,12 @@ const PDV = lazy(() => import('./components/PDV').then(module => ({ default: mod
 const Stock = lazy(() => import('./components/Stock').then(module => ({ default: module.Stock })));
 const Cashier = lazy(() => import('./components/Cashier').then(module => ({ default: module.Cashier })));
 const Reports = lazy(() => import('./components/Reports').then(module => ({ default: module.Reports })));
+const Intelligence = lazy(() => import('./components/Intelligence').then(module => ({ default: module.Intelligence })));
 const UserManual = lazy(() => import('./components/UserManual').then(module => ({ default: module.UserManual })));
 const Tables = lazy(() => import('./components/Tables').then(module => ({ default: module.Tables })));
 const Delivery = lazy(() => import('./components/Delivery').then(module => ({ default: module.Delivery })));
+const MenuDigital = lazy(() => import('./components/MenuDigital').then(module => ({ default: module.MenuDigital })));
+const SalesCenter = lazy(() => import('./components/SalesCenter').then(module => ({ default: module.SalesCenter })));
 const Customers = lazy(() => import('./components/Customers').then(module => ({ default: module.Customers })));
 const Collaborators = lazy(() => import('./components/Collaborators').then(module => ({ default: module.Collaborators })));
 const Suppliers = lazy(() => import('./components/Suppliers').then(module => ({ default: module.Suppliers })));
@@ -86,9 +90,12 @@ const AppContent = () => {
           ? <MasterDashboard />
           : <RedirectToDashboard setCurrentView={setCurrentView} />;
       case 'dashboard': return <PlanGuard moduleId="dashboard"><Dashboard /></PlanGuard>;
+      case 'intelligence': return <PlanGuard moduleId="intelligence"><Intelligence /></PlanGuard>;
       case 'pdv': return <PlanGuard moduleId="pdv"><PDV /></PlanGuard>;
       case 'mesas': return <PlanGuard moduleId="mesas"><Tables /></PlanGuard>;
       case 'delivery': return <PlanGuard moduleId="delivery"><Delivery /></PlanGuard>;
+      case 'cardapio-digital': return <PlanGuard moduleId="cardapio-digital"><MenuDigital /></PlanGuard>;
+      case 'vendas': return <PlanGuard moduleId="vendas"><SalesCenter /></PlanGuard>;
       case 'cozinha': return <PlanGuard moduleId="cozinha"><Kitchen /></PlanGuard>;
       case 'estoque': return <PlanGuard moduleId="estoque"><Stock /></PlanGuard>;
       case 'caixa': return <PlanGuard moduleId="caixa"><Cashier /></PlanGuard>;
@@ -120,6 +127,10 @@ const AppContent = () => {
 };
 
 export default function App() {
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/cardapio/')) {
+    return <CustomerMenuView />;
+  }
+
   return (
     <AppProvider>
       <AppContent />

@@ -74,6 +74,23 @@ export interface RecipeItem {
   quantity: number; // quantidade do insumo consumida
 }
 
+export interface MenuDigitalConfig {
+  visible: boolean;
+  description?: string;
+  imageBase64?: string;
+  highlight?: boolean;
+  highlightLabel?: string;
+}
+
+export interface MenuConfig {
+  empresaId: string;
+  accentColor: string;
+  welcomeMessage?: string;
+  footerMessage?: string;
+  showPrices: boolean;
+  allowCallWaiter: boolean;
+}
+
 export interface Product extends BaseEntity {
   name: string;
   description: string;
@@ -81,6 +98,8 @@ export interface Product extends BaseEntity {
   category: string;
   recipe?: RecipeItem[]; // Ficha técnica
   image?: string;
+  active?: boolean;
+  menuDigital?: MenuDigitalConfig;
 }
 
 export interface OrderItem {
@@ -88,6 +107,69 @@ export interface OrderItem {
   product: Product;
   quantity: number;
   price: number;
+  originalPrice?: number;
+  discount?: number;
+  promotionName?: string;
+  comboId?: string;
+}
+
+export interface Promotion {
+  id: string;
+  empresaId: string;
+  name: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  productIds: string[];
+  categoryIds: string[];
+  startsAt: string;
+  endsAt: string;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface Combo {
+  id: string;
+  empresaId: string;
+  name: string;
+  description?: string;
+  items: { productId: string; qty: number }[];
+  originalPrice: number;
+  comboPrice: number;
+  imageBase64?: string;
+  menuDigital?: MenuDigitalConfig;
+  active: boolean;
+  createdAt: string;
+}
+
+export interface LoyaltyConfig {
+  empresaId: string;
+  active: boolean;
+  pointsPerReal: number;
+  redeemThreshold: number;
+  redeemValue: number;
+  expiresInDays?: number;
+}
+
+export interface LoyaltyEntry {
+  id: string;
+  empresaId: string;
+  customerId: string;
+  points: number;
+  orderId?: string;
+  description: string;
+  createdAt: string;
+}
+
+export interface Campaign {
+  id: string;
+  empresaId: string;
+  name: string;
+  promotionId: string;
+  daysOfWeek: number[];
+  startsHour: number;
+  endsHour: number;
+  active: boolean;
+  createdAt: string;
 }
 
 export interface SplitItem {
@@ -115,6 +197,9 @@ export interface Order extends BaseEntity {
   status: 'open' | 'closed';
   waiterId: string;
   customerId?: string;
+  loyaltyDiscount?: number;
+  loyaltyPointsEarned?: number;
+  loyaltyPointsRedeemed?: number;
   timestamp: string;
 }
 
@@ -198,6 +283,60 @@ export interface Supplier extends BaseEntity {
   rating?: number; // 1-5 stars
 }
 
+export interface Entregador {
+  id: string;
+  empresaId: string;
+  name: string;
+  phone: string;
+  vehicle: 'moto' | 'bike' | 'carro' | 'a_pe';
+  status: 'disponivel' | 'em_rota' | 'inativo';
+  createdAt: string;
+}
+
+export interface DeliveryOrder {
+  id: string;
+  empresaId: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  neighborhood: string;
+  items: { name: string; qty: number; price: number }[];
+  subtotal: number;
+  deliveryFee: number;
+  discount: number;
+  total: number;
+  paymentMethod: 'dinheiro' | 'pix' | 'cartao_credito' | 'cartao_debito';
+  status: 'recebido' | 'preparo' | 'rota' | 'entregue' | 'cancelado';
+  entregadorId?: string;
+  notes?: string;
+  createdAt: string;
+  dispatchedAt?: string;
+  deliveredAt?: string;
+}
+
+export interface Insight {
+  id: string;
+  type: 'alerta' | 'oportunidade' | 'tendencia';
+  severity: 'critico' | 'atencao' | 'positivo' | 'info';
+  title: string;
+  description: string;
+  action?: string;
+  metric?: string;
+  module?: string;
+}
+
+export interface AppNotification {
+  id: string;
+  type: 'update' | 'security' | 'feature' | 'support' | 'sales' | 'info';
+  title: string;
+  body: string;
+  action?: string;
+  actionUrl?: string;
+  publishedAt: string;
+  expiresAt?: string;
+  targetPlans?: ('essencial' | 'profissional' | 'gestao')[];
+}
+
 export interface StockMovement extends BaseEntity {
   stockItemId: string; // Aponta para o insumo
   type: 'in' | 'out' | 'loss';
@@ -206,6 +345,58 @@ export interface StockMovement extends BaseEntity {
   reason?: string;
   timestamp: string;
   collaboratorId?: string;
+}
+
+// ─── PlenaHub — Pipeline Comercial & Notificações Master ───────────────────
+
+export type ProspectStage =
+  | 'contato'
+  | 'demo'
+  | 'proposta'
+  | 'contrato'
+  | 'onboarding'
+  | 'ativo'
+  | 'perdido';
+
+export interface Prospect {
+  id: string;
+  businessName: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail?: string;
+  planInterest: 'essencial' | 'profissional' | 'gestao';
+  stage: ProspectStage;
+  notes: string;
+  lostReason?: string;
+  monthlyValue: number;
+  createdAt: string;
+  updatedAt: string;
+  lastInteractionAt: string;
+}
+
+export interface CommercialActivity {
+  id: string;
+  prospectId?: string;
+  type: 'note' | 'call' | 'demo' | 'proposal' | 'contract' | 'upgrade' | 'churn';
+  description: string;
+  createdAt: string;
+}
+
+export interface MrrEntry {
+  month: string; // 'YYYY-MM'
+  value: number;
+}
+
+export interface MasterNotificationDraft {
+  id: string;
+  type: AppNotification['type'];
+  title: string;
+  body: string;
+  action?: string;
+  targetPlans: ('essencial' | 'profissional' | 'gestao')[];
+  publishedAt: string;
+  expiresAt?: string;
+  status: 'draft' | 'published';
 }
 
 export interface AppSettings {

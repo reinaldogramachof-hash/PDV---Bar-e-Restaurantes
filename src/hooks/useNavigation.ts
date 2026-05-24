@@ -3,9 +3,12 @@ import { useState } from 'react';
 export type View = 
   | 'master'
   | 'dashboard' 
+  | 'intelligence'
   | 'pdv' 
   | 'mesas' 
   | 'delivery'
+  | 'cardapio-digital'
+  | 'vendas'
   | 'estoque' 
   | 'caixa' 
   | 'relatorios' 

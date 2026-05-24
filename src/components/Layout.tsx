@@ -3,6 +3,8 @@ import { View } from '../hooks/useNavigation';
 import { useApp } from '../store/AppContext';
 import {
   BookOpen,
+  BadgePercent,
+  BrainCircuit,
   Bike,
   ChefHat,
   ChevronLeft,
@@ -15,6 +17,7 @@ import {
   MonitorPlay,
   Moon,
   Package,
+  QrCode,
   Settings,
   Shield,
   Sun,
@@ -28,7 +31,9 @@ import {
 import { AnimatePresence, motion } from 'motion/react';
 import { APP_NAME, canAccessModule, ModuleId } from '../domain/saas';
 import { LicenseCheckResult } from '../services/licenseService';
+import { fetchFeed } from '../services/notificationService';
 import { LicenseBanner } from './LicenseBanner';
+import { NotificationPanel } from './NotificationPanel';
 
 interface LayoutProps {
   currentView: View;
@@ -71,6 +76,9 @@ const navGroups = [
     title: 'Gestão',
     items: [
       { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { id: 'intelligence', icon: BrainCircuit, label: 'Inteligência' },
+      { id: 'cardapio-digital', icon: QrCode, label: 'Cardápio Digital' },
+      { id: 'vendas', icon: BadgePercent, label: 'Vendas' },
       { id: 'clientes', icon: Users, label: 'Clientes' },
       { id: 'colaboradores', icon: UserCheck, label: 'Colaboradores' },
       { id: 'fornecedores', icon: Truck, label: 'Fornecedores' },
@@ -94,9 +102,12 @@ const navGroups = [
 const viewLabels: Record<View, string> = {
   master: 'Painel Master',
   dashboard: 'Dashboard',
+  intelligence: 'Inteligência',
   pdv: 'PDV Balcão',
   mesas: 'Mesas',
   delivery: 'Delivery',
+  'cardapio-digital': 'Cardápio Digital',
+  vendas: 'Vendas',
   cozinha: 'Cozinha',
   estoque: 'Estoque',
   caixa: 'Caixa',
@@ -140,6 +151,10 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
+  }, []);
+
+  useEffect(() => {
+    fetchFeed();
   }, []);
 
   const handleInstallClick = async () => {
@@ -295,6 +310,8 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
                   <Monitor className="w-4 h-4" /> Instalar
                 </button>
               )}
+
+              <NotificationPanel />
 
               <button
                 onClick={() => setTheme(isDark ? 'light' : 'dark')}

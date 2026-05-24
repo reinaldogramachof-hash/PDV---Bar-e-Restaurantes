@@ -6,9 +6,10 @@ import { ArrowRight, Check, ChevronDown, Minus, Package, Plus, Search, ShoppingB
 import { CheckoutModal } from './CheckoutModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAudit } from '../hooks/useAudit';
+import { calcComboOriginalPrice, getProductDiscount } from '../services/salesService';
 
 export const PDV: React.FC = () => {
-  const { collaborators, currentEmpresa, waiters, theme } = useApp();
+  const { collaborators, currentEmpresa, waiters, theme, promotions, campaigns, combos, products, customers } = useApp();
   const isDark = theme === 'dark';
   const activeOperators = collaborators.filter(c => c.status === 'active');
   const initialOperatorId = activeOperators[0]?.id ?? waiters[0]?.id ?? '';
@@ -16,6 +17,7 @@ export const PDV: React.FC = () => {
     () => initialOperatorId
   );
   const [waiterMenuOpen, setWaiterMenuOpen] = useState(false);
+  const [comboMenuOpen, setComboMenuOpen] = useState(false);
   const [manualModalOpen, setManualModalOpen] = useState(false);
   const [manualName, setManualName] = useState('');
   const [manualPrice, setManualPrice] = useState('');
@@ -35,6 +37,7 @@ export const PDV: React.FC = () => {
   });
 
   const [activeOrder, setActiveOrder] = useState<Order>(createOrder);
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('Todos');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -48,7 +51,13 @@ export const PDV: React.FC = () => {
     activeOperators.find(c => c.id === selectedOperatorId)?.name ?? 'Operador';
 
   const addItemToOrder = (product: Product) => {
-    const existingIdx = activeOrder.items.findIndex(item => item.product.id === product.id);
+    const discountInfo = getProductDiscount(product, promotions, campaigns);
+    const itemPrice = Math.max(0, product.price - (discountInfo?.discount || 0));
+    const existingIdx = activeOrder.items.findIndex(item =>
+      item.product.id === product.id &&
+      !item.comboId &&
+      item.promotionName === discountInfo?.promotionName
+    );
     let updatedItems = [...activeOrder.items];
 
     if (existingIdx !== -1) {
@@ -61,7 +70,10 @@ export const PDV: React.FC = () => {
         id: Date.now().toString() + Math.random(),
         product,
         quantity: 1,
-        price: product.price,
+        price: itemPrice,
+        originalPrice: discountInfo ? product.price : undefined,
+        discount: discountInfo?.discount,
+        promotionName: discountInfo?.promotionName,
       });
     }
 
@@ -77,10 +89,47 @@ export const PDV: React.FC = () => {
     setActiveOrder({ ...activeOrder, items: updatedItems, subtotal, total: subtotal });
   };
 
+  const addComboToOrder = (comboId: string) => {
+    const combo = combos.find(item => item.id === comboId);
+    if (!combo) return;
+    const originalTotal = calcComboOriginalPrice(combo, products);
+    if (originalTotal <= 0) return;
+
+    const comboItems = combo.items.flatMap(comboItem => {
+      const product = products.find(item => item.id === comboItem.productId);
+      if (!product || comboItem.qty <= 0) return [];
+      const lineOriginal = product.price * comboItem.qty;
+      const distributedLineTotal = combo.comboPrice * (lineOriginal / originalTotal);
+      const unitPrice = distributedLineTotal / comboItem.qty;
+      return [{
+        id: Date.now().toString() + Math.random(),
+        product,
+        quantity: comboItem.qty,
+        price: Number(unitPrice.toFixed(2)),
+        originalPrice: product.price,
+        discount: Math.max(0, Number((product.price - unitPrice).toFixed(2))),
+        promotionName: `Combo: ${combo.name}`,
+        comboId: combo.id,
+      }];
+    });
+
+    if (comboItems.length === 0) return;
+    const updatedItems = [...activeOrder.items, ...comboItems];
+    const subtotal = updatedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    setActiveOrder({ ...activeOrder, items: updatedItems, subtotal, total: subtotal });
+    setComboMenuOpen(false);
+  };
+
   const handleSelectOperator = (id: string) => {
     setSelectedOperatorId(id);
     setWaiterMenuOpen(false);
     setActiveOrder(prev => ({ ...prev, waiterId: id }));
+  };
+
+  const handleSelectCustomer = (id: string) => {
+    setSelectedCustomerId(id);
+    const customer = customers.find(item => item.id === id);
+    setActiveOrder(prev => ({ ...prev, customerId: id || undefined, customerName: customer?.name }));
   };
 
   const addManualItem = () => {
@@ -106,6 +155,7 @@ export const PDV: React.FC = () => {
   const handleSuccess = () => {
     setCheckoutOpen(false);
     setActiveOrder(createOrder(selectedOperatorId));
+    setSelectedCustomerId('');
   };
 
   const handleCancelOrder = () => {
@@ -116,6 +166,7 @@ export const PDV: React.FC = () => {
       });
     }
     setActiveOrder(createOrder(selectedOperatorId));
+    setSelectedCustomerId('');
   };
 
   return (
@@ -128,6 +179,13 @@ export const PDV: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto">
+            <button
+              onClick={() => setComboMenuOpen(true)}
+              className={`shrink-0 flex items-center gap-2 px-4 h-10 rounded-control border font-medium text-sm text-accent transition-all hover:bg-accent/10 ${fieldClass}`}
+            >
+              <Package className="w-4 h-4" />
+              Combos
+            </button>
             <button
               onClick={() => setManualModalOpen(true)}
               className={`shrink-0 flex items-center gap-2 px-4 h-10 rounded-control border border-dashed font-medium text-sm text-accent transition-all hover:bg-accent/10 ${fieldClass}`}
@@ -193,6 +251,7 @@ export const PDV: React.FC = () => {
         </div>
 
         <div className={`px-5 py-3 border-b ${isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light'}`}>
+          <div className="grid grid-cols-1 gap-2">
           <div className="relative">
             <button
               onClick={() => setWaiterMenuOpen(open => !open)}
@@ -233,6 +292,17 @@ export const PDV: React.FC = () => {
               )}
             </AnimatePresence>
           </div>
+          <select
+            value={selectedCustomerId}
+            onChange={event => handleSelectCustomer(event.target.value)}
+            className={`w-full h-10 px-3 rounded-control border text-sm font-medium outline-none ${fieldClass}`}
+          >
+            <option value="">Cliente nao identificado</option>
+            {customers.map(customer => (
+              <option key={customer.id} value={customer.id}>{customer.name}</option>
+            ))}
+          </select>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px]">
@@ -259,7 +329,17 @@ export const PDV: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{item.product.name}</p>
-                  <p className="text-xs text-muted">R$ {item.price.toFixed(2)}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {item.originalPrice && item.originalPrice > item.price && (
+                      <span className="text-xs text-muted line-through">R$ {item.originalPrice.toFixed(2)}</span>
+                    )}
+                    <span className="text-xs text-muted">R$ {item.price.toFixed(2)}</span>
+                  </div>
+                  {item.promotionName && item.discount && item.discount > 0 && (
+                    <p className="mt-1 w-fit px-2 py-0.5 rounded-full bg-success/15 text-success text-[10px] font-semibold">
+                      Promocao: -R$ {item.discount.toFixed(2)} ({item.promotionName})
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
@@ -308,6 +388,67 @@ export const PDV: React.FC = () => {
 
       {checkoutOpen && (
         <CheckoutModal order={activeOrder} onClose={() => setCheckoutOpen(false)} onSuccess={handleSuccess} />
+      )}
+
+      {comboMenuOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`w-full max-w-2xl rounded-panel border shadow-2xl overflow-hidden ${panelClass}`}
+          >
+            <div className={`px-5 py-4 flex items-center justify-between border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-panel bg-accent text-white flex items-center justify-center">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-base">Combos disponiveis</h3>
+                  <p className="text-xs text-muted">Lance todos os itens do combo pelo preco promocional.</p>
+                </div>
+              </div>
+              <button onClick={() => setComboMenuOpen(false)} className="p-2 rounded-control hover:bg-current/10 text-muted" aria-label="Fechar combos">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[70vh] overflow-y-auto">
+              {combos.filter(combo => combo.active).map(combo => {
+                const original = calcComboOriginalPrice(combo, products);
+                return (
+                  <button
+                    key={combo.id}
+                    onClick={() => addComboToOrder(combo.id)}
+                    className={`text-left rounded-panel border overflow-hidden transition-all hover:border-accent ${fieldClass}`}
+                  >
+                    {combo.imageBase64 ? (
+                      <img src={combo.imageBase64} alt={combo.name} className="w-full h-28 object-cover" />
+                    ) : (
+                      <div className="h-28 flex items-center justify-center bg-current/5"><Package className="w-8 h-8 text-muted" /></div>
+                    )}
+                    <div className="p-3 space-y-2">
+                      <div>
+                        <p className="text-sm font-semibold">{combo.name}</p>
+                        <p className="text-xs text-muted">{combo.description || 'Combo promocional'}</p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <p className="text-xs text-muted line-through">R$ {original.toFixed(2)}</p>
+                          <p className="text-base font-semibold text-accent">R$ {combo.comboPrice.toFixed(2)}</p>
+                        </div>
+                        <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-success/15 text-success">
+                          Add combo
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+              {combos.filter(combo => combo.active).length === 0 && (
+                <div className="col-span-full py-10 text-center text-sm text-muted">Nenhum combo ativo no momento.</div>
+              )}
+            </div>
+          </motion.div>
+        </div>
       )}
 
       {manualModalOpen && (

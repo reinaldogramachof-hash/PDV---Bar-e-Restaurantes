@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission } from '../types';
+import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission, DeliveryOrder, Entregador, MenuConfig, MenuDigitalConfig, Promotion, Combo, LoyaltyConfig, LoyaltyEntry, Campaign } from '../types';
 import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers, mockSettings } from './mock';
 import { DEFAULT_EMPRESA_ID, buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, hasRolePermission, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId } from '../domain/saas';
 
@@ -18,6 +18,14 @@ interface AppState {
   customers: Customer[];
   collaborators: Collaborator[];
   stockMovements: StockMovement[];
+  deliveryOrders: DeliveryOrder[];
+  entregadores: Entregador[];
+  menuConfig: MenuConfig;
+  promotions: Promotion[];
+  combos: Combo[];
+  loyaltyConfig: LoyaltyConfig;
+  loyaltyEntries: LoyaltyEntry[];
+  campaigns: Campaign[];
   settings: AppSettings;
   readGuides: string[];
   theme: 'dark' | 'light';
@@ -56,6 +64,24 @@ interface AppContextType extends AppState {
   updateCollaborator: (collaborator: Collaborator) => void;
   deleteCollaborator: (id: string) => void;
   addStockMovement: (movement: StockMovement) => void;
+  addDeliveryOrder: (order: DeliveryOrder) => void;
+  updateDeliveryOrder: (order: DeliveryOrder) => void;
+  cancelDeliveryOrder: (id: string) => void;
+  addEntregador: (entregador: Entregador) => void;
+  updateEntregador: (entregador: Entregador) => void;
+  updateMenuConfig: (config: Partial<MenuConfig>) => void;
+  updateProductMenuDigital: (productId: string, data: Partial<MenuDigitalConfig>) => void;
+  addPromotion: (promotion: Omit<Promotion, 'id' | 'empresaId' | 'createdAt'>) => void;
+  updatePromotion: (id: string, data: Partial<Promotion>) => void;
+  deletePromotion: (id: string) => void;
+  addCombo: (combo: Omit<Combo, 'id' | 'empresaId' | 'createdAt'>) => void;
+  updateCombo: (id: string, data: Partial<Combo>) => void;
+  deleteCombo: (id: string) => void;
+  updateLoyaltyConfig: (config: Partial<LoyaltyConfig>) => void;
+  addLoyaltyEntry: (entry: Omit<LoyaltyEntry, 'id' | 'empresaId' | 'createdAt'>) => void;
+  addCampaign: (campaign: Omit<Campaign, 'id' | 'empresaId' | 'createdAt'>) => void;
+  updateCampaign: (id: string, data: Partial<Campaign>) => void;
+  deleteCampaign: (id: string) => void;
   updateSettings: (settings: AppSettings) => void;
   toggleGuideRead: (guideId: string) => void;
   importData: (json: string) => void;
@@ -155,6 +181,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [customers, setCustomers] = useState<Customer[]>(() => parseScopedJSON('customers', currentEmpresa.id, mockCustomers, true));
   const [collaborators, setCollaborators] = useState<Collaborator[]>(() => parseScopedJSON('collaborators', currentEmpresa.id, mockCollaborators, true));
   const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => parseScopedJSON('stockMovements', currentEmpresa.id, [], true));
+  const [deliveryOrders, setDeliveryOrders] = useState<DeliveryOrder[]>(() => parseScopedJSON('deliveryOrders', currentEmpresa.id, [], true));
+  const [entregadores, setEntregadores] = useState<Entregador[]>(() => parseScopedJSON('entregadores', currentEmpresa.id, [], true));
+  const defaultMenuConfig: MenuConfig = {
+    empresaId: currentEmpresa.id,
+    accentColor: '#E07B4A',
+    showPrices: true,
+    allowCallWaiter: true,
+  };
+  const defaultLoyaltyConfig: LoyaltyConfig = {
+    empresaId: currentEmpresa.id,
+    active: false,
+    pointsPerReal: 1,
+    redeemThreshold: 100,
+    redeemValue: 10,
+  };
+  const [menuConfig, setMenuConfig] = useState<MenuConfig>(() => parseScopedJSON('menuConfig', currentEmpresa.id, defaultMenuConfig, true));
+  const [promotions, setPromotions] = useState<Promotion[]>(() => parseScopedJSON('promotions', currentEmpresa.id, [], true));
+  const [combos, setCombos] = useState<Combo[]>(() => parseScopedJSON('combos', currentEmpresa.id, [], true));
+  const [loyaltyConfig, setLoyaltyConfig] = useState<LoyaltyConfig>(() => parseScopedJSON('loyaltyConfig', currentEmpresa.id, defaultLoyaltyConfig, true));
+  const [loyaltyEntries, setLoyaltyEntries] = useState<LoyaltyEntry[]>(() => parseScopedJSON('loyaltyEntries', currentEmpresa.id, [], true));
+  const [campaigns, setCampaigns] = useState<Campaign[]>(() => parseScopedJSON('campaigns', currentEmpresa.id, [], true));
   const [settings, setSettings] = useState<AppSettings>(() => parseScopedJSON('settings', currentEmpresa.id, mockSettings, true));
   const [readGuides, setReadGuides] = useState<string[]>(() => parseScopedJSON('readGuides', currentEmpresa.id, []));
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -175,10 +222,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(buildScopedStorageKey('customers', currentEmpresa.id), JSON.stringify(customers));
     localStorage.setItem(buildScopedStorageKey('collaborators', currentEmpresa.id), JSON.stringify(collaborators));
     localStorage.setItem(buildScopedStorageKey('stockMovements', currentEmpresa.id), JSON.stringify(stockMovements));
+    localStorage.setItem(buildScopedStorageKey('deliveryOrders', currentEmpresa.id), JSON.stringify(deliveryOrders));
+    localStorage.setItem(buildScopedStorageKey('entregadores', currentEmpresa.id), JSON.stringify(entregadores));
+    localStorage.setItem(buildScopedStorageKey('menuConfig', currentEmpresa.id), JSON.stringify(menuConfig));
+    localStorage.setItem(buildScopedStorageKey('promotions', currentEmpresa.id), JSON.stringify(promotions));
+    localStorage.setItem(buildScopedStorageKey('combos', currentEmpresa.id), JSON.stringify(combos));
+    localStorage.setItem(buildScopedStorageKey('loyaltyConfig', currentEmpresa.id), JSON.stringify(loyaltyConfig));
+    localStorage.setItem(buildScopedStorageKey('loyaltyEntries', currentEmpresa.id), JSON.stringify(loyaltyEntries));
+    localStorage.setItem(buildScopedStorageKey('campaigns', currentEmpresa.id), JSON.stringify(campaigns));
     localStorage.setItem(buildScopedStorageKey('settings', currentEmpresa.id), JSON.stringify(settings));
     localStorage.setItem(buildScopedStorageKey('readGuides', currentEmpresa.id), JSON.stringify(readGuides));
     localStorage.setItem(buildScopedStorageKey('theme', currentEmpresa.id), theme);
-  }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme, currentEmpresa.id]);
+  }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, settings, readGuides, theme, currentEmpresa.id]);
 
   const resetToMocks = () => {
     clearAppStorage(currentEmpresa.id);
@@ -189,7 +244,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const data = {
       empresaId: currentEmpresa.id,
       products, stockItems, suppliers, tables, waiters, orders, expenses, 
-      cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides
+      cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, settings, readGuides
     };
     return JSON.stringify(data, null, 2);
   };
@@ -209,6 +264,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (data.customers) setCustomers(normalizeImportedCollection(data.customers, currentEmpresa.id));
       if (data.collaborators) setCollaborators(normalizeImportedCollection(data.collaborators, currentEmpresa.id));
       if (data.stockMovements) setStockMovements(normalizeImportedCollection(data.stockMovements, currentEmpresa.id));
+      if (data.deliveryOrders) setDeliveryOrders(normalizeImportedCollection(data.deliveryOrders, currentEmpresa.id));
+      if (data.entregadores) setEntregadores(normalizeImportedCollection(data.entregadores, currentEmpresa.id));
+      if (data.menuConfig) setMenuConfig(ensureEmpresaId(data.menuConfig, currentEmpresa.id));
+      if (data.promotions) setPromotions(normalizeImportedCollection(data.promotions, currentEmpresa.id));
+      if (data.combos) setCombos(normalizeImportedCollection(data.combos, currentEmpresa.id));
+      if (data.loyaltyConfig) setLoyaltyConfig(ensureEmpresaId(data.loyaltyConfig, currentEmpresa.id));
+      if (data.loyaltyEntries) setLoyaltyEntries(normalizeImportedCollection(data.loyaltyEntries, currentEmpresa.id));
+      if (data.campaigns) setCampaigns(normalizeImportedCollection(data.campaigns, currentEmpresa.id));
       if (data.cashierSession) setCashierSession(ensureEmpresaId(data.cashierSession, currentEmpresa.id));
       if (data.settings) setSettings(ensureEmpresaId(data.settings, currentEmpresa.id));
       if (data.readGuides) setReadGuides(data.readGuides);
@@ -221,6 +284,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const hasPermission = (permission: Permission) => hasRolePermission(currentUser.role, permission);
 
   const updateSettings = (newSettings: AppSettings) => setSettings(ensureEmpresaId(newSettings, currentEmpresa.id));
+
+  const updateMenuConfig = (config: Partial<MenuConfig>) => {
+    setMenuConfig(prev => ({ ...prev, ...config, empresaId: currentEmpresa.id }));
+  };
 
   const toggleGuideRead = (guideId: string) => {
     setReadGuides(prev => 
@@ -238,6 +305,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteProduct = (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id));
+  };
+
+  const updateProductMenuDigital = (productId: string, data: Partial<MenuDigitalConfig>) => {
+    setProducts(prev => prev.map(product => {
+      if (product.id !== productId) return product;
+      return ensureEmpresaId({
+        ...product,
+        menuDigital: {
+          visible: product.menuDigital?.visible ?? false,
+          ...product.menuDigital,
+          ...data,
+        },
+      }, currentEmpresa.id);
+    }));
   };
 
   const updateStockItem = (updatedItem: StockItem) => {
@@ -293,7 +374,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       payments,
       serviceCharge,
       status: 'closed',
-      total: order.subtotal + serviceCharge,
+      total: Math.max(0, order.subtotal + serviceCharge - (order.loyaltyDiscount || 0)),
     };
 
     setOrders(prev => {
@@ -353,7 +434,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ? { 
               ...c, 
               totalSpent: c.totalSpent + order.subtotal, 
-              loyaltyPoints: c.loyaltyPoints + Math.floor(order.subtotal / 10),
+              loyaltyPoints: c.loyaltyPoints + (order.loyaltyPointsEarned ?? Math.floor(order.subtotal / 10)) - (order.loyaltyPointsRedeemed || 0),
               lastVisit: new Date().toISOString()
             } 
           : c
@@ -521,9 +602,94 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setStockMovements(prev => [...prev, ensureEmpresaId(movement, currentEmpresa.id)]);
   };
 
+  const addDeliveryOrder = (order: DeliveryOrder) => {
+    setDeliveryOrders(prev => [...prev, ensureEmpresaId(order, currentEmpresa.id)]);
+  };
+
+  const updateDeliveryOrder = (updatedOrder: DeliveryOrder) => {
+    setDeliveryOrders(prev => prev.map(order => order.id === updatedOrder.id ? ensureEmpresaId(updatedOrder, currentEmpresa.id) : order));
+  };
+
+  const cancelDeliveryOrder = (id: string) => {
+    setDeliveryOrders(prev => prev.map(order => order.id === id ? { ...order, status: 'cancelado' } : order));
+  };
+
+  const addEntregador = (entregador: Entregador) => {
+    setEntregadores(prev => [...prev, ensureEmpresaId(entregador, currentEmpresa.id)]);
+  };
+
+  const updateEntregador = (updatedEntregador: Entregador) => {
+    setEntregadores(prev => prev.map(entregador => entregador.id === updatedEntregador.id ? ensureEmpresaId(updatedEntregador, currentEmpresa.id) : entregador));
+  };
+
+  const addPromotion = (promotion: Omit<Promotion, 'id' | 'empresaId' | 'createdAt'>) => {
+    setPromotions(prev => [...prev, {
+      ...promotion,
+      id: `promotion-${Date.now()}`,
+      empresaId: currentEmpresa.id,
+      createdAt: new Date().toISOString(),
+    }]);
+  };
+
+  const updatePromotion = (id: string, data: Partial<Promotion>) => {
+    setPromotions(prev => prev.map(promotion => promotion.id === id ? ensureEmpresaId({ ...promotion, ...data }, currentEmpresa.id) : promotion));
+  };
+
+  const deletePromotion = (id: string) => {
+    setPromotions(prev => prev.filter(promotion => promotion.id !== id));
+    setCampaigns(prev => prev.filter(campaign => campaign.promotionId !== id));
+  };
+
+  const addCombo = (combo: Omit<Combo, 'id' | 'empresaId' | 'createdAt'>) => {
+    setCombos(prev => [...prev, {
+      ...combo,
+      id: `combo-${Date.now()}`,
+      empresaId: currentEmpresa.id,
+      createdAt: new Date().toISOString(),
+    }]);
+  };
+
+  const updateCombo = (id: string, data: Partial<Combo>) => {
+    setCombos(prev => prev.map(combo => combo.id === id ? ensureEmpresaId({ ...combo, ...data }, currentEmpresa.id) : combo));
+  };
+
+  const deleteCombo = (id: string) => {
+    setCombos(prev => prev.filter(combo => combo.id !== id));
+  };
+
+  const updateLoyaltyConfig = (config: Partial<LoyaltyConfig>) => {
+    setLoyaltyConfig(prev => ({ ...prev, ...config, empresaId: currentEmpresa.id }));
+  };
+
+  const addLoyaltyEntry = (entry: Omit<LoyaltyEntry, 'id' | 'empresaId' | 'createdAt'>) => {
+    setLoyaltyEntries(prev => [...prev, {
+      ...entry,
+      id: `loyalty-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      empresaId: currentEmpresa.id,
+      createdAt: new Date().toISOString(),
+    }]);
+  };
+
+  const addCampaign = (campaign: Omit<Campaign, 'id' | 'empresaId' | 'createdAt'>) => {
+    setCampaigns(prev => [...prev, {
+      ...campaign,
+      id: `campaign-${Date.now()}`,
+      empresaId: currentEmpresa.id,
+      createdAt: new Date().toISOString(),
+    }]);
+  };
+
+  const updateCampaign = (id: string, data: Partial<Campaign>) => {
+    setCampaigns(prev => prev.map(campaign => campaign.id === id ? ensureEmpresaId({ ...campaign, ...data }, currentEmpresa.id) : campaign));
+  };
+
+  const deleteCampaign = (id: string) => {
+    setCampaigns(prev => prev.filter(campaign => campaign.id !== id));
+  };
+
   return (
     <AppContext.Provider value={{
-      currentEmpresa, currentUser, products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, settings, readGuides, theme,
+      currentEmpresa, currentUser, products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, settings, readGuides, theme,
       hasPermission, setTheme, updateProduct, addProduct, deleteProduct, 
       updateStockItem, addStockItem, deleteStockItem,
       updateSupplier, addSupplier, deleteSupplier,
@@ -531,7 +697,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       transferTable, mergeTables, reserveTable, clearTable,
       addCustomer, updateCustomer, deleteCustomer,
       addCollaborator, updateCollaborator, deleteCollaborator,
-      addStockMovement, updateSettings, toggleGuideRead, importData, exportData, resetToMocks
+      addStockMovement,
+      addDeliveryOrder, updateDeliveryOrder, cancelDeliveryOrder, addEntregador, updateEntregador,
+      updateMenuConfig, updateProductMenuDigital,
+      addPromotion, updatePromotion, deletePromotion,
+      addCombo, updateCombo, deleteCombo,
+      updateLoyaltyConfig, addLoyaltyEntry,
+      addCampaign, updateCampaign, deleteCampaign,
+      updateSettings, toggleGuideRead, importData, exportData, resetToMocks
     }}>
       {children}
     </AppContext.Provider>

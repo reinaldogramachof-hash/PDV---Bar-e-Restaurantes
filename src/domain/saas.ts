@@ -9,9 +9,12 @@ export const STORAGE_PREFIX = 'gestao-gastro';
 
 export type ModuleId =
   | 'dashboard'
+  | 'intelligence'
   | 'pdv'
   | 'mesas'
   | 'delivery'
+  | 'cardapio-digital'
+  | 'vendas'
   | 'cozinha'
   | 'estoque'
   | 'caixa'
@@ -27,14 +30,17 @@ export type ModuleId =
 
 export const planModules: Record<Plano, ModuleId[]> = {
   essencial: ['pdv', 'mesas', 'caixa', 'produtos', 'relatorios'],
-  profissional: ['pdv', 'mesas', 'caixa', 'produtos', 'relatorios', 'cozinha', 'estoque', 'clientes', 'fornecedores'],
+  profissional: ['pdv', 'mesas', 'caixa', 'produtos', 'cardapio-digital', 'vendas', 'relatorios', 'cozinha', 'estoque', 'clientes', 'fornecedores'],
   gestao: [
     'dashboard',
+    'intelligence',
     'pdv',
     'mesas',
     'delivery',
     'caixa',
     'produtos',
+    'cardapio-digital',
+    'vendas',
     'relatorios',
     'cozinha',
     'estoque',
@@ -93,9 +99,12 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
 
 export const modulePermissions: Record<ModuleId, Permission> = {
   dashboard: 'dashboard:read',
+  intelligence: 'dashboard:read',
   pdv: 'pdv:write',
   mesas: 'mesas:write',
   delivery: 'delivery:write',
+  'cardapio-digital': 'produtos:write',
+  vendas: 'produtos:write',
   cozinha: 'cozinha:write',
   estoque: 'estoque:write',
   caixa: 'caixa:write',
@@ -123,6 +132,14 @@ export const scopedCollections = [
   'customers',
   'collaborators',
   'stockMovements',
+  'deliveryOrders',
+  'entregadores',
+  'menuConfig',
+  'promotions',
+  'combos',
+  'loyaltyConfig',
+  'loyaltyEntries',
+  'campaigns',
   'settings',
   'readGuides',
 ] as const;
