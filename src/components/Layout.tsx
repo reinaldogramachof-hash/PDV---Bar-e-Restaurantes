@@ -6,7 +6,7 @@ import {
   ChefHat,
   ChevronLeft,
   Crown,
-  LifeBuoy,
+  Headset,
   LineChart,
   LayoutDashboard,
   Menu,
@@ -89,7 +89,7 @@ const navGroups = [
       { id: 'manual', icon: BookOpen, label: 'Manual de Uso' },
       { id: 'seguranca', icon: Shield, label: 'Segurança' },
       { id: 'configuracoes', icon: Settings, label: 'Configurações' },
-      { id: 'suporte', icon: LifeBuoy, label: 'Suporte' },
+      { id: 'suporte', icon: Headset, label: 'Suporte' },
     ],
   },
 ] as const;

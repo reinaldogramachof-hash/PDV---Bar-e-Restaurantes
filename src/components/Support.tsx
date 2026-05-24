@@ -1,7 +1,7 @@
 import React from 'react';
 import { useApp } from '../store/AppContext';
 import { 
-  LifeBuoy, 
+  Headset,
   MessageCircle, 
   Mail, 
   Phone, 
@@ -52,7 +52,7 @@ export const Support: React.FC = () => {
       {/* Header section */}
       <div className="text-center space-y-4">
         <div className="inline-flex p-4 rounded-3xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] mb-4">
-          <LifeBuoy className="w-10 h-10" />
+          <Headset className="w-10 h-10" />
         </div>
         <h1 className="text-xl font-semibold">Central de Suporte</h1>
         <p className="text-sm font-medium opacity-60 max-w-lg mx-auto">
