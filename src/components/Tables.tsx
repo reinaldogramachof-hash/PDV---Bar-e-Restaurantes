@@ -13,6 +13,9 @@ interface StatCardProps {
   panelClass: string;
 }
 
+const TABLE_STATUS_FILTERS = ['todos', 'livre', 'ocupada', 'aguardando', 'reservada'] as const;
+type TableStatusFilter = typeof TABLE_STATUS_FILTERS[number];
+
 const formatCurrency = (value: number) =>
   `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -43,7 +46,8 @@ export const Tables: React.FC = () => {
   const isDark = theme === 'dark';
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'todos' | 'livre' | 'ocupada' | 'aguardando' | 'reservada'>('todos');
+  const [filter, setFilter] = useState<TableStatusFilter>('todos');
+  const [sectorFilter, setSectorFilter] = useState('Todos');
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedForReservation, setSelectedForReservation] = useState<number[]>([]);
   const [reservationReason, setReservationReason] = useState('');
@@ -55,11 +59,13 @@ export const Tables: React.FC = () => {
   const reservedCount = tables.filter(table => table.status === 'reservada').length;
   const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
   const fieldClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
+  const sectors = Array.from(new Set(tables.map(table => table.sector).filter((sector): sector is string => Boolean(sector?.trim()))));
 
   const filteredTables = tables.filter(table => {
     const matchesSearch = table.number.toString().includes(searchTerm);
     const matchesFilter = filter === 'todos' || table.status === filter;
-    return matchesSearch && matchesFilter;
+    const matchesSector = sectorFilter === 'Todos' || table.sector === sectorFilter;
+    return matchesSearch && matchesFilter && matchesSector;
   });
 
   const handleTableClick = (number: number) => {
@@ -99,10 +105,10 @@ export const Tables: React.FC = () => {
 
         <div className="flex flex-col lg:flex-row justify-between items-center gap-4 pt-5 border-t border-current/5">
           <div className={`flex p-1 gap-1 rounded-panel border w-full lg:w-fit overflow-x-auto scrollbar-none ${fieldClass}`}>
-            {['todos', 'livre', 'ocupada', 'aguardando', 'reservada'].map(item => (
+            {TABLE_STATUS_FILTERS.map(item => (
               <button
                 key={item}
-                onClick={() => setFilter(item as 'todos' | 'livre' | 'ocupada' | 'aguardando' | 'reservada')}
+                onClick={() => setFilter(item)}
                 className={`flex-1 lg:flex-none px-4 py-2 rounded-control text-sm font-medium transition-all ${filter === item ? 'bg-accent text-white' : isDark ? 'text-muted hover:bg-surface hover:text-text' : 'text-muted-light hover:bg-surface-light hover:text-text-light'}`}
               >
                 {item}
@@ -131,6 +137,24 @@ export const Tables: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {sectors.length > 0 && (
+          <div className={`flex p-1 gap-1 rounded-panel border w-full overflow-x-auto scrollbar-none ${fieldClass}`}>
+            {['Todos', ...sectors].map(sector => (
+              <button
+                key={sector}
+                onClick={() => setSectorFilter(sector)}
+                className={`shrink-0 px-4 py-2 rounded-control text-sm font-medium transition-all ${
+                  sectorFilter === sector
+                    ? 'bg-accent text-white'
+                    : isDark ? 'text-muted hover:bg-surface hover:text-text' : 'text-muted-light hover:bg-surface-light hover:text-text-light'
+                }`}
+              >
+                {sector}
+              </button>
+            ))}
+          </div>
+        )}
 
       </div>
 

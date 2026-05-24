@@ -215,6 +215,7 @@ export interface Table {
   empresaId: string;
   number: number;
   status: 'livre' | 'ocupada' | 'aguardando' | 'reservada';
+  sector?: string;
   activeOrderId?: string;
   reservationReason?: string;
 }
