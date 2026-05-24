@@ -48,77 +48,64 @@ export const Support: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-700">
-      {/* Header section */}
-      <div className="text-center space-y-4">
-        <div className="inline-flex p-4 rounded-3xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] mb-4">
-          <Headset className="w-10 h-10" />
+    <div className="max-w-4xl mx-auto space-y-5 animate-in fade-in duration-700 pb-8">
+      {/* Header */}
+      <div className="flex items-center gap-4 border-b border-dashed border-current/10 pb-5">
+        <div className="w-10 h-10 rounded-panel bg-[var(--color-accent)]/10 flex items-center justify-center shrink-0">
+          <Headset className="w-5 h-5 text-[var(--color-accent)]" />
         </div>
-        <h1 className="text-xl font-semibold">Central de Suporte</h1>
-        <p className="text-sm font-medium opacity-60 max-w-lg mx-auto">
-          Estamos aqui para ajudar você a tirar o máximo proveito do {APP_NAME}.
-        </p>
+        <div>
+          <h1 className="text-xl font-semibold">Central de Suporte</h1>
+          <p className="text-xs text-muted">Estamos aqui para ajudar você a tirar o máximo proveito do {APP_NAME}</p>
+        </div>
       </div>
 
       {/* Contact Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {contactMethods.map((method, i) => (
           <motion.a
             key={i}
             href={method.link}
             target="_blank"
             rel="noopener noreferrer"
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className={`group p-8 rounded-panel border transition-all hover:scale-[1.02] active:scale-95
-              ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-accent)]/40' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20 hover:border-[var(--color-accent)]/40'}`}
+            transition={{ delay: i * 0.08 }}
+            className={`group p-5 rounded-panel border transition-all hover:border-[var(--color-accent)]/30
+              ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-sm hover:shadow-md'}`}
           >
-            <div className={`w-14 h-14 rounded-2xl ${method.bg} ${method.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-              <method.icon className="w-7 h-7" />
+            <div className={`w-9 h-9 rounded-control ${method.bg} ${method.color} flex items-center justify-center mb-4`}>
+              <method.icon className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-medium opacity-40 mb-1">{method.title}</h3>
-            <p className={`${method.title === 'E-mail' ? 'text-sm' : 'text-xl'} font-semibold mb-2 break-all`}>{method.value}</p>
-            <p className="text-[10px] font-medium opacity-50">{method.sub}</p>
+            <p className="text-xs text-muted mb-0.5">{method.title}</p>
+            <p className="text-sm font-semibold break-all leading-snug">{method.value}</p>
+            <p className="text-xs text-muted mt-1">{method.sub}</p>
           </motion.a>
         ))}
       </div>
 
       {/* Website Card */}
-      <div className={`p-10 rounded-section border overflow-hidden relative
-        ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/30'}`}>
-        
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-accent)]/5 blur-[100px] -mr-32 -mt-32" />
-        
-        <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-          <div className="space-y-6 flex-1 text-center md:text-left">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Suporte Plena Informática</h2>
-              <p className="text-sm font-medium opacity-70 leading-relaxed max-w-md">
-                Acesse nosso site e conheça outras soluções.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex-shrink-0">
-            <a 
-              href="https://www.plenainformatica.com.br" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 px-10 py-6 bg-[var(--color-accent)] text-white rounded-section font-medium text-[11px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-105 active:scale-95 transition-all"
-            >
-              Visitar Nosso Site
-              <ExternalLink className="w-5 h-5" />
-            </a>
-          </div>
+      <div className={`p-5 rounded-panel border flex flex-col md:flex-row items-center justify-between gap-4
+        ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-sm'}`}>
+        <div>
+          <h2 className="text-sm font-semibold">Suporte Plena Informática</h2>
+          <p className="text-xs text-muted mt-0.5">Acesse nosso site e conheça outras soluções</p>
         </div>
+        <a
+          href="https://www.plenainformatica.com.br"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-4 h-10 bg-[var(--color-accent)] text-white rounded-control font-medium text-xs flex items-center gap-2 hover:opacity-90 transition-all shrink-0"
+        >
+          Visitar Nosso Site
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
       </div>
 
       {/* Footer Text */}
-      <div className="text-center opacity-30 py-8">
-        <p className="text-[10px] font-medium">{APP_NAME} - Versão 1.0.0</p>
-        <p className="text-[8px] font-medium mt-2">© 2026 Plena Informática. Todos os direitos reservados.</p>
-      </div>
+      <p className="text-center text-xs text-muted opacity-50 pt-2">
+        {APP_NAME} v1.0.0 — © 2026 Plena Informática. Todos os direitos reservados.
+      </p>
     </div>
   );
 }

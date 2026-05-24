@@ -19,11 +19,11 @@ export const Collaborators: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'geral' | 'trabalhista'>('geral');
   const [editingMember, setEditingMember] = useState<any>(null);
-  const [formData, setFormData] = useState({ 
-    name: '', 
-    email: '', 
-    role: '', 
-    permissions: 'waiter' as any, 
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: '',
+    permissions: 'waiter' as any,
     status: 'active' as any,
     observations: '',
     contractType: 'CLT' as any,
@@ -31,7 +31,8 @@ export const Collaborators: React.FC = () => {
     commissionRate: 0,
     document: '',
     address: '',
-    bankDetails: ''
+    bankDetails: '',
+    password: ''
   });
 
   const stats = [
@@ -44,11 +45,11 @@ export const Collaborators: React.FC = () => {
   const handleOpenModal = (member?: any) => {
     if (member) {
       setEditingMember(member);
-      setFormData({ 
-        name: member.name, 
-        email: member.email, 
-        role: member.role, 
-        permissions: member.permissions, 
+      setFormData({
+        name: member.name,
+        email: member.email,
+        role: member.role,
+        permissions: member.permissions,
         status: member.status,
         observations: member.observations || '',
         contractType: member.contractType || 'CLT',
@@ -56,23 +57,25 @@ export const Collaborators: React.FC = () => {
         commissionRate: member.commissionRate || 0,
         document: member.document || '',
         address: member.address || '',
-        bankDetails: member.bankDetails || ''
+        bankDetails: member.bankDetails || '',
+        password: member.password || ''
       });
     } else {
       setEditingMember(null);
-      setFormData({ 
-        name: '', 
-        email: '', 
-        role: '', 
-        permissions: 'waiter', 
-        status: 'active', 
+      setFormData({
+        name: '',
+        email: '',
+        role: '',
+        permissions: 'waiter',
+        status: 'active',
         observations: '',
         contractType: 'CLT',
         salary: 0,
         commissionRate: 0,
         document: '',
         address: '',
-        bankDetails: ''
+        bankDetails: '',
+        password: ''
       });
     }
     setActiveTab('geral');
@@ -376,6 +379,17 @@ export const Collaborators: React.FC = () => {
                     <div className="space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Endereço Residencial</label>
                       <input value={formData.address} onChange={e => setFormData({ ...formData, address: e.target.value })} className={`w-full p-4 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`} />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-2">Senha de Autorização</label>
+                      <input
+                        type="password"
+                        value={formData.password}
+                        onChange={e => setFormData({ ...formData, password: e.target.value })}
+                        placeholder="Senha usada no SecurityGate"
+                        className={`w-full p-4 rounded-2xl border outline-none font-bold text-sm transition-all focus:ring-4 focus:ring-[var(--color-accent)]/10 ${isDark ? 'bg-[var(--color-app-base)] border-[var(--color-border)] focus:border-[var(--color-accent)]/40' : 'bg-gray-50 border-gray-200 focus:border-pink-300'}`}
+                      />
+                      <p className="text-[9px] opacity-30 ml-2">Deixe em branco para desabilitar autenticação por senha neste colaborador.</p>
                     </div>
                   </div>
                 ) : (
