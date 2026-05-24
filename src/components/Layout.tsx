@@ -20,6 +20,7 @@ import {
   QrCode,
   Settings,
   Shield,
+  ShoppingBag,
   Sun,
   Table2,
   Truck,
@@ -68,6 +69,7 @@ const navGroups = [
       { id: 'pdv', icon: MonitorPlay, label: 'PDV (Balcão)' },
       { id: 'mesas', icon: Table2, label: 'Mesas' },
       { id: 'delivery', icon: Bike, label: 'Delivery' },
+      { id: 'pedidos-online', icon: ShoppingBag, label: 'Pedidos Online' },
       { id: 'cozinha', icon: ChefHat, label: 'Cozinha' },
       { id: 'caixa', icon: Wallet, label: 'Caixa' },
     ],
@@ -106,6 +108,7 @@ const viewLabels: Record<View, string> = {
   pdv: 'PDV Balcão',
   mesas: 'Mesas',
   delivery: 'Delivery',
+  'pedidos-online': 'Pedidos Online',
   'cardapio-digital': 'Cardápio Digital',
   vendas: 'Vendas',
   cozinha: 'Cozinha',
@@ -205,6 +208,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
             {visibleNavGroups.map((group) => {
               const filteredItems = group.items.filter(item => {
                 if (item.id === 'master') return currentUser.role === 'master';
+                if (item.id === 'pedidos-online') return currentEmpresa.plano !== 'essencial';
                 return canAccessModule(currentEmpresa.plano, currentUser.role, item.id as ModuleId);
               });
 

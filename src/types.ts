@@ -89,6 +89,7 @@ export interface MenuConfig {
   footerMessage?: string;
   showPrices: boolean;
   allowCallWaiter: boolean;
+  whatsappPhone?: string; // formato: 11999999999 (sem +55, sem espaços)
 }
 
 export interface Product extends BaseEntity {
@@ -397,6 +398,44 @@ export interface MasterNotificationDraft {
   publishedAt: string;
   expiresAt?: string;
   status: 'draft' | 'published';
+}
+
+// ─── Central de Pedidos Online ───────────────────────────────────────────────
+
+export type OnlineOrderStatus =
+  | 'recebido'
+  | 'confirmado'
+  | 'preparo'
+  | 'pronto'
+  | 'entregue'
+  | 'cancelado';
+
+export type OnlineOrderChannel = 'mesa' | 'delivery' | 'balcao';
+
+export interface CartItem {
+  productId: string;
+  name: string;
+  qty: number;
+  price: number;
+  notes?: string;
+}
+
+export interface OnlineOrder extends BaseEntity {
+  channel: OnlineOrderChannel;
+  status: OnlineOrderStatus;
+  items: CartItem[];
+  customerName: string;
+  customerPhone?: string;
+  tableRef?: string;
+  address?: string;
+  notes?: string;
+  total: number;
+  createdAt: string;
+  confirmedAt?: string;
+  readyAt?: string;
+  deliveredAt?: string;
+  canceledAt?: string;
+  cancelReason?: string;
 }
 
 export interface AppSettings {

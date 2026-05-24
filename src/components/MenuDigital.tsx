@@ -199,6 +199,17 @@ export const MenuDigital: React.FC = () => {
               <span className="text-xs text-muted">Mensagem de rodape</span>
               <input maxLength={120} value={draftConfig.footerMessage || ''} onChange={event => setDraftConfig(prev => ({ ...prev, footerMessage: event.target.value }))} className={`w-full h-10 px-3 rounded-control border bg-transparent text-sm ${isDark ? 'border-border' : 'border-border-light'}`} />
             </label>
+            <label className="space-y-2 block">
+              <span className="text-xs text-muted">WhatsApp para pedidos</span>
+              <input
+                maxLength={20}
+                value={draftConfig.whatsappPhone || ''}
+                onChange={event => setDraftConfig(prev => ({ ...prev, whatsappPhone: event.target.value }))}
+                placeholder="11999999999"
+                className={`w-full h-10 px-3 rounded-control border bg-transparent text-sm ${isDark ? 'border-border' : 'border-border-light'}`}
+              />
+              <p className="text-[11px] text-muted">Usado pelo cardápio digital para enviar pedidos. Formato: 11999999999 (sem +55, sem espaços)</p>
+            </label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {[
                 ['Exibir precos', 'showPrices'],

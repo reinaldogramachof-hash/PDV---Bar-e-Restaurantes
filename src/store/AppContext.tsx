@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission, DeliveryOrder, Entregador, MenuConfig, MenuDigitalConfig, Promotion, Combo, LoyaltyConfig, LoyaltyEntry, Campaign } from '../types';
+import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission, DeliveryOrder, Entregador, MenuConfig, MenuDigitalConfig, Promotion, Combo, LoyaltyConfig, LoyaltyEntry, Campaign, OnlineOrder, OnlineOrderStatus } from '../types';
 import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers, mockSettings } from './mock';
 import { DEFAULT_EMPRESA_ID, buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, hasRolePermission, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId } from '../domain/saas';
 
@@ -26,6 +26,7 @@ interface AppState {
   loyaltyConfig: LoyaltyConfig;
   loyaltyEntries: LoyaltyEntry[];
   campaigns: Campaign[];
+  onlineOrders: OnlineOrder[];
   settings: AppSettings;
   readGuides: string[];
   theme: 'dark' | 'light';
@@ -82,6 +83,9 @@ interface AppContextType extends AppState {
   addCampaign: (campaign: Omit<Campaign, 'id' | 'empresaId' | 'createdAt'>) => void;
   updateCampaign: (id: string, data: Partial<Campaign>) => void;
   deleteCampaign: (id: string) => void;
+  addOnlineOrder: (order: Omit<OnlineOrder, 'id' | 'empresaId' | 'createdAt' | 'updatedAt'>) => void;
+  updateOnlineOrderStatus: (id: string, status: OnlineOrderStatus, extra?: Partial<OnlineOrder>) => void;
+  cancelOnlineOrder: (id: string, reason: string) => void;
   updateSettings: (settings: AppSettings) => void;
   toggleGuideRead: (guideId: string) => void;
   importData: (json: string) => void;
@@ -202,6 +206,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [loyaltyConfig, setLoyaltyConfig] = useState<LoyaltyConfig>(() => parseScopedJSON('loyaltyConfig', currentEmpresa.id, defaultLoyaltyConfig, true));
   const [loyaltyEntries, setLoyaltyEntries] = useState<LoyaltyEntry[]>(() => parseScopedJSON('loyaltyEntries', currentEmpresa.id, [], true));
   const [campaigns, setCampaigns] = useState<Campaign[]>(() => parseScopedJSON('campaigns', currentEmpresa.id, [], true));
+  const [onlineOrders, setOnlineOrders] = useState<OnlineOrder[]>(() => parseScopedJSON('online-orders', currentEmpresa.id, [], true));
   const [settings, setSettings] = useState<AppSettings>(() => parseScopedJSON('settings', currentEmpresa.id, mockSettings, true));
   const [readGuides, setReadGuides] = useState<string[]>(() => parseScopedJSON('readGuides', currentEmpresa.id, []));
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -230,10 +235,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(buildScopedStorageKey('loyaltyConfig', currentEmpresa.id), JSON.stringify(loyaltyConfig));
     localStorage.setItem(buildScopedStorageKey('loyaltyEntries', currentEmpresa.id), JSON.stringify(loyaltyEntries));
     localStorage.setItem(buildScopedStorageKey('campaigns', currentEmpresa.id), JSON.stringify(campaigns));
+    localStorage.setItem(buildScopedStorageKey('online-orders', currentEmpresa.id), JSON.stringify(onlineOrders));
     localStorage.setItem(buildScopedStorageKey('settings', currentEmpresa.id), JSON.stringify(settings));
     localStorage.setItem(buildScopedStorageKey('readGuides', currentEmpresa.id), JSON.stringify(readGuides));
     localStorage.setItem(buildScopedStorageKey('theme', currentEmpresa.id), theme);
-  }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, settings, readGuides, theme, currentEmpresa.id]);
+  }, [products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, settings, readGuides, theme, currentEmpresa.id]);
 
   const resetToMocks = () => {
     clearAppStorage(currentEmpresa.id);
@@ -687,9 +693,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCampaigns(prev => prev.filter(campaign => campaign.id !== id));
   };
 
+  const addOnlineOrder = (order: Omit<OnlineOrder, 'id' | 'empresaId' | 'createdAt' | 'updatedAt'>) => {
+    const now = new Date().toISOString();
+    setOnlineOrders(prev => [...prev, {
+      ...order,
+      id: `online-order-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      empresaId: currentEmpresa.id,
+      createdAt: now,
+      updatedAt: now,
+    }]);
+  };
+
+  const updateOnlineOrderStatus = (id: string, status: OnlineOrderStatus, extra?: Partial<OnlineOrder>) => {
+    const now = new Date().toISOString();
+    setOnlineOrders(prev => prev.map(o =>
+      o.id === id ? { ...o, ...extra, status, updatedAt: now } : o
+    ));
+  };
+
+  const cancelOnlineOrder = (id: string, reason: string) => {
+    const now = new Date().toISOString();
+    setOnlineOrders(prev => prev.map(o =>
+      o.id === id ? { ...o, status: 'cancelado', cancelReason: reason, canceledAt: now, updatedAt: now } : o
+    ));
+  };
+
   return (
     <AppContext.Provider value={{
-      currentEmpresa, currentUser, products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, settings, readGuides, theme,
+      currentEmpresa, currentUser, products, stockItems, suppliers, tables, waiters, orders, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, settings, readGuides, theme,
       hasPermission, setTheme, updateProduct, addProduct, deleteProduct, 
       updateStockItem, addStockItem, deleteStockItem,
       updateSupplier, addSupplier, deleteSupplier,
@@ -704,6 +735,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addCombo, updateCombo, deleteCombo,
       updateLoyaltyConfig, addLoyaltyEntry,
       addCampaign, updateCampaign, deleteCampaign,
+      addOnlineOrder, updateOnlineOrderStatus, cancelOnlineOrder,
       updateSettings, toggleGuideRead, importData, exportData, resetToMocks
     }}>
       {children}

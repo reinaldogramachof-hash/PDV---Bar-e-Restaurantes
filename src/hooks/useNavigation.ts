@@ -1,26 +1,27 @@
 import { useState } from 'react';
 
-export type View = 
+export type View =
   | 'master'
-  | 'dashboard' 
+  | 'dashboard'
   | 'intelligence'
-  | 'pdv' 
-  | 'mesas' 
+  | 'pdv'
+  | 'mesas'
   | 'delivery'
   | 'cardapio-digital'
   | 'vendas'
-  | 'estoque' 
-  | 'caixa' 
-  | 'relatorios' 
-  | 'configuracoes' 
-  | 'manual' 
-  | 'clientes' 
-  | 'colaboradores' 
+  | 'estoque'
+  | 'caixa'
+  | 'relatorios'
+  | 'configuracoes'
+  | 'manual'
+  | 'clientes'
+  | 'colaboradores'
   | 'fornecedores'
   | 'produtos'
   | 'cozinha'
   | 'seguranca'
-  | 'suporte';
+  | 'suporte'
+  | 'pedidos-online';
 
 export function useNavigation() {
   const getInitialView = (): View => {

@@ -30,6 +30,7 @@ const Support = lazy(() => import('./components/Support').then(module => ({ defa
 const Kitchen = lazy(() => import('./components/Kitchen').then(module => ({ default: module.Kitchen })));
 const Settings = lazy(() => import('./components/Settings').then(module => ({ default: module.Settings })));
 const Security = lazy(() => import('./components/Security').then(module => ({ default: module.Security })));
+const OnlineOrders = lazy(() => import('./components/OnlineOrders').then(module => ({ default: module.OnlineOrders })));
 
 const LoadingSpinner = () => (
   <div className="h-full w-full min-h-[400px] flex items-center justify-center">
@@ -108,6 +109,7 @@ const AppContent = () => {
       case 'suporte': return <Support />;
       case 'configuracoes': return <Settings />;
       case 'seguranca': return <PlanGuard moduleId="seguranca"><Security /></PlanGuard>;
+      case 'pedidos-online': return <OnlineOrders />;
       default: return (
         <div className="h-full flex flex-col items-center justify-center gap-4 opacity-50">
           <p className="text-xl font-semibold">Em construcao</p>
