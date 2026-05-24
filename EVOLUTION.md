@@ -5,6 +5,98 @@
 
 ---
 
+## [2026-05-24] Revisão Operacional — Módulos PDV, Mesas, Delivery, Pedidos Online, Cozinha e Caixa
+
+**Contexto:** Antes de avançar para a Fase 3 (Supabase), todos os módulos operacionais passaram por auditoria completa (Antigravity) e aplicação de melhorias aprovadas (Codex). Foco em qualidade de código, lógica de negócio e UX real de operação.
+
+**Metodologia:** Claude (Arquiteto) → Antigravity audita → Reinaldo aprova → Codex implementa → Claude valida.
+
+---
+
+### PDV (Balcão)
+**Melhorias aplicadas:**
+- `PDV-001`: carrinho do balcão persistido por empresa no `AppContext` via `buildScopedStorageKey` — sem perda ao navegar ou recarregar
+- `PDV-002`: interface `CountInputProps` explícita em `OrderModal.tsx` — eliminado `any`
+- `PDV-003`: confirmação antes de limpar carrinho — cancelamento acidental bloqueado
+- `PDV-004`: lógica de rateio de combo extraída para `allocateComboItems` em `salesService.ts` — função pura com teste
+- `PDV-005`: pagamento parcial por mesa — `PartialPaymentItem[]` em `Order`, mesa fecha automaticamente ao quitar saldo
+
+**Commits:** `b7db058`, `aecebcb`, `ba385ce`
+
+---
+
+### Mesas
+**Melhorias aplicadas:**
+- `MESA-001`: interface `StatCardProps` explícita em `Tables.tsx` — eliminado `any`
+- `MESA-002`: valor parcial da comanda exibido no card da mesa no mapa do salão
+- `MESA-004`: botão "Juntar Mesas" na UI — expõe `mergeTables` do `AppContext` com confirmação
+- `MESA-005`: campo `sector?: string` em `Table` + sub-abas de filtro por setor no mapa
+
+**Decisão de produto:** `MESA-003` rejeitado — mesa ocupada sem itens permanece "ocupada" por design intencional (controle manual do operador).
+
+**Commits:** `db14bb7`, `a644081`, `a3ae797`, `7971d7e`
+
+---
+
+### Delivery
+**Melhorias aplicadas:**
+- `DEL-003`: modelo de repasse por entregador (`repasseType`, `repasseValue`) + tabela de repasse na aba Financeiro
+- `DEL-004`: cancelamento com motivo obrigatório (select de opções) + alerta visual de pedidos atrasados no kanban
+- `DEL-005`: identidade visual por coluna do kanban (laranja/roxo/verde/vermelho)
+- `DEL-006`: enum de pagamento unificado com `PaymentMethod` global — eliminado `cartao_credito`/`cartao_debito` divergentes
+
+**Débito técnico documentado (defer Fase 3):**
+- `DEL-001`: integração com catálogo de produtos no formulário Novo Pedido
+- `DEL-002`: receita de delivery integrada ao `CashierSession` — resolvido parcialmente no CAI-002
+
+**Commit:** `f96bf0a`
+
+---
+
+### Pedidos Online
+**Melhorias aplicadas:**
+- `ONL-001`: HEX hardcoded substituídos por `var(--color-*)` em `CustomerMenuView.tsx`
+- `ONL-002`: receita de pedidos online integrada ao `CashierSession` via `registerOnlineSale`
+- `ONL-003`: baixa de estoque ao confirmar pedido online via `applyOnlineOrderStockDeduction`
+- `ONL-004`: alerta sonoro (`Audio`) + visual pulse para pedidos ociosos >60s na coluna "Recebido"
+- `ONL-005`: chips de motivo rápido no cancelamento — substituído `textarea` obrigatório
+
+**Arquivo novo:** `src/services/onlineOrdersService.ts` com helper e teste.
+
+**Commit:** `a4f5cd9`
+
+---
+
+### Cozinha (KDS)
+**Melhorias aplicadas:**
+- `COZ-001`: KDS exibe pedidos de todas as origens (mesa, balcão, delivery, online) com ícone identificador por canal — eliminada restrição `mode === 'mesa'`
+- `COZ-002`: modo KDS modular configurável em Settings: `display` (visualização passiva) ou `interactive` (cozinheiro marca status dos itens). `kitchenStatus?: KitchenItemStatus` em `OrderItem`
+- `COZ-003`: timer de atraso usa `addedAt` do item mais antigo não servido — sobremesa lançada 2h depois não aparece como "Atrasada 120min"
+- `COZ-004`: pause/play do auto-slide + setas de navegação manual (`ChevronLeft`/`ChevronRight`)
+- `COZ-005`: filtro por setor no topo do KDS (Todos / Cozinha / Bar) via `isBarCategory`
+
+**Decisão arquitetural:** COZ-002 implementado com arquitetura modular por decisão do Reinaldo — futuro produto terá as duas opções e o cliente escolhe em Settings.
+
+**Commit:** `754f6c8`
+
+---
+
+### Caixa
+**Melhorias aplicadas:**
+- `CAI-001`: etapa de contagem física de gaveta no fechamento — campo opcional com feedback em tempo real (Sobra/Falta/Conferido). `countedCash` e `cashBreakdown` persistidos em `CashierSession`. Coluna "Quebra" no histórico
+- `CAI-002`: receita de `deliveryOrders` com `status === 'entregue'` integrada ao `salesTotal`, `ordersCount` e `paymentBreakdown` do fechamento — eliminada cegueira contábil do delivery
+- `CAI-003`: toggle Saída/Entrada no form de movimentação — `entryType?: 'saida' | 'entrada'` em `Expense`. Suprimento de troco documentado e somado corretamente ao saldo
+- `CAI-004`: `cashierHistory` limitado a 30 sessões via `slice(-30)` — prevenção de `QuotaExceededError` em produção após meses de uso
+
+**Commit:** `61636da`
+
+---
+
+**Branch:** `feat/port-logica-negocio`
+**Status:** Aguardando QA Reinaldo → merge para main → início Fase 3 (Supabase)
+
+---
+
 ## [2026-05-22] Densidade Visual Desktop-First
 
 **Contexto:** Sistema original com espaçamentos generosos (mobile-friendly). Público-alvo opera em estações desktop em ambiente de restaurante.
