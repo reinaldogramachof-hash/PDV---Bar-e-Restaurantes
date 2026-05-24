@@ -1,19 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import {
-  AlertTriangle,
-  CheckCircle2,
   Clock,
+  Edit3,
   Package,
+  Save,
   ShoppingBag,
   Table as TableIcon,
+  Trash2,
   Trophy,
   TrendingUp,
+  X,
 } from 'lucide-react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
+import { SecurityGate } from './SecurityGate';
+import { buildEditedClosedOrder, getAttendanceRanking } from '../services/dashboardOrderTools';
+import { Order, PaymentMethod } from '../types';
 
 export const Dashboard: React.FC = () => {
-  const { orders, tables, products, theme } = useApp();
+  const { orders, tables, products, expenses, collaborators, theme, updateOrder, deleteOrder } = useApp();
   const isDark = theme === 'dark';
 
   const closedOrders = orders.filter(o => o.status === 'closed');
@@ -21,6 +26,17 @@ export const Dashboard: React.FC = () => {
   const totalOrders = closedOrders.length;
   const avgTicket = totalOrders > 0 ? salesToday / totalOrders : 0;
   const occupiedTables = tables.filter(t => t.status !== 'livre').length;
+  const sortedOperators = getAttendanceRanking(closedOrders, collaborators);
+  const expensesToday = expenses.reduce((acc, e) => acc + e.amount, 0);
+  const netProfit = salesToday - expensesToday;
+
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [subtotalInput, setSubtotalInput] = useState('');
+  const [serviceInput, setServiceInput] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('dinheiro');
+  const [gateOpen, setGateOpen] = useState(false);
+  const [gateTitle, setGateTitle] = useState('');
+  const [onGateSuccess, setOnGateSuccess] = useState<() => void>(() => () => {});
 
   const categorySales = closedOrders.flatMap(o => o.items).reduce<Record<string, number>>((acc, item) => {
     acc[item.product.category] = (acc[item.product.category] || 0) + item.price * item.quantity;
@@ -41,7 +57,37 @@ export const Dashboard: React.FC = () => {
     .sort((a, b) => b.qty - a.qty)
     .slice(0, 5);
 
-  const productsWithoutRecipe = products.filter(p => !p.recipe || p.recipe.length === 0).slice(0, 5);
+  const startEditOrder = (order: Order) => {
+    setEditingOrder(order);
+    setSubtotalInput(order.subtotal.toString().replace('.', ','));
+    setServiceInput(order.serviceCharge.toString().replace('.', ','));
+    setPaymentMethod(order.payments[0]?.method || 'dinheiro');
+  };
+
+  const parseMoney = (value: string) => parseFloat(value.replace(',', '.'));
+
+  const handleSaveOrderEdit = () => {
+    if (!editingOrder) return;
+    const subtotal = parseMoney(subtotalInput);
+    const serviceCharge = parseMoney(serviceInput);
+    if (isNaN(subtotal) || subtotal < 0 || isNaN(serviceCharge) || serviceCharge < 0) return;
+    setGateTitle('Autorizar Edição de Pedido');
+    setOnGateSuccess(() => () => {
+      updateOrder(buildEditedClosedOrder(editingOrder, subtotal, serviceCharge, paymentMethod));
+      setEditingOrder(null);
+    });
+    setGateOpen(true);
+  };
+
+  const handleDeleteOrder = (order: Order) => {
+    if (!window.confirm(`Excluir o pedido #${order.id.slice(-6)} no valor de R$ ${order.total.toFixed(2)}?`)) return;
+    setGateTitle('Autorizar Exclusão de Pedido');
+    setOnGateSuccess(() => () => {
+      deleteOrder(order.id);
+      if (editingOrder?.id === order.id) setEditingOrder(null);
+    });
+    setGateOpen(true);
+  };
 
   const kpis = [
     { label: 'Vendas hoje', value: `R$ ${salesToday.toFixed(2)}`, icon: TrendingUp, tone: 'text-success', bg: 'bg-success/10', detail: '+12.5%' },
@@ -138,11 +184,12 @@ export const Dashboard: React.FC = () => {
                   <th className="px-3 py-3">Modo</th>
                   <th className="px-3 py-3">Status</th>
                   <th className="px-3 py-3 text-right">Valor</th>
+                  <th className="px-3 py-3"></th>
                 </tr>
               </thead>
               <tbody className={`divide-y ${isDark ? 'divide-border' : 'divide-border-light'}`}>
                 {recentOrders.map(order => (
-                  <tr key={order.id} className={isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}>
+                  <tr key={order.id} className={`group ${isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}`}>
                     <td className="px-3 py-3 text-muted">#{order.id.slice(-6)}</td>
                     <td className="px-3 py-3 font-medium">
                       {new Date(order.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -159,6 +206,20 @@ export const Dashboard: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-3 py-3 text-right font-semibold">R$ {order.total.toFixed(2)}</td>
+                    <td className="px-3 py-3">
+                      {order.status === 'closed' && (
+                        <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => startEditOrder(order)} title="Editar"
+                            className="w-7 h-7 rounded-control flex items-center justify-center text-accent hover:bg-accent/10 transition-all">
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => handleDeleteOrder(order)} title="Excluir"
+                            className="w-7 h-7 rounded-control flex items-center justify-center text-danger hover:bg-danger/10 transition-all">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -206,28 +267,96 @@ export const Dashboard: React.FC = () => {
 
         <section className={`p-5 rounded-panel border ${panelClass}`}>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="font-semibold text-sm">Ficha técnica</h3>
-            <div className={`w-8 h-8 rounded-panel flex items-center justify-center ${productsWithoutRecipe.length > 0 ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'}`}>
-              {productsWithoutRecipe.length > 0 ? <AlertTriangle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+            <h3 className="font-semibold text-sm">Ranking / Atendimento</h3>
+            <div className="w-8 h-8 rounded-panel bg-success/10 text-success flex items-center justify-center">
+              <Trophy className="w-4 h-4" />
             </div>
           </div>
           <div className="space-y-3">
-            {productsWithoutRecipe.length > 0 ? (
-              productsWithoutRecipe.map(product => (
-                <div key={product.id} className={`flex items-center justify-between p-3 rounded-panel border-l-2 border-warning ${isDark ? 'bg-elevated' : 'bg-elevated-light'}`}>
+            {sortedOperators.length > 0 ? (
+              sortedOperators.map((operator, index) => (
+                <div key={operator.name} className={`flex items-center justify-between p-3 rounded-panel ${isDark ? 'bg-elevated' : 'bg-elevated-light'}`}>
                   <div>
-                    <p className="text-sm font-medium">{product.name}</p>
-                    <p className="text-xs text-muted">Produto sem insumos vinculados</p>
+                    <p className="text-sm font-medium">{operator.name}</p>
+                    <p className="text-xs text-muted">{operator.ordersCount} pedido(s)</p>
                   </div>
-                  <span className="text-xs font-medium text-warning">Revisar</span>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-accent">R$ {operator.total.toFixed(2)}</p>
+                    <p className="text-xs text-muted">#{index + 1}</p>
+                  </div>
                 </div>
               ))
             ) : (
-              <EmptyState icon={CheckCircle2} title="Tudo em dia" description="Os produtos cadastrados possuem ficha técnica vinculada." />
+              <EmptyState icon={Trophy} title="Sem atendimento fechado" description="O ranking aparece após os primeiros pedidos fechados." />
             )}
           </div>
         </section>
       </div>
+
+      <SecurityGate isOpen={gateOpen} onClose={() => setGateOpen(false)} onSuccess={onGateSuccess} title={gateTitle} />
+
+      <AnimatePresence>
+        {editingOrder && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              className={`w-full max-w-lg overflow-hidden rounded-panel border shadow-2xl ${isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light'}`}
+            >
+              <div className="flex items-center justify-between border-b border-current/10 px-5 py-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Editar Pedido</h3>
+                  <p className="text-xs text-muted">#{editingOrder.id.slice(-6)} · {new Date(editingOrder.timestamp).toLocaleString('pt-BR')}</p>
+                </div>
+                <button onClick={() => setEditingOrder(null)}
+                  className={`w-8 h-8 rounded-control flex items-center justify-center ${isDark ? 'bg-elevated hover:bg-border' : 'bg-elevated-light hover:bg-border-light'}`}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="p-5 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  {[{ label: 'Faturamento', value: subtotalInput, set: setSubtotalInput }, { label: 'Taxa de Serviço', value: serviceInput, set: setServiceInput }].map(f => (
+                    <div key={f.label} className="space-y-1.5">
+                      <label className="text-xs text-muted">{f.label}</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted">R$</span>
+                        <input type="text" value={f.value} onChange={e => f.set(e.target.value)}
+                          className={`w-full h-10 pl-8 pr-3 rounded-control border outline-none text-sm font-medium ${isDark ? 'bg-elevated border-border focus:border-accent' : 'bg-elevated-light border-border-light focus:border-accent'}`} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs text-muted">Forma de Pagamento</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {(['dinheiro','credito','debito','pix','vr','va','voucher'] as PaymentMethod[]).map(m => (
+                      <button key={m} onClick={() => setPaymentMethod(m)}
+                        className={`h-9 rounded-control text-xs font-medium border transition-all ${paymentMethod === m ? 'border-accent bg-accent/10 text-accent' : isDark ? 'border-border bg-elevated' : 'border-border-light bg-elevated-light'}`}>
+                        {m.charAt(0).toUpperCase() + m.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className={`flex items-center justify-between rounded-control px-4 py-3 ${isDark ? 'bg-elevated' : 'bg-elevated-light'}`}>
+                  <span className="text-xs text-muted">Total ajustado</span>
+                  <span className="text-lg font-semibold text-accent">R$ {((parseMoney(subtotalInput) || 0) + (parseMoney(serviceInput) || 0)).toFixed(2)}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button onClick={() => handleDeleteOrder(editingOrder)}
+                    className="h-10 rounded-control bg-danger/10 text-danger text-xs font-medium flex items-center justify-center gap-2 hover:bg-danger/20 transition-all">
+                    <Trash2 className="w-4 h-4" /> Excluir
+                  </button>
+                  <button onClick={handleSaveOrderEdit}
+                    className="h-10 rounded-control bg-accent text-white text-xs font-medium flex items-center justify-center gap-2 hover:bg-accent-hover transition-all">
+                    <Save className="w-4 h-4" /> Salvar
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

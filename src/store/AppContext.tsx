@@ -37,6 +37,7 @@ interface AppContextType extends AppState {
   deleteSupplier: (id: string) => void;
   updateTable: (table: Table) => void;
   updateOrder: (order: Order) => void;
+  deleteOrder: (id: string) => void;
   addOrder: (order: Order) => void;
   closeOrder: (order: Order, payments: PaymentItem[], serviceCharge: number) => void;
   addExpense: (expense: Expense) => void;
@@ -281,6 +282,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOrders(prev => prev.map(o => o.id === updatedOrder.id ? ensureEmpresaId(updatedOrder, currentEmpresa.id) : o));
   };
 
+  const deleteOrder = (id: string) => {
+    setOrders(prev => prev.filter(o => o.id !== id));
+  };
+
   const closeOrder = (order: Order, payments: PaymentItem[], serviceCharge: number) => {
     const closedOrder: Order = {
       ...order,
@@ -522,7 +527,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       hasPermission, setTheme, updateProduct, addProduct, deleteProduct, 
       updateStockItem, addStockItem, deleteStockItem,
       updateSupplier, addSupplier, deleteSupplier,
-      updateTable, addOrder, updateOrder, closeOrder, addExpense, updateExpense, deleteExpense, openCashier, closeCashier,
+      updateTable, addOrder, updateOrder, deleteOrder, closeOrder, addExpense, updateExpense, deleteExpense, openCashier, closeCashier,
       transferTable, mergeTables, reserveTable, clearTable,
       addCustomer, updateCustomer, deleteCustomer,
       addCollaborator, updateCollaborator, deleteCollaborator,

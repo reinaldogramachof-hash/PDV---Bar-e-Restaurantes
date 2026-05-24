@@ -178,6 +178,7 @@ export interface Collaborator extends BaseEntity {
   document?: string;
   address?: string;
   bankDetails?: string;
+  password?: string;
 }
 
 export interface Supplier extends BaseEntity {
