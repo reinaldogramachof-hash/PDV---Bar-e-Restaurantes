@@ -34,7 +34,27 @@ git push origin main
 ## 🟡 Fase 3 — Supabase (próxima grande sessão)
 
 Decisão aprovada em 2026-05-24: backend central Supabase multi-tenant.  
+**Projeto Supabase já criado e linkado.** Credenciais salvas em local seguro (acesso exclusivo Claude).  
 Ver detalhes completos em `EVOLUTION.md`.
+
+### Pré-requisitos da sessão (executar antes de começar)
+```bash
+# Instalar Agent Skills do Supabase
+npx skills add supabase/agent-skills
+
+# Adicionar MCP Server (se ainda não feito)
+claude mcp add --scope project --transport http supabase \
+  "https://mcp.supabase.com/mcp?project_ref=fnzwbauyjhbznqynaupv&features=database"
+
+# Autenticar: abrir terminal fora do IDE e rodar
+claude /mcp   # → selecionar supabase → Autenticar
+```
+
+### Variáveis de ambiente (criar .env local — não commitar)
+```env
+VITE_SUPABASE_URL=https://fnzwbauyjhbznqynaupv.supabase.co
+VITE_SUPABASE_ANON_KEY=<ver memória Claude>
+```
 
 ### Sprint 1 — Auth JWT (prioridade máxima)
 - Criar projeto Supabase
