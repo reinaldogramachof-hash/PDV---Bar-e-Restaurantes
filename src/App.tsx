@@ -7,6 +7,8 @@ import { Dashboard } from './components/Dashboard';
 import { MasterDashboard } from './components/MasterDashboard';
 import { LicenseLock } from './components/LicenseLock';
 import { CustomerMenuView } from './components/CustomerMenuView';
+import { LoginPage } from './components/LoginPage';
+import { useAuth } from './hooks/useAuth';
 import { LICENSE_STATUS_URL } from './domain/saas';
 import { checkLicense, LicenseCheckResult } from './services/licenseService';
 import { purgeOldLogs } from './services/auditService';
@@ -128,14 +130,43 @@ const AppContent = () => {
   );
 };
 
+const AuthGate: React.FC = () => {
+  const { session, user, empresa, loading, error, signIn, signOut } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[var(--color-app-base)] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!session || !user || !empresa) {
+    return <LoginPage onSignIn={signIn} />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[var(--color-app-base)] flex items-center justify-center p-4">
+        <div className="text-center space-y-4">
+          <p className="text-[var(--color-danger)]">{error}</p>
+          <button onClick={signOut} className="text-xs text-[var(--color-muted)] underline">Sair</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <AppProvider authUser={user} authEmpresa={empresa}>
+      <AppContent />
+    </AppProvider>
+  );
+};
+
 export default function App() {
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/cardapio/')) {
     return <CustomerMenuView />;
   }
 
-  return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
-  );
+  return <AuthGate />;
 }

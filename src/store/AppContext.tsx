@@ -157,9 +157,14 @@ const clearAppStorage = (empresaId: string) => {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Fase 1: sessão demo local. Na Fase 3, substituir por empresa/usuário vindos da autenticação real.
-  const currentEmpresa: Empresa = {
+interface AppProviderProps {
+  children: React.ReactNode
+  authUser?: Usuario
+  authEmpresa?: Empresa
+}
+
+export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, authEmpresa }) => {
+  const currentEmpresa: Empresa = authEmpresa ?? {
     id: DEFAULT_EMPRESA_ID,
     empresaId: DEFAULT_EMPRESA_ID,
     name: 'Gestao Gastro Demo',
@@ -168,7 +173,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     licenseStatus: 'active',
   };
 
-  const currentUser: Usuario = {
+  const currentUser: Usuario = authUser ?? {
     id: 'user-master-demo',
     empresaId: DEFAULT_EMPRESA_ID,
     name: 'Administrador Demo',
