@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { CashierSession, Expense } from '../types';
-import { useApp } from '../store/AppContext';
+import { useBase } from '../store/AppBaseContext';
 import {
   addExpense as addExpenseInSupabase,
   closeSession,
@@ -29,7 +29,7 @@ export interface UseCashierReturn {
 }
 
 export function useCashier(): UseCashierReturn {
-  const { currentEmpresa } = useApp();
+  const { currentEmpresa } = useBase();
   const [cashierSession, setCashierSession] = useState<CashierSession | null>(null);
   const [cashierHistory, setCashierHistory] = useState<CashierSession[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);

@@ -1,13 +1,20 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission, DeliveryOrder, Entregador, MenuConfig, MenuDigitalConfig, Promotion, Combo, LoyaltyConfig, LoyaltyEntry, Campaign, OnlineOrder, OnlineOrderStatus, KitchenItemStatus } from '../types';
-import { mockProducts, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers } from './mock';
+import { mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers } from './mock';
 import { buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId } from '../domain/saas';
 import { buildOnlineOrderStockAdjustments, getDeliveredOnlineOrdersInWindow, getOnlineSalesTotal } from '../services/onlineOrdersService';
 import { useOrders } from '../hooks/useOrders';
 import { useTables } from '../hooks/useTables';
+import { useDelivery } from '../hooks/useDelivery';
+import { useOnlineOrders } from '../hooks/useOnlineOrders';
+import { useCashier } from '../hooks/useCashier';
+import { useProducts } from '../hooks/useProducts';
 import { useBase } from './AppBaseContext';
 import type { CreateOrderInput, UpdateOrderInput } from '../services/ordersSupabaseService';
 import type { UpdateTableInput } from '../services/tablesSupabaseService';
+import type { CreateDeliveryOrderInput, UpdateDeliveryOrderInput, CreateEntregadorInput } from '../services/deliverySupabaseService';
+import type { CreateOnlineOrderInput, UpdateOnlineOrderStatusInput } from '../services/onlineOrdersSupabaseService';
+import type { CreateExpenseInput, CloseSessionInput } from '../services/cashierSupabaseService';
 
 interface AppState {
   currentEmpresa: Empresa;
@@ -41,6 +48,14 @@ interface AppState {
   ordersError: string | null;
   tablesLoading: boolean;
   tablesError: string | null;
+  deliveryLoading: boolean;
+  deliveryError: string | null;
+  onlineOrdersLoading: boolean;
+  onlineOrdersError: string | null;
+  cashierLoading: boolean;
+  cashierError: string | null;
+  productsLoading: boolean;
+  productsError: string | null;
 }
 
 interface AppContextType extends AppState {
@@ -109,6 +124,10 @@ interface AppContextType extends AppState {
   resetToMocks: () => void;
   refreshOrders: () => Promise<void>;
   refreshTables: () => Promise<void>;
+  refreshDelivery: () => Promise<void>;
+  refreshOnlineOrders: () => Promise<void>;
+  refreshCashier: () => Promise<void>;
+  refreshProducts: () => Promise<void>;
 }
 
 const parseJSON = <T,>(key: string, fallback: T): T => {
@@ -186,22 +205,27 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   } = useBase();
   const ordersHook = useOrders();
   const tablesHook = useTables();
+  const deliveryHook = useDelivery();
+  const onlineHook = useOnlineOrders();
+  const cashierHook = useCashier();
+  const productsHook = useProducts();
   const orders = ordersHook.openOrders;
   const tables = tablesHook.tables;
+  const products = productsHook.products;
+  const deliveryOrders = deliveryHook.deliveryOrders;
+  const entregadores = deliveryHook.entregadores;
+  const onlineOrders = onlineHook.onlineOrders;
+  const cashierSession = cashierHook.cashierSession;
+  const cashierHistory = cashierHook.cashierHistory;
+  const expenses = cashierHook.expenses;
 
-  const [products, setProducts] = useState<Product[]>(() => parseScopedJSON('products', currentEmpresa.id, mockProducts, true));
   const [stockItems, setStockItems] = useState<StockItem[]>(() => parseScopedJSON('stockItems', currentEmpresa.id, mockStockItems, true));
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => parseScopedJSON('suppliers', currentEmpresa.id, mockSuppliers, true));
   const [waiters] = useState<Waiter[]>(() => parseScopedJSON('waiters', currentEmpresa.id, mockWaiters, true));
   const [draftOrder, setDraftOrderState] = useState<Order | null>(() => parseScopedJSON('draftOrder', currentEmpresa.id, null, true));
-  const [expenses, setExpenses] = useState<Expense[]>(() => parseScopedJSON('expenses', currentEmpresa.id, [], true));
-  const [cashierSession, setCashierSession] = useState<CashierSession | null>(() => parseScopedJSON('cashierSession', currentEmpresa.id, null, true));
-  const [cashierHistory, setCashierHistory] = useState<CashierSession[]>(() => parseScopedJSON('cashierHistory', currentEmpresa.id, [], true));
   const [customers, setCustomers] = useState<Customer[]>(() => parseScopedJSON('customers', currentEmpresa.id, mockCustomers, true));
   const [collaborators, setCollaborators] = useState<Collaborator[]>(() => parseScopedJSON('collaborators', currentEmpresa.id, mockCollaborators, true));
   const [stockMovements, setStockMovements] = useState<StockMovement[]>(() => parseScopedJSON('stockMovements', currentEmpresa.id, [], true));
-  const [deliveryOrders, setDeliveryOrders] = useState<DeliveryOrder[]>(() => parseScopedJSON('deliveryOrders', currentEmpresa.id, [], true));
-  const [entregadores, setEntregadores] = useState<Entregador[]>(() => parseScopedJSON('entregadores', currentEmpresa.id, [], true));
   const defaultMenuConfig: MenuConfig = {
     empresaId: currentEmpresa.id,
     accentColor: '#E07B4A',
@@ -221,30 +245,22 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [loyaltyConfig, setLoyaltyConfig] = useState<LoyaltyConfig>(() => parseScopedJSON('loyaltyConfig', currentEmpresa.id, defaultLoyaltyConfig, true));
   const [loyaltyEntries, setLoyaltyEntries] = useState<LoyaltyEntry[]>(() => parseScopedJSON('loyaltyEntries', currentEmpresa.id, [], true));
   const [campaigns, setCampaigns] = useState<Campaign[]>(() => parseScopedJSON('campaigns', currentEmpresa.id, [], true));
-  const [onlineOrders, setOnlineOrders] = useState<OnlineOrder[]>(() => parseScopedJSON('online-orders', currentEmpresa.id, [], true));
 
   useEffect(() => {
-    localStorage.setItem(buildScopedStorageKey('products', currentEmpresa.id), JSON.stringify(products));
     localStorage.setItem(buildScopedStorageKey('stockItems', currentEmpresa.id), JSON.stringify(stockItems));
     localStorage.setItem(buildScopedStorageKey('suppliers', currentEmpresa.id), JSON.stringify(suppliers));
     localStorage.setItem(buildScopedStorageKey('waiters', currentEmpresa.id), JSON.stringify(waiters));
     localStorage.setItem(buildScopedStorageKey('draftOrder', currentEmpresa.id), JSON.stringify(draftOrder));
-    localStorage.setItem(buildScopedStorageKey('expenses', currentEmpresa.id), JSON.stringify(expenses));
-    localStorage.setItem(buildScopedStorageKey('cashierSession', currentEmpresa.id), JSON.stringify(cashierSession));
-    localStorage.setItem(buildScopedStorageKey('cashierHistory', currentEmpresa.id), JSON.stringify(cashierHistory));
     localStorage.setItem(buildScopedStorageKey('customers', currentEmpresa.id), JSON.stringify(customers));
     localStorage.setItem(buildScopedStorageKey('collaborators', currentEmpresa.id), JSON.stringify(collaborators));
     localStorage.setItem(buildScopedStorageKey('stockMovements', currentEmpresa.id), JSON.stringify(stockMovements));
-    localStorage.setItem(buildScopedStorageKey('deliveryOrders', currentEmpresa.id), JSON.stringify(deliveryOrders));
-    localStorage.setItem(buildScopedStorageKey('entregadores', currentEmpresa.id), JSON.stringify(entregadores));
     localStorage.setItem(buildScopedStorageKey('menuConfig', currentEmpresa.id), JSON.stringify(menuConfig));
     localStorage.setItem(buildScopedStorageKey('promotions', currentEmpresa.id), JSON.stringify(promotions));
     localStorage.setItem(buildScopedStorageKey('combos', currentEmpresa.id), JSON.stringify(combos));
     localStorage.setItem(buildScopedStorageKey('loyaltyConfig', currentEmpresa.id), JSON.stringify(loyaltyConfig));
     localStorage.setItem(buildScopedStorageKey('loyaltyEntries', currentEmpresa.id), JSON.stringify(loyaltyEntries));
     localStorage.setItem(buildScopedStorageKey('campaigns', currentEmpresa.id), JSON.stringify(campaigns));
-    localStorage.setItem(buildScopedStorageKey('online-orders', currentEmpresa.id), JSON.stringify(onlineOrders));
-  }, [products, stockItems, suppliers, waiters, draftOrder, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, currentEmpresa.id]);
+  }, [stockItems, suppliers, waiters, draftOrder, customers, collaborators, stockMovements, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, currentEmpresa.id]);
 
   const resetToMocks = () => {
     clearAppStorage(currentEmpresa.id);
@@ -265,24 +281,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       const data = JSON.parse(json);
       validateImportEmpresaId(data, currentEmpresa.id);
 
-      if (data.products) setProducts(normalizeImportedCollection(data.products, currentEmpresa.id));
       if (data.stockItems) setStockItems(normalizeImportedCollection(data.stockItems, currentEmpresa.id));
       if (data.suppliers) setSuppliers(normalizeImportedCollection(data.suppliers, currentEmpresa.id));
       if ('draftOrder' in data) setDraftOrderState(data.draftOrder ? ensureEmpresaId(data.draftOrder, currentEmpresa.id) : null);
-      if (data.expenses) setExpenses(normalizeImportedCollection(data.expenses, currentEmpresa.id));
-      if (data.cashierHistory) setCashierHistory(normalizeImportedCollection(data.cashierHistory, currentEmpresa.id));
       if (data.customers) setCustomers(normalizeImportedCollection(data.customers, currentEmpresa.id));
       if (data.collaborators) setCollaborators(normalizeImportedCollection(data.collaborators, currentEmpresa.id));
       if (data.stockMovements) setStockMovements(normalizeImportedCollection(data.stockMovements, currentEmpresa.id));
-      if (data.deliveryOrders) setDeliveryOrders(normalizeImportedCollection(data.deliveryOrders, currentEmpresa.id));
-      if (data.entregadores) setEntregadores(normalizeImportedCollection(data.entregadores, currentEmpresa.id));
       if (data.menuConfig) setMenuConfig(ensureEmpresaId(data.menuConfig, currentEmpresa.id));
       if (data.promotions) setPromotions(normalizeImportedCollection(data.promotions, currentEmpresa.id));
       if (data.combos) setCombos(normalizeImportedCollection(data.combos, currentEmpresa.id));
       if (data.loyaltyConfig) setLoyaltyConfig(ensureEmpresaId(data.loyaltyConfig, currentEmpresa.id));
       if (data.loyaltyEntries) setLoyaltyEntries(normalizeImportedCollection(data.loyaltyEntries, currentEmpresa.id));
       if (data.campaigns) setCampaigns(normalizeImportedCollection(data.campaigns, currentEmpresa.id));
-      if (data.cashierSession) setCashierSession(ensureEmpresaId(data.cashierSession, currentEmpresa.id));
       if (data.settings) updateSettings(ensureEmpresaId(data.settings, currentEmpresa.id));
       alert('Dados importados com sucesso!');
     } catch (error) {
@@ -295,28 +305,26 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const updateProduct = (updatedProduct: Product) => {
-    setProducts(prev => prev.map(p => p.id === updatedProduct.id ? ensureEmpresaId(updatedProduct, currentEmpresa.id) : p));
+    runOperationalTask(() => productsHook.updateProduct(updatedProduct.id, updatedProduct));
   };
 
   const addProduct = (product: Product) => {
-    setProducts(prev => [...prev, ensureEmpresaId(product, currentEmpresa.id)]);
+    runOperationalTask(() => productsHook.createProduct(product));
   };
 
   const deleteProduct = (id: string) => {
-    setProducts(prev => prev.filter(p => p.id !== id));
+    runOperationalTask(() => productsHook.deleteProduct(id));
   };
 
   const updateProductMenuDigital = (productId: string, data: Partial<MenuDigitalConfig>) => {
-    setProducts(prev => prev.map(product => {
-      if (product.id !== productId) return product;
-      return ensureEmpresaId({
-        ...product,
-        menuDigital: {
-          visible: product.menuDigital?.visible ?? false,
-          ...product.menuDigital,
-          ...data,
-        },
-      }, currentEmpresa.id);
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+    runOperationalTask(() => productsHook.updateProduct(productId, {
+      menuDigital: {
+        visible: product.menuDigital?.visible ?? false,
+        ...product.menuDigital,
+        ...data,
+      },
     }));
   };
 
@@ -480,45 +488,37 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const addExpense = (expense: Expense) => {
-    setExpenses(prev => [...prev, ensureEmpresaId(expense, currentEmpresa.id)]);
+    const { id: _id, empresaId: _emp, ...input } = expense;
+    void _id;
+    void _emp;
+    runOperationalTask(() => cashierHook.addExpense(input as CreateExpenseInput));
   };
 
   const updateExpense = (updatedExpense: Expense) => {
-    setExpenses(prev => prev.map(e => e.id === updatedExpense.id ? ensureEmpresaId(updatedExpense, currentEmpresa.id) : e));
+    runOperationalTask(() => cashierHook.updateExpense(updatedExpense.id, updatedExpense));
   };
 
   const deleteExpense = (id: string) => {
-    setExpenses(prev => prev.filter(e => e.id !== id));
+    runOperationalTask(() => cashierHook.deleteExpense(id));
   };
 
   const openCashier = (initialBalance = 0) => {
-    const newSession: CashierSession = {
-      id: Date.now().toString(),
-      empresaId: currentEmpresa.id,
-      openedAt: new Date().toISOString(),
-      initialBalance,
-      salesTotal: 0,
-      serviceTaxTotal: 0,
-      expensesTotal: 0,
-      tipsTotal: 0,
-      ordersCount: 0,
-      status: 'open',
-    };
-    setCashierSession(newSession);
+    runOperationalTask(() => cashierHook.openCashier(initialBalance));
   };
 
   // CAI-001/002/003: closeCashier expandido para incluir delivery, suprimentos e contagem física
   const closeCashier = (tipsTotal: number, countedCash?: number) => {
-    if (!cashierSession) return;
-    const openedAt = new Date(cashierSession.openedAt).getTime();
-    const belongsToCurrentSession = (timestamp: string, empresaId?: string) =>
-      (empresaId || currentEmpresa.id) === currentEmpresa.id && new Date(timestamp).getTime() >= openedAt;
+    if (!cashierHook.cashierSession) return;
+    const openedAt = new Date(cashierHook.cashierSession.openedAt).getTime();
+    const belongsToCurrentSession = (timestamp: string, empId?: string) =>
+      (empId || currentEmpresa.id) === currentEmpresa.id && new Date(timestamp).getTime() >= openedAt;
 
     // Pedidos de mesa/balcão fechados na sessão
-    const closedOrders = orders.filter(o => o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId));
+    const allOrders = ordersHook.openOrders;
+    const closedOrders = allOrders.filter(o => o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId));
 
     // CAI-002: Pedidos online entregues na janela da sessão
-    const deliveredOnlineOrders = getDeliveredOnlineOrdersInWindow(onlineOrders, cashierSession.openedAt);
+    const deliveredOnlineOrders = getDeliveredOnlineOrdersInWindow(onlineOrders, cashierHook.cashierSession.openedAt);
     const onlineSalesTotal = getOnlineSalesTotal(deliveredOnlineOrders);
 
     // CAI-002: Pedidos de delivery entregues na janela da sessão
@@ -531,32 +531,28 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     const serviceTaxTotal = closedOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
 
     // CAI-003: suprimentos (entryType='entrada') somam ao saldo; saídas subtraem
-    const sessionExpenses = getSessionScopedExpenses(expenses, cashierSession.openedAt, currentEmpresa.id);
+    const sessionExpenses = getSessionScopedExpenses(expenses, cashierHook.cashierSession.openedAt, currentEmpresa.id);
     const expensesTotal = sessionExpenses.reduce((acc, e) => {
       return e.entryType === 'entrada' ? acc - e.amount : acc + e.amount;
     }, 0);
 
-    const finalBalance = cashierSession.initialBalance + salesTotal + serviceTaxTotal - expensesTotal + tipsTotal;
+    const finalBalance = cashierHook.cashierSession.initialBalance + salesTotal + serviceTaxTotal - expensesTotal + tipsTotal;
 
     // CAI-001: calcular quebra de caixa se contagem física foi informada
     const cashBreakdown = countedCash !== undefined ? countedCash - finalBalance : undefined;
 
-    const closedSession: CashierSession = {
-      ...cashierSession,
-      status: 'closed',
-      closedAt: new Date().toISOString(),
-      tipsTotal,
+    const input: CloseSessionInput = {
       salesTotal,
       serviceTaxTotal,
       expensesTotal,
+      tipsTotal,
       ordersCount: closedOrders.length + deliveredOnlineOrders.length + deliveredDeliveryOrders.length,
       finalBalance,
       countedCash,
       cashBreakdown,
     };
-    setCashierHistory(prev => [...prev.slice(-30), closedSession]);
-    setCashierSession(null);
-    setExpenses(prev => prev.filter(e => !belongsToCurrentSession(e.timestamp, e.empresaId)));
+
+    runOperationalTask(() => cashierHook.closeCashier(input));
   };
 
   const transferTable = (fromNumber: number, toNumber: number) => {
@@ -649,23 +645,34 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const addDeliveryOrder = (order: DeliveryOrder) => {
-    setDeliveryOrders(prev => [...prev, ensureEmpresaId(order, currentEmpresa.id)]);
+    const { id: _id, empresaId: _emp, createdAt: _ca, ...input } = order;
+    void _id;
+    void _emp;
+    void _ca;
+    runOperationalTask(() => deliveryHook.createOrder(input as CreateDeliveryOrderInput));
   };
 
   const updateDeliveryOrder = (updatedOrder: DeliveryOrder) => {
-    setDeliveryOrders(prev => prev.map(order => order.id === updatedOrder.id ? ensureEmpresaId(updatedOrder, currentEmpresa.id) : order));
+    const { id, empresaId: _emp, createdAt: _ca, ...input } = updatedOrder;
+    void _emp;
+    void _ca;
+    runOperationalTask(() => deliveryHook.updateOrder(id, input as UpdateDeliveryOrderInput));
   };
 
   const cancelDeliveryOrder = (id: string) => {
-    setDeliveryOrders(prev => prev.map(order => order.id === id ? { ...order, status: 'cancelado' } : order));
+    runOperationalTask(() => deliveryHook.cancelOrder(id, ''));
   };
 
   const addEntregador = (entregador: Entregador) => {
-    setEntregadores(prev => [...prev, ensureEmpresaId(entregador, currentEmpresa.id)]);
+    const { id: _id, empresaId: _emp, createdAt: _ca, ...input } = entregador;
+    void _id;
+    void _emp;
+    void _ca;
+    runOperationalTask(() => deliveryHook.createEntregador(input as CreateEntregadorInput));
   };
 
   const updateEntregador = (updatedEntregador: Entregador) => {
-    setEntregadores(prev => prev.map(entregador => entregador.id === updatedEntregador.id ? ensureEmpresaId(updatedEntregador, currentEmpresa.id) : entregador));
+    runOperationalTask(() => deliveryHook.updateEntregador(updatedEntregador.id, updatedEntregador));
   };
 
   const addPromotion = (promotion: Omit<Promotion, 'id' | 'empresaId' | 'createdAt'>) => {
@@ -734,32 +741,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   };
 
   const addOnlineOrder = (order: Omit<OnlineOrder, 'id' | 'empresaId' | 'createdAt' | 'updatedAt'>) => {
-    const now = new Date().toISOString();
-    setOnlineOrders(prev => [...prev, {
-      ...order,
-      id: `online-order-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      empresaId: currentEmpresa.id,
-      createdAt: now,
-      updatedAt: now,
-    }]);
+    runOperationalTask(() => onlineHook.createOrder(order as CreateOnlineOrderInput));
   };
 
   const updateOnlineOrderStatus = (id: string, status: OnlineOrderStatus, extra?: Partial<OnlineOrder>) => {
-    const now = new Date().toISOString();
-    setOnlineOrders(prev => prev.map(o =>
-      o.id === id ? { ...o, ...extra, status, updatedAt: now } : o
-    ));
+    runOperationalTask(() => onlineHook.updateStatus(id, { status, ...extra } as UpdateOnlineOrderStatusInput));
   };
 
   const cancelOnlineOrder = (id: string, reason: string) => {
-    const now = new Date().toISOString();
-    setOnlineOrders(prev => prev.map(o =>
-      o.id === id ? { ...o, status: 'cancelado', cancelReason: reason, canceledAt: now, updatedAt: now } : o
-    ));
+    runOperationalTask(() => onlineHook.cancelOrder(id, reason));
   };
 
   const updateOrderItemKitchenStatus = (orderId: string, itemIndex: number, status: KitchenItemStatus) => {
-    const now = new Date().toISOString();
     const order = orders.find(item => item.id === orderId);
 
     if (order) {
@@ -771,32 +764,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       runOperationalTask(() => ordersHook.updateOrderItems(orderId, updatedItems));
     }
 
-    setDeliveryOrders(prev => prev.map(order => {
-      if (order.id !== orderId) return order;
+    const deliveryOrder = deliveryOrders.find(o => o.id === orderId);
+    if (deliveryOrder) {
+      const updatedItems = deliveryOrder.items.map((item, index) =>
+        index === itemIndex ? { ...item, kitchenStatus: status, addedAt: item.addedAt ?? deliveryOrder.createdAt } : item
+      );
+      runOperationalTask(() => deliveryHook.updateOrder(orderId, { items: updatedItems } as UpdateDeliveryOrderInput));
+    }
 
-      return ensureEmpresaId({
-        ...order,
-        items: order.items.map((item, index) =>
-          index === itemIndex
-            ? { ...item, kitchenStatus: status, addedAt: item.addedAt ?? order.createdAt }
-            : item
-        ),
-      }, currentEmpresa.id);
-    }));
-
-    setOnlineOrders(prev => prev.map(order => {
-      if (order.id !== orderId) return order;
-
-      return ensureEmpresaId({
-        ...order,
-        updatedAt: now,
-        items: order.items.map((item, index) =>
-          index === itemIndex
-            ? { ...item, kitchenStatus: status, addedAt: item.addedAt ?? order.createdAt }
-            : item
-        ),
-      }, currentEmpresa.id);
-    }));
+    const onlineOrder = onlineOrders.find(o => o.id === orderId);
+    if (onlineOrder) {
+      const updatedItems = onlineOrder.items.map((item, index) =>
+        index === itemIndex ? { ...item, kitchenStatus: status, addedAt: item.addedAt ?? onlineOrder.createdAt } : item
+      );
+      runOperationalTask(() => onlineHook.updateStatus(orderId, {
+        status: onlineOrder.status,
+        items: updatedItems,
+      } as UpdateOnlineOrderStatusInput));
+    }
   };
 
   const applyOnlineOrderStockDeduction = (id: string) => {
@@ -816,28 +801,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       setStockMovements(prev => [...prev, ...movements]);
     }
 
-    setOnlineOrders(prev => prev.map(item =>
-      item.id === id ? { ...item, stockDeductedAt: timestamp, updatedAt: timestamp } : item
-    ));
+    runOperationalTask(() => onlineHook.markStockDeducted(id));
   };
 
   const registerOnlineSale = (id: string) => {
     const order = onlineOrders.find(item => item.id === id);
     if (!order || order.cashierRecordedAt) return;
 
-    const timestamp = new Date().toISOString();
-
-    if (cashierSession) {
-      setCashierSession(prev => prev ? {
-        ...prev,
-        salesTotal: prev.salesTotal + order.total,
-        ordersCount: prev.ordersCount + 1,
-      } : prev);
-    }
-
-    setOnlineOrders(prev => prev.map(item =>
-      item.id === id ? { ...item, cashierRecordedAt: timestamp, updatedAt: timestamp } : item
-    ));
+    runOperationalTask(() => onlineHook.markCashierRecorded(id));
   };
 
   return (
@@ -847,6 +818,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       ordersError: ordersHook.error,
       tablesLoading: tablesHook.loading,
       tablesError: tablesHook.error,
+      deliveryLoading: deliveryHook.loading,
+      deliveryError: deliveryHook.error,
+      onlineOrdersLoading: onlineHook.loading,
+      onlineOrdersError: onlineHook.error,
+      cashierLoading: cashierHook.loading,
+      cashierError: cashierHook.error,
+      productsLoading: productsHook.loading,
+      productsError: productsHook.error,
       hasPermission, setTheme, updateProduct, addProduct, deleteProduct, 
       updateStockItem, addStockItem, deleteStockItem,
       updateSupplier, addSupplier, deleteSupplier,
@@ -864,7 +843,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       addOnlineOrder, updateOnlineOrderStatus, cancelOnlineOrder, updateOrderItemKitchenStatus, applyOnlineOrderStockDeduction, registerOnlineSale,
       updateSettings, toggleGuideRead, importData, exportData, resetToMocks,
       refreshOrders: ordersHook.refresh,
-      refreshTables: tablesHook.refresh
+      refreshTables: tablesHook.refresh,
+      refreshDelivery: deliveryHook.refresh,
+      refreshOnlineOrders: onlineHook.refresh,
+      refreshCashier: cashierHook.refresh,
+      refreshProducts: productsHook.refresh,
     }}>
       {children}
     </AppContext.Provider>

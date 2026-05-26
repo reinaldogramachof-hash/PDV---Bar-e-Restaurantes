@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useApp } from '../store/AppContext';
+import { useBase } from '../store/AppBaseContext';
 import type { OnlineOrder } from '../types';
 import {
   cancelOnlineOrder,
@@ -25,7 +25,7 @@ export interface UseOnlineOrdersReturn {
 }
 
 export function useOnlineOrders(): UseOnlineOrdersReturn {
-  const { currentEmpresa } = useApp();
+  const { currentEmpresa } = useBase();
   const [onlineOrders, setOnlineOrders] = useState<OnlineOrder[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

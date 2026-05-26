@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Product } from '../types';
-import { useApp } from '../store/AppContext';
+import { useBase } from '../store/AppBaseContext';
 import {
   createProduct as createProductInSupabase,
   deleteProduct as deleteProductInSupabase,
@@ -25,7 +25,7 @@ export interface UseProductsReturn {
 }
 
 export function useProducts(): UseProductsReturn {
-  const { currentEmpresa } = useApp();
+  const { currentEmpresa } = useBase();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

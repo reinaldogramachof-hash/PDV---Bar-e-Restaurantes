@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useApp } from '../store/AppContext';
+import { useBase } from '../store/AppBaseContext';
 import type { DeliveryOrder, Entregador } from '../types';
 import {
   cancelDeliveryOrder,
@@ -34,7 +34,7 @@ export interface UseDeliveryReturn {
 }
 
 export function useDelivery(): UseDeliveryReturn {
-  const { currentEmpresa } = useApp();
+  const { currentEmpresa } = useBase();
   const [deliveryOrders, setDeliveryOrders] = useState<DeliveryOrder[]>([]);
   const [entregadores, setEntregadores] = useState<Entregador[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
