@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../store/AppContext';
+import { useMaster } from '../hooks/useMaster';
 import {
   getProspects, saveProspect, deleteProspect, createProspect,
   advanceProspectStage, getDrafts, createDraft, saveDraft,
@@ -15,9 +16,10 @@ import {
   calcCurrentMrr, recordCurrentMrr, addActivity,
   getActivitiesForProspect, getUpsellOpportunities,
 } from '../services/plenaHubService';
+import type { CreateEmpresaInput } from '../services/masterService';
 import type {
   Prospect, ProspectStage, MasterNotificationDraft,
-  CommercialActivity, AppNotification,
+  CommercialActivity, AppNotification, Empresa,
 } from '../types';
 
 // ─── Tab Types ────────────────────────────────────────────────────────────────
@@ -25,13 +27,6 @@ import type {
 type Tab = 'overview' | 'companies' | 'notifications' | 'comercial';
 
 // ─── Static mock data (overview tab) ─────────────────────────────────────────
-
-const companies = [
-  { name: 'Soberano Grill', plan: 'Gestao', status: 'Ativa', statusTone: 'text-success', lastActivity: 'Hoje, 14:22', action: 'Ver' },
-  { name: 'Cantina Brasil', plan: 'Profissional', status: 'Renovar', statusTone: 'text-warning', lastActivity: 'Ontem, 18:10', action: 'Contato' },
-  { name: 'Bistro Avenida', plan: 'Essencial', status: 'Suspensa', statusTone: 'text-danger', lastActivity: '3 dias atras', action: 'Ver' },
-  { name: 'Villa Massas', plan: 'Profissional', status: 'Ativa', statusTone: 'text-success', lastActivity: 'Hoje, 09:44', action: 'Ver' },
-];
 
 const alerts = [
   { company: 'Soberano Grill', detail: 'Vence em 8 dias' },
@@ -327,16 +322,175 @@ const ActivityModal: React.FC<ActivityModalProps> = ({ prospectId, prospectName,
   );
 };
 
+interface CreateEmpresaModalProps {
+  onClose: () => void;
+  onCreated: () => void;
+  onSubmit: (input: CreateEmpresaInput) => Promise<void>;
+  isDark: boolean;
+  elevatedClass: string;
+  panelClass: string;
+}
+
+const CreateEmpresaModal: React.FC<CreateEmpresaModalProps> = ({ onClose, onCreated, onSubmit, isDark, elevatedClass, panelClass }) => {
+  const [form, setForm] = useState<CreateEmpresaInput>({
+    name: '',
+    document: '',
+    plano: 'essencial',
+    licenseStatus: 'trial',
+    adminName: '',
+    adminEmail: '',
+    adminPassword: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const handleCreate = async () => {
+    if (!form.name.trim()) return;
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      await onSubmit(form);
+      setSuccess('Empresa criada com sucesso.');
+      onCreated();
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao criar empresa.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className={`w-full max-w-lg rounded-section border shadow-elevated ${panelClass}`}
+      >
+        <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
+          <h3 className="text-sm font-semibold">Nova empresa</h3>
+          <button onClick={onClose} className="text-muted hover:text-text transition-colors"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+          <div>
+            <label className="block text-xs text-muted mb-1">Nome da empresa *</label>
+            <input
+              value={form.name}
+              onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+              className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-muted mb-1">CNPJ / Documento</label>
+            <input
+              value={form.document}
+              onChange={e => setForm(prev => ({ ...prev, document: e.target.value }))}
+              className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs text-muted mb-1">Plano</label>
+              <select
+                value={form.plano}
+                onChange={e => setForm(prev => ({ ...prev, plano: e.target.value as CreateEmpresaInput['plano'] }))}
+                className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
+              >
+                <option value="essencial">Essencial</option>
+                <option value="profissional">Profissional</option>
+                <option value="gestao">Gestao</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-muted mb-1">Status inicial</label>
+              <select
+                value={form.licenseStatus}
+                onChange={e => setForm(prev => ({ ...prev, licenseStatus: e.target.value as CreateEmpresaInput['licenseStatus'] }))}
+                className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
+              >
+                <option value="trial">Trial</option>
+                <option value="active">Ativo</option>
+                <option value="suspended">Suspenso</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs text-muted mb-1">Nome admin</label>
+            <input
+              value={form.adminName}
+              onChange={e => setForm(prev => ({ ...prev, adminName: e.target.value }))}
+              className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-muted mb-1">Email admin</label>
+            <input
+              value={form.adminEmail}
+              onChange={e => setForm(prev => ({ ...prev, adminEmail: e.target.value }))}
+              className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-muted mb-1">Senha admin</label>
+            <input
+              type="password"
+              value={form.adminPassword}
+              onChange={e => setForm(prev => ({ ...prev, adminPassword: e.target.value }))}
+              className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
+            />
+          </div>
+          {error && (
+            <div className="text-xs text-danger">{error}</div>
+          )}
+          {success && (
+            <div className="text-xs text-success">{success}</div>
+          )}
+        </div>
+        <div className={`flex justify-end gap-3 px-5 py-4 border-t ${isDark ? 'border-border' : 'border-border-light'}`}>
+          <button onClick={onClose} className={`h-10 px-4 rounded-control border text-xs font-medium ${elevatedClass}`}>Cancelar</button>
+          <button
+            onClick={() => void handleCreate()}
+            disabled={loading || !form.name.trim()}
+            className="h-10 px-4 rounded-control bg-accent text-white text-xs font-medium hover:bg-accent-hover disabled:opacity-40"
+          >
+            {loading ? 'Criando...' : 'Criar empresa'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 // ─── Tab: Overview ────────────────────────────────────────────────────────────
 
-interface TabOverviewProps { isDark: boolean; panelClass: string; elevatedClass: string }
+interface TabOverviewProps {
+  isDark: boolean;
+  panelClass: string;
+  elevatedClass: string;
+  totalEmpresas?: number;
+  empresasAtivas?: number;
+  licencasVencer?: number;
+}
 
-const TabOverview: React.FC<TabOverviewProps> = ({ isDark, panelClass, elevatedClass }) => {
+const TabOverview: React.FC<TabOverviewProps> = ({
+  isDark,
+  panelClass,
+  elevatedClass,
+  totalEmpresas,
+  empresasAtivas,
+  licencasVencer,
+}) => {
+  const empresasAtivasValue = empresasAtivas ?? 37;
+  const licencasVencerValue = licencasVencer ?? 6;
+  const totalEmpresasValue = totalEmpresas ?? 41;
   const kpis = [
     { label: 'Receita Total', value: 'R$ 248.900', detail: '+12,4% vs mes anterior', icon: ReceiptText, tone: 'text-success', bg: 'bg-success/10' },
     { label: 'Pedidos Hoje', value: '1.284', detail: 'Operacao em alta', icon: ShoppingBag, tone: 'text-accent', bg: 'bg-accent/10' },
-    { label: 'Empresas Ativas', value: '37', detail: '4 novas no periodo', icon: Building2, tone: 'text-success', bg: 'bg-success/10' },
-    { label: 'Licencas a Vencer', value: '6', detail: 'Proximos 30 dias', icon: AlertTriangle, tone: 'text-warning', bg: 'bg-warning/10' },
+    { label: 'Empresas Ativas', value: String(empresasAtivasValue), detail: `${totalEmpresasValue} no total`, icon: Building2, tone: 'text-success', bg: 'bg-success/10' },
+    { label: 'Licencas a Vencer', value: String(licencasVencerValue), detail: 'Proximos 30 dias', icon: AlertTriangle, tone: 'text-warning', bg: 'bg-warning/10' },
   ];
 
   return (
@@ -415,46 +569,160 @@ const TabOverview: React.FC<TabOverviewProps> = ({ isDark, panelClass, elevatedC
 
 interface TabCompaniesProps { isDark: boolean; panelClass: string; elevatedClass: string }
 
-const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevatedClass }) => (
-  <section className={`p-5 rounded-section border ${panelClass}`}>
-    <div className="flex items-center justify-between mb-5">
-      <div>
-        <h3 className="text-sm font-semibold">Empresas clientes</h3>
-        <p className="text-xs text-muted mt-1">Status operacional, plano contratado e ultima atividade</p>
+const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevatedClass }) => {
+  const { empresas, loading, error, updateLicense, updatePlano, createEmpresa, refresh } = useMaster();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [loadingPlanoById, setLoadingPlanoById] = useState<Record<string, boolean>>({});
+  const [loadingLicenseById, setLoadingLicenseById] = useState<Record<string, boolean>>({});
+
+  const exportEmpresas = () => {
+    const payload = JSON.stringify(empresas, null, 2);
+    const blob = new Blob([payload], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `empresas-${new Date().toISOString().slice(0, 10)}.json`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleUpdatePlano = async (id: string, plano: Empresa['plano']) => {
+    setLoadingPlanoById(prev => ({ ...prev, [id]: true }));
+    try {
+      await updatePlano(id, plano);
+    } finally {
+      setLoadingPlanoById(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const handleUpdateLicense = async (id: string, licenseStatus: Empresa['licenseStatus']) => {
+    setLoadingLicenseById(prev => ({ ...prev, [id]: true }));
+    try {
+      await updateLicense(id, licenseStatus);
+    } finally {
+      setLoadingLicenseById(prev => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const getLicenseTone = (status: Empresa['licenseStatus']) => {
+    if (status === 'active') return 'text-success';
+    if (status === 'trial') return 'text-warning';
+    return 'text-danger';
+  };
+
+  return (
+    <section className={`p-5 rounded-section border ${panelClass}`}>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h3 className="text-sm font-semibold">Empresas clientes</h3>
+          <p className="text-xs text-muted mt-1">Gestao real de empresas, plano e licenca</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="h-10 px-4 rounded-control bg-accent text-white text-xs font-medium hover:bg-accent-hover inline-flex items-center gap-2"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Nova empresa
+          </button>
+          <button onClick={exportEmpresas} className={`h-10 px-4 rounded-control border text-xs font-medium ${elevatedClass}`}>Exportar</button>
+        </div>
       </div>
-      <button className={`h-10 px-4 rounded-control border text-xs font-medium ${elevatedClass}`}>Exportar</button>
-    </div>
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-[860px] text-left text-sm">
-        <thead>
-          <tr className={`border-b text-xs font-medium text-muted ${isDark ? 'border-border' : 'border-border-light'}`}>
-            <th className="px-4 py-3">Nome</th>
-            <th className="px-4 py-3">Plano</th>
-            <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Ultima atividade</th>
-            <th className="px-4 py-3 text-right">Acao</th>
-          </tr>
-        </thead>
-        <tbody className={`divide-y ${isDark ? 'divide-border' : 'divide-border-light'}`}>
-          {companies.map(company => (
-            <tr key={company.name} className={isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}>
-              <td className="px-4 py-3 font-medium">{company.name}</td>
-              <td className="px-4 py-3 text-muted">{company.plan}</td>
-              <td className="px-4 py-3"><span className={`text-xs font-medium ${company.statusTone}`}>{company.status}</span></td>
-              <td className="px-4 py-3 text-muted">{company.lastActivity}</td>
-              <td className="px-4 py-3 text-right">
-                <button className={`inline-flex h-8 items-center gap-2 rounded-control border px-3 text-xs font-medium ${company.action === 'Contato' ? 'bg-accent text-white border-accent' : elevatedClass}`}>
-                  {company.action}
-                  <MoreHorizontal className="w-3.5 h-3.5" />
-                </button>
-              </td>
-            </tr>
+      {successMessage && (
+        <div className="mb-4 text-xs text-success">{successMessage}</div>
+      )}
+      {error && (
+        <div className="mb-4 inline-flex items-center gap-2 text-xs text-danger">
+          <AlertTriangle className="w-3.5 h-3.5" />
+          {error}
+        </div>
+      )}
+      {loading ? (
+        <div className="space-y-3">
+          {[0, 1, 2].map(idx => (
+            <div key={idx} className={`h-12 rounded-panel border animate-pulse ${elevatedClass}`} />
           ))}
-        </tbody>
-      </table>
-    </div>
-  </section>
-);
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[860px] text-left text-sm">
+            <thead>
+              <tr className={`border-b text-xs font-medium text-muted ${isDark ? 'border-border' : 'border-border-light'}`}>
+                <th className="px-4 py-3">Nome</th>
+                <th className="px-4 py-3">Plano</th>
+                <th className="px-4 py-3">Status Licenca</th>
+                <th className="px-4 py-3">Criada em</th>
+                <th className="px-4 py-3 text-right">Acoes</th>
+              </tr>
+            </thead>
+            <tbody className={`divide-y ${isDark ? 'divide-border' : 'divide-border-light'}`}>
+              {empresas.map(empresa => (
+                <tr key={empresa.id} className={isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}>
+                  <td className="px-4 py-3 font-medium">{empresa.name}</td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={empresa.plano}
+                      disabled={Boolean(loadingPlanoById[empresa.id])}
+                      onChange={e => void handleUpdatePlano(empresa.id, e.target.value as Empresa['plano'])}
+                      className={`h-8 rounded-control border px-2 text-xs ${elevatedClass}`}
+                    >
+                      <option value="essencial">essencial</option>
+                      <option value="profissional">profissional</option>
+                      <option value="gestao">gestao</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={empresa.licenseStatus}
+                      disabled={Boolean(loadingLicenseById[empresa.id])}
+                      onChange={e => void handleUpdateLicense(empresa.id, e.target.value as Empresa['licenseStatus'])}
+                      className={`h-8 rounded-control border px-2 text-xs ${elevatedClass} ${getLicenseTone(empresa.licenseStatus)}`}
+                    >
+                      <option value="active">active</option>
+                      <option value="trial">trial</option>
+                      <option value="suspended">suspended</option>
+                    </select>
+                  </td>
+                  <td className="px-4 py-3 text-muted">
+                    {empresa.createdAt
+                      ? new Intl.DateTimeFormat('pt-BR').format(new Date(empresa.createdAt))
+                      : '-'}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <button
+                      disabled
+                      title="Em breve"
+                      className={`inline-flex h-8 items-center gap-2 rounded-control border px-3 text-xs font-medium opacity-60 cursor-not-allowed ${elevatedClass}`}
+                    >
+                      Ver
+                      <MoreHorizontal className="w-3.5 h-3.5" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <AnimatePresence>
+        {showCreateModal && (
+          <CreateEmpresaModal
+            onClose={() => setShowCreateModal(false)}
+            onCreated={() => {
+              setSuccessMessage('Empresa criada com sucesso.');
+              void refresh();
+            }}
+            onSubmit={createEmpresa}
+            isDark={isDark}
+            elevatedClass={elevatedClass}
+            panelClass={panelClass}
+          />
+        )}
+      </AnimatePresence>
+    </section>
+  );
+};
 
 // ─── Tab: Notifications ───────────────────────────────────────────────────────
 
@@ -1136,9 +1404,12 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
 
 export const MasterDashboard: React.FC = () => {
   const { theme } = useApp();
+  const master = useMaster();
   const isDark = theme === 'dark';
   const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
   const elevatedClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
+  const empresasAtivas = master.empresas.filter(e => e.licenseStatus === 'active').length;
+  const licencasVencer = master.empresas.filter(e => e.licenseStatus === 'trial').length;
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [notifPrefillType, setNotifPrefillType] = useState<AppNotification['type'] | undefined>(undefined);
@@ -1206,7 +1477,14 @@ export const MasterDashboard: React.FC = () => {
           transition={{ duration: 0.15 }}
         >
           {activeTab === 'overview' && (
-            <TabOverview isDark={isDark} panelClass={panelClass} elevatedClass={elevatedClass} />
+            <TabOverview
+              isDark={isDark}
+              panelClass={panelClass}
+              elevatedClass={elevatedClass}
+              totalEmpresas={master.empresas.length}
+              empresasAtivas={empresasAtivas}
+              licencasVencer={licencasVencer}
+            />
           )}
           {activeTab === 'companies' && (
             <TabCompanies isDark={isDark} panelClass={panelClass} elevatedClass={elevatedClass} />
