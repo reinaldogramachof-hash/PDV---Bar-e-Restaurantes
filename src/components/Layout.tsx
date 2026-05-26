@@ -12,6 +12,7 @@ import {
   Headset,
   LineChart,
   LayoutDashboard,
+  LogOut,
   Menu,
   Monitor,
   MonitorPlay,
@@ -29,6 +30,7 @@ import {
   Utensils,
   Wallet,
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { AnimatePresence, motion } from 'motion/react';
 import { APP_NAME, canAccessModule, ModuleId } from '../domain/saas';
 import { LicenseCheckResult } from '../services/licenseService';
@@ -335,12 +337,21 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
                 </AnimatePresence>
               </button>
 
-              <div className={`hidden md:flex items-center gap-3 px-3 py-2 rounded-panel border ${isDark ? 'bg-surface border-border' : 'bg-elevated-light border-border-light'}`}>
-                <div className="w-8 h-8 rounded-panel bg-accent flex items-center justify-center text-white font-semibold text-xs">GG</div>
-                <div className="leading-none">
-                  <p className="text-xs font-semibold">Admin Demo</p>
-                  <p className="text-[10px] font-medium text-muted mt-0.5">Administrador</p>
+              <div className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-panel border ${isDark ? 'bg-surface border-border' : 'bg-elevated-light border-border-light'}`}>
+                <div className="w-8 h-8 rounded-panel bg-accent flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
+                  {currentUser.name.slice(0, 2).toUpperCase()}
                 </div>
+                <div className="leading-none">
+                  <p className="text-xs font-semibold truncate max-w-[120px]">{currentUser.name}</p>
+                  <p className="text-[10px] font-medium text-muted mt-0.5 capitalize">{currentUser.role}</p>
+                </div>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  title="Sair"
+                  className={`ml-1 p-1.5 rounded-control transition-colors ${isDark ? 'hover:bg-elevated text-muted hover:text-danger' : 'hover:bg-gray-200 text-muted-light hover:text-danger'}`}
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           </header>
