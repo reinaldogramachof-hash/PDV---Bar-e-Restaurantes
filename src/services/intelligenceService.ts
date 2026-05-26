@@ -5,7 +5,12 @@ type ProductRankingItem = { name: string; qty: number; revenue: number; lastSold
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const closedOrders = (orders: Order[]) => orders.filter(order => order.status === 'closed');
+const closedOrders = (orders: Order[]) => {
+  if (orders.length === 0) return orders;
+  // If already filtered, skip re-filtering
+  if (orders.every(order => order.status === 'closed')) return orders;
+  return orders.filter(order => order.status === 'closed');
+};
 
 const dateKey = (date: Date) => date.toISOString().slice(0, 10);
 
@@ -105,9 +110,9 @@ export function computeRevenueGrowth(orders: Order[], period: Period) {
   return ((current - previous) / previous) * 100;
 }
 
-export function computeExpenseRatio(orders: Order[], expenses: Expense[]) {
+export function computeExpenseRatio(orders: Order[], expenses: Expense[] | number) {
   const revenue = sumRevenue(closedOrders(orders));
-  const totalExpenses = expenses.reduce((total, expense) => total + expense.amount, 0);
+  const totalExpenses = typeof expenses === 'number' ? expenses : expenses.reduce((total, expense) => total + expense.amount, 0);
   return revenue > 0 ? (totalExpenses / revenue) * 100 : totalExpenses > 0 ? 100 : 0;
 }
 
@@ -158,12 +163,12 @@ export function computeInsights(
   const insights: Insight[] = [];
   const now = new Date();
   const salesOrders = closedOrders(orders);
-  const weeklyGrowth = computeRevenueGrowth(orders, 'week');
-  const monthlyGrowth = computeRevenueGrowth(orders, 'month');
+  const weeklyGrowth = computeRevenueGrowth(salesOrders, 'week');
+  const monthlyGrowth = computeRevenueGrowth(salesOrders, 'month');
   const expenseRatio = computeExpenseRatio(salesOrders, expenses);
-  const currentWeekAvgTicket = computeTicketAverage(orders, 'week');
+  const currentWeekAvgTicket = computeTicketAverage(salesOrders, 'week');
   const { currentStart: weekStart, previousStart: previousWeekStart } = getPeriodBounds('week', now);
-  const previousWeekOrders = periodOrders(orders, previousWeekStart, weekStart);
+  const previousWeekOrders = periodOrders(salesOrders, previousWeekStart, weekStart);
   const previousWeekAvgTicket = previousWeekOrders.length ? sumRevenue(previousWeekOrders) / previousWeekOrders.length : 0;
   const ticketGrowth = previousWeekAvgTicket > 0 ? ((currentWeekAvgTicket - previousWeekAvgTicket) / previousWeekAvgTicket) * 100 : 0;
 

@@ -66,8 +66,7 @@ const getClosedOrders = (orders: Order[]) => orders.filter(order => order.status
 
 const sumOrders = (orders: Order[]) => orders.reduce((total, order) => total + order.total, 0);
 
-const getLastDaysRevenue = (orders: Order[], days: number) => {
-  const groups = groupOrdersByDay(orders);
+const getLastDaysRevenue = (groups: Map<string, Order[]>, days: number) => {
   const now = new Date();
   return Array.from({ length: days }, (_, index) => {
     const date = new Date(now.getTime() - (days - 1 - index) * 24 * 60 * 60 * 1000);
@@ -77,27 +76,44 @@ const getLastDaysRevenue = (orders: Order[], days: number) => {
   });
 };
 
-const getWeeklyVariation = (orders: Order[], productName: string) => {
+const getLastWeeksRevenue = (orders: Order[], weeks: number) => {
+  const now = new Date();
+  return Array.from({ length: weeks }, (_, index) => {
+    const start = new Date(now.getTime() - (weeks - index) * 7 * 24 * 60 * 60 * 1000);
+    const end = new Date(now.getTime() - (weeks - 1 - index) * 7 * 24 * 60 * 60 * 1000);
+    const revenue = sumOrders(getClosedOrders(orders).filter(o => {
+      const d = new Date(o.timestamp);
+      return d >= start && d < end;
+    }));
+    return { key: `week-${index}`, label: `Sem. ${weeks - index}`, revenue };
+  });
+};
+
+const getWeeklyVariationMap = (orders: Order[]) => {
   const now = new Date();
   const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const prevStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
-  const qty = (from: Date, to: Date) => getClosedOrders(orders)
-    .filter(order => {
-      const date = new Date(order.timestamp);
-      return date >= from && date < to;
-    })
-    .flatMap(order => order.items)
-    .filter(item => item.product.name === productName)
-    .reduce((total, item) => total + item.quantity, 0);
-  const current = qty(weekStart, now);
-  const previous = qty(prevStart, weekStart);
-  const variation = previous > 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
-  return { current, previous, variation };
+  const currentMap = new Map<string, number>();
+  const prevMap = new Map<string, number>();
+
+  getClosedOrders(orders).forEach(order => {
+    const date = new Date(order.timestamp);
+    if (date >= weekStart && date < now) {
+      order.items.forEach(item => {
+        currentMap.set(item.product.name, (currentMap.get(item.product.name) || 0) + item.quantity);
+      });
+    } else if (date >= prevStart && date < weekStart) {
+      order.items.forEach(item => {
+        prevMap.set(item.product.name, (prevMap.get(item.product.name) || 0) + item.quantity);
+      });
+    }
+  });
+  return { currentMap, prevMap };
 };
 
 const getHealthScore = (orders: Order[], expensesTotal: number, deliveryCancelRate: number) => {
   const revenueGrowth = computeRevenueGrowth(orders, 'week');
-  const expenseRatio = computeExpenseRatio(orders, [{ id: 'ratio', empresaId: 'local', description: 'Despesas', amount: expensesTotal, category: 'Outros', status: 'pago', timestamp: new Date().toISOString() }]);
+  const expenseRatio = computeExpenseRatio(orders, expensesTotal);
   const monthlyGrowth = computeRevenueGrowth(orders, 'month');
 
   const revenueScore = Math.max(0, Math.min(40, 20 + revenueGrowth));
@@ -180,7 +196,7 @@ export const Intelligence: React.FC = () => {
     () => [...insights].sort((a, b) => severityOrder[a.severity] - severityOrder[b.severity]),
     [insights],
   );
-  const visibleInsights = sortedInsights.filter(insight => typeFilter === 'todos' || insight.type === typeFilter);
+  const visibleInsights = useMemo(() => sortedInsights.filter(insight => typeFilter === 'todos' || insight.type === typeFilter), [sortedInsights, typeFilter]);
   const criticalAlert = sortedInsights.find(insight => insight.type === 'alerta');
   const opportunity = sortedInsights.find(insight => insight.type === 'oportunidade');
   const trend = sortedInsights.find(insight => insight.type === 'tendencia');
@@ -190,7 +206,9 @@ export const Intelligence: React.FC = () => {
   const expensesTotal = scopedExpenses.reduce((total, expense) => total + expense.amount, 0);
   const healthScore = getHealthScore(scopedOrders, expensesTotal, cancelRate);
 
-  const timeline = getLastDaysRevenue(scopedOrders, 14);
+  const dayGroups = useMemo(() => groupOrdersByDay(scopedOrders), [scopedOrders]);
+
+  const timeline = useMemo(() => getLastDaysRevenue(dayGroups, 14), [dayGroups]);
   const maxTimeline = Math.max(...timeline.map(item => item.revenue), 1);
   const dayOfWeekRevenue = [...groupOrdersByDayOfWeek(scopedOrders).entries()]
     .map(([day, dayOrders]) => ({ day, revenue: sumOrders(dayOrders), count: dayOrders.length }))
@@ -200,19 +218,41 @@ export const Intelligence: React.FC = () => {
   const maxHourOrders = Math.max(...[...hourGroups.values()].map(items => items.length), 1);
   const productRanking = getProductSalesRanking(scopedOrders);
   const totalProductRevenue = productRanking.reduce((total, item) => total + item.revenue, 0);
-  const stagnantProducts = productRanking
+  
+  const stagnantProducts = useMemo(() => productRanking
     .map(item => ({ ...item, daysStopped: Math.floor((Date.now() - new Date(item.lastSoldAt).getTime()) / (24 * 60 * 60 * 1000)) }))
     .filter(item => item.daysStopped >= 7)
-    .sort((a, b) => b.daysStopped - a.daysStopped);
-  const fallingProducts = productRanking
-    .map(item => ({ ...item, ...getWeeklyVariation(scopedOrders, item.name) }))
-    .filter(item => item.variation < 0)
-    .sort((a, b) => a.variation - b.variation);
+    .sort((a, b) => b.daysStopped - a.daysStopped), [productRanking]);
 
-  const avgTicketTimeline = timeline.map(day => {
-    const dayOrders = (groupOrdersByDay(scopedOrders).get(day.key) || []);
+  const fallingProducts = useMemo(() => {
+    const { currentMap, prevMap } = getWeeklyVariationMap(scopedOrders);
+    return productRanking
+      .map(item => {
+        const current = currentMap.get(item.name) || 0;
+        const previous = prevMap.get(item.name) || 0;
+        const variation = previous > 0 ? ((current - previous) / previous) * 100 : current > 0 ? 100 : 0;
+        return { ...item, current, previous, variation };
+      })
+      .filter(item => item.variation < 0)
+      .sort((a, b) => a.variation - b.variation);
+  }, [productRanking, scopedOrders]);
+
+  const avgTicketTimeline = useMemo(() => timeline.map(day => {
+    const dayOrders = (dayGroups.get(day.key) || []);
     return dayOrders.length ? sumOrders(dayOrders) / dayOrders.length : 0;
-  });
+  }), [timeline, dayGroups]);
+
+  const weeklyTimeline = useMemo(() => getLastWeeksRevenue(scopedOrders, 4), [scopedOrders]);
+  const maxWeeklyTimeline = Math.max(...weeklyTimeline.map(item => item.revenue), 1);
+
+  const heatmapData = useMemo(() => {
+    const counts = Array.from({ length: 7 }, () => Array.from({ length: 24 }, () => 0));
+    getClosedOrders(scopedOrders).forEach(order => {
+      const date = new Date(order.timestamp);
+      counts[date.getDay()][date.getHours()]++;
+    });
+    return counts;
+  }, [scopedOrders]);
   const maxTicket = Math.max(...avgTicketTimeline, 1);
   const points = avgTicketTimeline
     .map((value, index) => `${(index / Math.max(avgTicketTimeline.length - 1, 1)) * 100},${100 - (value / maxTicket) * 90}`)
@@ -261,7 +301,7 @@ export const Intelligence: React.FC = () => {
               <div className={`rounded-panel border p-6 flex flex-col items-center justify-center text-center ${panelClass}`}>
                 <div className={`w-48 h-48 rounded-full border-[10px] flex flex-col items-center justify-center ${getScoreTone(healthScore)}`}>
                   <span className="text-5xl font-semibold tabular-nums">{healthScore}</span>
-                  <span className="text-xs font-medium uppercase tracking-[0.18em] mt-2">Saude</span>
+                  <span className="text-xs font-medium text-muted mt-2">Saude</span>
                 </div>
                 <p className="text-xs text-muted leading-relaxed mt-5 max-w-xs">
                   Score ponderado por receita, despesas, cancelamentos e crescimento.
@@ -301,7 +341,7 @@ export const Intelligence: React.FC = () => {
               <div className="h-44 flex items-end gap-2">
                 {timeline.map(day => (
                   <div key={day.key} className="flex-1 min-w-0 flex flex-col items-center gap-2">
-                    <div className={`w-full rounded-t-control bg-accent/80 min-h-1`} style={{ height: `${Math.max(4, (day.revenue / maxTimeline) * 150)}px` }} />
+                    <div className={`w-full rounded-t-control bg-accent/80 min-h-1`} style={{ height: `${Math.max(4, (day.revenue / maxTimeline) * 150)}px` }} title={`${day.label}: ${money(day.revenue)}`} />
                     <span className="text-[10px] text-muted truncate">{day.label}</span>
                   </div>
                 ))}
@@ -313,11 +353,11 @@ export const Intelligence: React.FC = () => {
         {activeTab === 'tendencias' && (
           <motion.section key="tendencias" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="grid grid-cols-1 xl:grid-cols-2 gap-5">
             <div className={`rounded-panel border p-5 ${panelClass}`}>
-              <h3 className="text-sm font-semibold mb-5">Receita por dia</h3>
+              <h3 className="text-sm font-semibold mb-5">Receita por semana (Ultimas 4s)</h3>
               <div className="h-56 flex items-end gap-2">
-                {timeline.map(day => (
-                  <div key={day.key} className="flex-1 min-w-0">
-                    <div className="rounded-t-control bg-success/70" style={{ height: `${Math.max(4, (day.revenue / maxTimeline) * 200)}px` }} title={`${day.label} - ${money(day.revenue)}`} />
+                {weeklyTimeline.map(week => (
+                  <div key={week.key} className="flex-1 min-w-0">
+                    <div className="rounded-t-control bg-success/70" style={{ height: `${Math.max(4, (week.revenue / maxWeeklyTimeline) * 200)}px` }} title={`${week.label}: ${money(week.revenue)}`} />
                   </div>
                 ))}
               </div>
@@ -332,7 +372,7 @@ export const Intelligence: React.FC = () => {
                   return (
                     <div key={label} className="grid grid-cols-[42px_1fr_88px] items-center gap-3">
                       <span className="text-xs text-muted">{label}</span>
-                      <div className={`h-3 rounded-full overflow-hidden ${isDark ? 'bg-elevated' : 'bg-elevated-light'}`}>
+                      <div className={`h-3 rounded-full overflow-hidden ${isDark ? 'bg-elevated' : 'bg-elevated-light'}`} title={`${label}: ${money(revenue)}`}>
                         <div className="h-full rounded-full bg-accent" style={{ width: `${(revenue / maxDayRevenue) * 100}%` }} />
                       </div>
                       <span className="text-xs text-right tabular-nums">{money(revenue)}</span>
@@ -351,10 +391,7 @@ export const Intelligence: React.FC = () => {
                   <React.Fragment key={label}>
                     <div className="text-muted py-1">{label}</div>
                     {Array.from({ length: 24 }, (_, hour) => {
-                      const count = getClosedOrders(scopedOrders).filter(order => {
-                        const date = new Date(order.timestamp);
-                        return date.getDay() === day && date.getHours() === hour;
-                      }).length;
+                      const count = heatmapData[day][hour];
                       const intensity = count / maxHourOrders;
                       return <div key={hour} className="aspect-square rounded-sm border border-current/5" style={{ backgroundColor: `rgba(34, 197, 94, ${0.08 + intensity * 0.82})` }} title={`${label} ${hour}h - ${count} pedidos`} />;
                     })}
