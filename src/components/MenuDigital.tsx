@@ -63,17 +63,18 @@ export const MenuDigital: React.FC = () => {
   const [draftConfig, setDraftConfig] = useState<MenuConfig>(menuConfig);
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const activeProducts = useMemo(() => products.filter(product => product.active !== false), [products]);
-  const menuUrl = getMenuUrl(currentEmpresa.id);
+  const menuUrl = useMemo(() => getMenuUrl(currentEmpresa.id), [currentEmpresa.id]);
 
   useEffect(() => {
     setDraftConfig(menuConfig);
   }, [menuConfig]);
 
   useEffect(() => {
-    generateQRCode(currentEmpresa.id).then(setQrDataUrl).catch(() => setQrDataUrl(''));
-  }, [currentEmpresa.id]);
+    generateQRCode(currentEmpresa.id, draftConfig.accentColor).then(setQrDataUrl).catch(() => setQrDataUrl(''));
+  }, [currentEmpresa.id, draftConfig.accentColor]);
 
   const openProductConfig = (product: Product) => {
     setEditingProduct(product);
@@ -87,10 +88,15 @@ export const MenuDigital: React.FC = () => {
     setImageError('');
   };
 
+  const closeProductConfig = () => {
+    setEditingProduct(null);
+    setEditingData({ visible: false });
+  };
+
   const saveProductConfig = () => {
     if (!editingProduct) return;
     updateProductMenuDigital(editingProduct.id, editingData);
-    setEditingProduct(null);
+    closeProductConfig();
   };
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,17 +104,20 @@ export const MenuDigital: React.FC = () => {
     if (!file) return;
     try {
       setImageError('');
+      setIsUploading(true);
       const imageBase64 = await resizeImage(file);
       setEditingData(prev => ({ ...prev, imageBase64 }));
     } catch (error) {
       setImageError(error instanceof Error ? error.message : 'Erro ao processar imagem.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(menuUrl);
     setCopied(true);
-    window.setTimeout(() => setCopied(false), 1800);
+    setTimeout(() => setCopied(false), 1800);
   };
 
   return (
@@ -226,7 +235,7 @@ export const MenuDigital: React.FC = () => {
           </div>
 
           <div className="rounded-[2rem] bg-[#0F0F11] p-5 text-white shadow-2xl">
-            <p className="text-[10px] uppercase tracking-[0.18em] text-white/40 mb-4">Preview do header</p>
+            <p className="text-[10px] font-medium text-white/40 mb-4">Preview do header</p>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${draftConfig.accentColor}22`, color: draftConfig.accentColor }}>
                 <MonitorSmartphone className="w-6 h-6" />
@@ -295,14 +304,14 @@ export const MenuDigital: React.FC = () => {
       <AnimatePresence>
         {editingProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setEditingProduct(null)} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closeProductConfig} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
             <motion.div initial={{ opacity: 0, y: 18, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 18, scale: 0.96 }} className={`relative w-full max-w-xl rounded-panel border shadow-2xl ${panelClass}`}>
               <div className="flex items-center justify-between px-5 py-4 border-b border-current/10">
                 <div>
                   <h3 className="text-base font-semibold">{editingProduct.name}</h3>
                   <p className="text-xs text-muted">Config do Cardapio Digital</p>
                 </div>
-                <button onClick={() => setEditingProduct(null)} className="w-8 h-8 rounded-control flex items-center justify-center text-muted"><X className="w-4 h-4" /></button>
+                <button onClick={closeProductConfig} className="w-8 h-8 rounded-control flex items-center justify-center text-muted"><X className="w-4 h-4" /></button>
               </div>
               <div className="p-5 space-y-4">
                 <label className="space-y-2 block">
@@ -312,7 +321,7 @@ export const MenuDigital: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-[120px_1fr] gap-4">
                   <div className={`h-28 rounded-panel border flex items-center justify-center overflow-hidden ${mutedPanelClass}`}>
-                    {editingData.imageBase64 ? <img src={editingData.imageBase64} alt="" className="w-full h-full object-cover" /> : <ImagePlus className="w-8 h-8 text-muted" />}
+                    {isUploading ? <span className="text-xs text-muted">Enviando...</span> : editingData.imageBase64 ? <img src={editingData.imageBase64} alt="" className="w-full h-full object-cover" /> : <ImagePlus className="w-8 h-8 text-muted" />}
                   </div>
                   <div className="space-y-2">
                     <label className="h-10 px-3 rounded-control bg-accent/10 text-accent text-xs font-medium inline-flex items-center gap-2 cursor-pointer">
@@ -337,7 +346,7 @@ export const MenuDigital: React.FC = () => {
                 </label>
               </div>
               <div className="flex gap-3 px-5 pb-5">
-                <button onClick={() => setEditingProduct(null)} className="flex-1 h-10 rounded-control text-xs font-medium text-muted">Cancelar</button>
+                <button onClick={closeProductConfig} className="flex-1 h-10 rounded-control text-xs font-medium text-muted">Cancelar</button>
                 <button onClick={saveProductConfig} className="flex-[2] h-10 rounded-control bg-accent text-white text-xs font-medium">Salvar</button>
               </div>
             </motion.div>

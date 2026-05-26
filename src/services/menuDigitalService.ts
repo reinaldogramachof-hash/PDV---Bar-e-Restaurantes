@@ -5,11 +5,11 @@ export function getMenuUrl(empresaId: string): string {
   return `${window.location.origin}/cardapio/${empresaId}`;
 }
 
-export async function generateQRCode(empresaId: string): Promise<string> {
+export async function generateQRCode(empresaId: string, accentColor?: string): Promise<string> {
   return QRCode.toDataURL(getMenuUrl(empresaId), {
     width: 400,
     margin: 2,
-    color: { dark: '#0F0F11', light: '#FAFAFA' },
+    color: { dark: accentColor || '#0F0F11', light: '#FAFAFA' },
   });
 }
 
@@ -17,7 +17,9 @@ export function downloadQR(dataUrl: string, empresaName: string): void {
   const a = document.createElement('a');
   a.href = dataUrl;
   a.download = `cardapio-qr-${empresaName.toLowerCase().replace(/\s+/g, '-')}.png`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
 }
 
 export function getMenuProducts(products: Product[], combos: Combo[] = []): Record<string, Product[]> {
