@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+﻿import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   AlertTriangle, Bell, Building2, CalendarDays, ChevronDown,
   ChevronRight, Copy, Filter, Info, LineChart, MessageSquare,
@@ -10,9 +10,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../store/AppContext';
 import { useMaster } from '../hooks/useMaster';
 import {
-  getDrafts, createDraft, saveDraft,
-  publishDraft, deleteDraft, duplicateDraft, getMrrHistory,
-  calcCurrentMrr, recordCurrentMrr, getUpsellOpportunities,
+  getMrrHistory,
+  calcCurrentMrr,
+  recordCurrentMrr,
 } from '../services/plenaHubService';
 import { listEmpresaProfiles } from '../services/masterService';
 import type { CreateEmpresaInput, ProfileSummary } from '../services/masterService';
@@ -22,24 +22,16 @@ import { listEmpresaModules, removeEmpresaModule, upsertEmpresaModule, type Empr
 import { addonLabels, addonModules, addonPricing, packDescriptions, packLabels, packModules, packPricing, planDescriptions, planModules, planPricing, type AddonModuleId, type ModuleId, type PackId } from '../domain/saas';
 import { addMessage, listAllTickets, listMessages, updateTicketStatus, type SupportMessage, type SupportTicket } from '../services/supportService';
 import { supabase } from '../lib/supabase';
-import type {
-  Prospect, ProspectStage, MasterNotificationDraft,
-  CommercialActivity, AppNotification, Empresa,
-} from '../types';
+import { createNotification, deleteNotification, duplicateNotification, listNotifications, publishNotification, type MasterNotification } from '../services/masterNotificationsService';
+import type { Prospect, ProspectStage, CommercialActivity, AppNotification, Empresa } from '../types';
 
-// ─── Tab Types ────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tab Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type Tab = 'overview' | 'companies' | 'notifications' | 'comercial' | 'suporte';
 
-// ─── Static mock data (overview tab) ─────────────────────────────────────────
+// â”€â”€â”€ Static mock data (overview tab) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const alerts = [
-  { company: 'Soberano Grill', detail: 'Vence em 8 dias' },
-  { company: 'Cantina Brasil', detail: 'Vence em 14 dias' },
-  { company: 'Villa Massas', detail: 'Vence em 26 dias' },
-];
-
-// ─── Pipeline stages ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Pipeline stages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const STAGES: { id: ProspectStage; label: string; color: string }[] = [
   { id: 'contato',    label: 'Contato',    color: 'text-muted' },
@@ -50,9 +42,18 @@ const STAGES: { id: ProspectStage; label: string; color: string }[] = [
   { id: 'ativo',      label: 'Ativo',      color: 'text-success' },
 ];
 
-const PLAN_LABELS: Record<string, string> = {
-  essencial: 'Essencial', profissional: 'Profissional', gestao: 'Gestão',
+
+const PLANO_LABELS: Record<string, string> = {
+  essencial: 'Essencial',
+  profissional: 'Profissional',
+  gestao: 'Gestão',
 };
+const LICENSE_LABELS: Record<string, string> = {
+  active: 'Ativo',
+  trial: 'Trial',
+  suspended: 'Suspenso',
+};
+const PLAN_LABELS = PLANO_LABELS;
 
 const ACTIVITY_LABELS: Record<CommercialActivity['type'], string> = {
   note: 'Nota', call: 'Ligação', demo: 'Demo', proposal: 'Proposta',
@@ -64,7 +65,7 @@ const NOTIF_ICON: Record<AppNotification['type'], React.ComponentType<{ classNam
   support: MessageSquare, sales: Tag, info: Info,
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const fmtBRL = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -78,7 +79,7 @@ const relativeTime = (iso: string) => {
   return `há ${diffD}d`;
 };
 
-const isExpired = (draft: MasterNotificationDraft) =>
+const isExpired = (draft: MasterNotification) =>
   draft.expiresAt ? new Date(draft.expiresAt) < new Date() : false;
 
 const addDays = (days: number) => {
@@ -87,7 +88,7 @@ const addDays = (days: number) => {
   return d.toISOString();
 };
 
-// ─── Prospect Modal ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Prospect Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface ProspectModalProps {
   prospect?: PlenaProspect;
@@ -163,8 +164,8 @@ const ProspectModal: React.FC<ProspectModalProps> = ({ prospect, onClose, onSave
                 onChange={e => setForm(f => ({ ...f, planInterest: e.target.value as Prospect['planInterest'] }))}
                 className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
               >
-                <option value="essencial">Essencial</option>
-                <option value="profissional">Profissional</option>
+                <option value="essencial">{PLANO_LABELS.essencial}</option>
+                <option value="profissional">{PLANO_LABELS.profissional}</option>
                 <option value="gestao">Gestão</option>
               </select>
             </div>
@@ -232,7 +233,7 @@ const ProspectModal: React.FC<ProspectModalProps> = ({ prospect, onClose, onSave
   );
 };
 
-// ─── Activity Modal ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Activity Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface ActivityModalProps {
   prospectId: string;
@@ -465,32 +466,17 @@ const CreateEmpresaModal: React.FC<CreateEmpresaModalProps> = ({ onClose, onCrea
               ))}
             </div>
           )}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs text-muted mb-1">Plano</label>
-              <select
-                value={form.plano}
-                disabled={contractType === 'pack'}
-                onChange={e => setForm(prev => ({ ...prev, plano: e.target.value as CreateEmpresaInput['plano'] }))}
-                className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
-              >
-                <option value="essencial">Essencial</option>
-                <option value="profissional">Profissional</option>
-                <option value="gestao">Gestao</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-muted mb-1">Status inicial</label>
-              <select
-                value={form.licenseStatus}
-                onChange={e => setForm(prev => ({ ...prev, licenseStatus: e.target.value as CreateEmpresaInput['licenseStatus'] }))}
-                className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
-              >
-                <option value="trial">Trial</option>
-                <option value="active">Ativo</option>
-                <option value="suspended">Suspenso</option>
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs text-muted mb-1">Status inicial</label>
+            <select
+              value={form.licenseStatus}
+              onChange={e => setForm(prev => ({ ...prev, licenseStatus: e.target.value as CreateEmpresaInput['licenseStatus'] }))}
+              className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
+            >
+              <option value="trial">{LICENSE_LABELS.trial}</option>
+              <option value="active">{LICENSE_LABELS.active}</option>
+              <option value="suspended">{LICENSE_LABELS.suspended}</option>
+            </select>
           </div>
           <div>
             <label className="block text-xs text-muted mb-1">Nome admin</label>
@@ -686,9 +672,9 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
                   }}
                   className={`h-8 rounded-control border px-2 text-xs ${elevatedClass}`}
                 >
-                  <option value="essencial">essencial</option>
-                  <option value="profissional">profissional</option>
-                  <option value="gestao">gestao</option>
+                  <option value="essencial">{PLANO_LABELS.essencial}</option>
+                  <option value="profissional">{PLANO_LABELS.profissional}</option>
+                  <option value="gestao">{PLANO_LABELS.gestao}</option>
                 </select>
               </div>
               <div>
@@ -706,26 +692,26 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
                   }}
                   className={`h-8 rounded-control border px-2 text-xs ${elevatedClass} ${licenseTone}`}
                 >
-                  <option value="active">active</option>
-                  <option value="trial">trial</option>
-                  <option value="suspended">suspended</option>
+                  <option value="active">{LICENSE_LABELS.active}</option>
+                  <option value="trial">{LICENSE_LABELS.trial}</option>
+                  <option value="suspended">{LICENSE_LABELS.suspended}</option>
                 </select>
               </div>
             </div>
           </section>
 
           <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
-            <h4 className="text-xs font-semibold text-muted">Plano & M�dulos</h4>
+            <h4 className="text-xs font-semibold text-muted">Módulos & Add-ons</h4>
             <div>
-              <p className="text-xs text-muted mb-2">M�dulos do plano</p>
+              <p className="text-xs text-muted mb-2">Módulos incluídos no plano [{PLANO_LABELS[empresa.plano]}]</p>
               <div className="flex flex-wrap gap-2">
                 {planModules[empresa.plano].map(module => (
-                  <span key={module} className={`px-2 py-1 rounded-control text-[10px] border ${elevatedClass}`}>? {module}</span>
+                  <span key={module} className={`px-2 py-1 rounded-control text-[10px] border ${elevatedClass}`}>{module}</span>
                 ))}
               </div>
             </div>
             <div className="border-t pt-3">
-              <p className="text-xs text-muted mb-2">Add-ons extras</p>
+              <p className="text-xs text-muted mb-2">Add-ons padrão (toggle on/off)</p>
               <div className="space-y-2">
                 {addonModules.map(moduleId => {
                   const enabled = enabledAddonModules.includes(moduleId);
@@ -733,7 +719,7 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
                     <div key={moduleId} className={`p-2 rounded-control border flex items-center justify-between ${elevatedClass}`}>
                       <div>
                         <p className="text-xs font-medium">{addonLabels[moduleId]}</p>
-                        <p className="text-[10px] text-muted">+R$ {addonPricing[moduleId]}/m�s</p>
+                        <p className="text-[10px] text-muted">+R$ {addonPricing[moduleId]}/mês</p>
                       </div>
                       <button
                         onClick={() => void toggleAddon(moduleId, !enabled)}
@@ -746,50 +732,16 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
                 })}
               </div>
             </div>
-          </section>
-
-          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
-            <h4 className="text-xs font-semibold text-muted">Usuários desta empresa</h4>
-            {loadingProfiles ? (
-              <div className="space-y-2">
-                {[0, 1, 2].map(idx => (
-                  <div key={idx} className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} />
-                ))}
+            <div className="border-t pt-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted">Módulos personalizados</p>
+                <button onClick={() => setShowModuleForm(prev => !prev)} className="h-8 px-3 rounded-control bg-accent/10 text-accent text-xs font-medium">
+                  + Habilitar módulo
+                </button>
               </div>
-            ) : profiles.length === 0 ? (
-              <p className="text-xs text-muted">Nenhum usuário cadastrado</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className={`border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
-                      <th className="text-left py-2">Nome</th>
-                      <th className="text-left py-2">Role</th>
-                      <th className="text-left py-2">E-mail</th>
-                      <th className="text-left py-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {profiles.map(profile => (
-                      <tr key={profile.id} className={`border-b ${isDark ? 'border-border/50' : 'border-border-light/50'}`}>
-                        <td className="py-2">{profile.name}</td>
-                        <td className="py-2">{profile.role}</td>
-                        <td className="py-2">{profile.email || '-'}</td>
-                        <td className="py-2">{profile.active ? 'ativo' : 'inativo'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
+            </div>
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-semibold text-muted">Módulos Extras</h4>
-              <button onClick={() => setShowModuleForm(prev => !prev)} className="h-8 px-3 rounded-control bg-accent/10 text-accent text-xs font-medium">
-                + Habilitar módulo
-              </button>
+              <h4 className="text-xs font-semibold text-muted">Módulos personalizados ativos</h4>
             </div>
             {showModuleForm && (
               <div className={`p-3 rounded-panel border space-y-2 ${elevatedClass}`}>
@@ -841,13 +793,50 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
                           await removeEmpresaModule(item.id);
                           await refreshModules();
                         }}
-                        className="h-7 w-7 rounded-control border text-danger"
+                        title="Remover módulo"
+                        className={`h-7 w-7 rounded-control border flex items-center justify-center text-muted hover:text-danger hover:border-danger transition-colors ${elevatedClass}`}
                       >
-                        X
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </section>
+
+          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
+            <h4 className="text-xs font-semibold text-muted">Usuários desta empresa</h4>
+            {loadingProfiles ? (
+              <div className="space-y-2">
+                {[0, 1, 2].map(idx => (
+                  <div key={idx} className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} />
+                ))}
+              </div>
+            ) : profiles.length === 0 ? (
+              <p className="text-xs text-muted">Nenhum usuário cadastrado</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className={`border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
+                      <th className="text-left py-2">Nome</th>
+                      <th className="text-left py-2">Role</th>
+                      <th className="text-left py-2">E-mail</th>
+                      <th className="text-left py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {profiles.map(profile => (
+                      <tr key={profile.id} className={`border-b ${isDark ? 'border-border/50' : 'border-border-light/50'}`}>
+                        <td className="py-2">{profile.name}</td>
+                        <td className="py-2">{profile.role}</td>
+                        <td className="py-2">{profile.email || '-'}</td>
+                        <td className="py-2">{profile.active ? 'ativo' : 'inativo'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </section>
@@ -857,33 +846,36 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
   );
 };
 
-// ─── Tab: Overview ────────────────────────────────────────────────────────────
+// â”€â”€â”€ Tab: Overview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface TabOverviewProps {
   isDark: boolean;
   panelClass: string;
   elevatedClass: string;
-  totalEmpresas?: number;
-  empresasAtivas?: number;
-  licencasVencer?: number;
+  empresas: Empresa[];
 }
 
 const TabOverview: React.FC<TabOverviewProps> = ({
   isDark,
   panelClass,
   elevatedClass,
-  totalEmpresas,
-  empresasAtivas,
-  licencasVencer,
+  empresas,
 }) => {
-  const empresasAtivasValue = empresasAtivas ?? 37;
-  const licencasVencerValue = licencasVencer ?? 6;
-  const totalEmpresasValue = totalEmpresas ?? 41;
+  const totalEmpresas = empresas.length;
+  const empresasAtivas = empresas.filter(e => e.licenseStatus === 'active').length;
+  const empresasTrial = empresas.filter(e => e.licenseStatus === 'trial').length;
+  const empresasSuspensas = empresas.filter(e => e.licenseStatus === 'suspended').length;
+  const mrrReal = empresas
+    .filter(e => e.licenseStatus === 'active')
+    .reduce((acc, e) => acc + (planPricing[e.plano] ?? 0), 0);
+  const licencasVencer = empresasTrial;
+  const trialEmpresas = empresas.filter(e => e.licenseStatus === 'trial').slice(0, 5);
+
   const kpis = [
-    { label: 'Receita Total', value: 'R$ 248.900', detail: '+12,4% vs mes anterior', icon: ReceiptText, tone: 'text-success', bg: 'bg-success/10' },
-    { label: 'Pedidos Hoje', value: '1.284', detail: 'Operacao em alta', icon: ShoppingBag, tone: 'text-accent', bg: 'bg-accent/10' },
-    { label: 'Empresas Ativas', value: String(empresasAtivasValue), detail: `${totalEmpresasValue} no total`, icon: Building2, tone: 'text-success', bg: 'bg-success/10' },
-    { label: 'Licencas a Vencer', value: String(licencasVencerValue), detail: 'Proximos 30 dias', icon: AlertTriangle, tone: 'text-warning', bg: 'bg-warning/10' },
+    { label: 'MRR Ativo', value: fmtBRL(mrrReal), detail: `${totalEmpresas} empresas`, icon: ReceiptText, tone: 'text-success', bg: 'bg-success/10' },
+    { label: 'Empresas Ativas', value: String(empresasAtivas), detail: `${totalEmpresas} no total`, icon: Building2, tone: 'text-success', bg: 'bg-success/10' },
+    { label: 'Em Trial', value: String(empresasTrial), detail: `${licencasVencer} requerem atenção`, icon: CalendarDays, tone: 'text-warning', bg: 'bg-warning/10' },
+    { label: 'Suspensas', value: String(empresasSuspensas), detail: 'Licenças bloqueadas', icon: AlertTriangle, tone: 'text-danger', bg: 'bg-danger/10' },
   ];
 
   return (
@@ -935,20 +927,25 @@ const TabOverview: React.FC<TabOverviewProps> = ({
               <span>Jan</span><span>Fev</span><span>Mar</span><span>Abr</span><span>Mai</span><span>Jun</span>
             </div>
           </div>
+          <p className="text-[10px] text-muted mt-2">* Dados ilustrativos</p>
         </section>
         <section className={`p-5 rounded-section border ${panelClass}`}>
           <div className="flex items-center justify-between mb-5">
             <h3 className="text-sm font-semibold">Alertas de licenca</h3>
-            <span className="text-xs font-medium text-warning">6 abertas</span>
+            <span className="text-xs font-medium text-warning">{trialEmpresas.length} abertas</span>
           </div>
-          <div className="space-y-3">
-            {alerts.map(alert => (
-              <div key={alert.company} className={`p-4 rounded-panel border ${elevatedClass}`}>
-                <p className="text-sm font-semibold text-warning">{alert.company}</p>
-                <p className="text-xs text-muted mt-1">{alert.detail}</p>
-              </div>
-            ))}
-          </div>
+          {trialEmpresas.length > 0 ? (
+            <div className="space-y-3">
+              {trialEmpresas.map(empresa => (
+                <div key={empresa.id} className={`p-4 rounded-panel border ${elevatedClass}`}>
+                  <p className="text-sm font-semibold text-warning">{empresa.name}</p>
+                  <p className="text-xs text-muted mt-1">Trial</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-xs text-muted">Nenhuma licença requer atenção</p>
+          )}
           <button className="mt-5 h-10 w-full rounded-control bg-accent px-4 text-xs font-medium text-white hover:bg-accent-hover">
             Abrir renovacoes
           </button>
@@ -958,7 +955,7 @@ const TabOverview: React.FC<TabOverviewProps> = ({
   );
 };
 
-// ─── Tab: Companies ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Tab: Companies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface TabCompaniesProps { isDark: boolean; panelClass: string; elevatedClass: string }
 
@@ -1076,9 +1073,9 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
                       onChange={e => void handleUpdatePlano(empresa.id, e.target.value as Empresa['plano'])}
                       className={`h-8 rounded-control border px-2 text-xs ${elevatedClass}`}
                     >
-                      <option value="essencial">essencial</option>
-                      <option value="profissional">profissional</option>
-                      <option value="gestao">gestao</option>
+                      <option value="essencial">{PLANO_LABELS.essencial}</option>
+                      <option value="profissional">{PLANO_LABELS.profissional}</option>
+                      <option value="gestao">{PLANO_LABELS.gestao}</option>
                     </select>
                   </td>
                   <td className="px-4 py-3">
@@ -1088,9 +1085,9 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
                       onChange={e => void handleUpdateLicense(empresa.id, e.target.value as Empresa['licenseStatus'])}
                       className={`h-8 rounded-control border px-2 text-xs ${elevatedClass} ${getLicenseTone(empresa.licenseStatus)}`}
                     >
-                      <option value="active">active</option>
-                      <option value="trial">trial</option>
-                      <option value="suspended">suspended</option>
+                      <option value="active">{LICENSE_LABELS.active}</option>
+                      <option value="trial">{LICENSE_LABELS.trial}</option>
+                      <option value="suspended">{LICENSE_LABELS.suspended}</option>
                     </select>
                   </td>
                   <td className="px-4 py-3 text-muted">
@@ -1152,7 +1149,7 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
   );
 };
 
-// ─── Tab: Notifications ───────────────────────────────────────────────────────
+// â”€â”€â”€ Tab: Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 interface TabNotificacoesProps {
   isDark: boolean; panelClass: string; elevatedClass: string;
@@ -1169,22 +1166,31 @@ const EXPIRY_OPTIONS = [
 
 const TEMPLATES = [
   { label: 'Nova versão', type: 'update' as AppNotification['type'], title: 'Nova versão disponível' },
-  { label: 'Segurança', type: 'security' as AppNotification['type'], title: 'Aviso de segurança importante' },
+  { label: 'Segurança', type: 'security' as AppNotification['type'], title: 'Aviso de Segurança importante' },
   { label: 'Oferta', type: 'sales' as AppNotification['type'], title: 'Oferta especial para você' },
 ];
 
 const BLANK_DRAFT = {
   type: 'update' as AppNotification['type'],
   title: '', body: '', action: '',
-  targetPlans: ['essencial', 'profissional', 'gestao'] as MasterNotificationDraft['targetPlans'],
+  targetPlans: ['essencial', 'profissional', 'gestao'] as MasterNotification['targetPlans'],
   expiryDays: 30,
 };
 
 const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, elevatedClass, prefillType, onClearPrefill }) => {
   const [form, setForm] = useState({ ...BLANK_DRAFT, type: prefillType ?? BLANK_DRAFT.type });
-  const [drafts, setDrafts] = useState<MasterNotificationDraft[]>(() => getDrafts());
+  const [notifications, setNotifications] = useState<MasterNotification[]>([]);
+  const [loadingNotifs, setLoadingNotifs] = useState(true);
 
-  const reload = () => setDrafts(getDrafts());
+  const reloadNotifs = useCallback(async () => {
+    const next = await listNotifications();
+    setNotifications(next);
+  }, []);
+
+  useEffect(() => {
+    setLoadingNotifs(true);
+    void reloadNotifs().finally(() => setLoadingNotifs(false));
+  }, [reloadNotifs]);
 
   const togglePlan = (plan: 'essencial' | 'profissional' | 'gestao') => {
     setForm(f => ({
@@ -1200,29 +1206,32 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
     onClearPrefill?.();
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
     if (!form.title || !form.body) return;
-    createDraft({
+    await createNotification({
       type: form.type, title: form.title, body: form.body,
       action: form.action || undefined,
       targetPlans: form.targetPlans,
+      status: 'draft',
       expiresAt: form.expiryDays > 0 ? addDays(form.expiryDays) : undefined,
+      publishedAt: undefined,
     });
     setForm({ ...BLANK_DRAFT });
-    reload();
+    await reloadNotifs();
   };
 
-  const handlePublish = () => {
+  const handlePublish = async () => {
     if (!form.title || !form.body) return;
-    const d = createDraft({
+    await createNotification({
       type: form.type, title: form.title, body: form.body,
       action: form.action || undefined,
       targetPlans: form.targetPlans,
+      status: 'published',
       expiresAt: form.expiryDays > 0 ? addDays(form.expiryDays) : undefined,
+      publishedAt: new Date().toISOString(),
     });
-    publishDraft(d.id);
     setForm({ ...BLANK_DRAFT });
-    reload();
+    await reloadNotifs();
   };
 
   const NotifIcon = NOTIF_ICON[form.type];
@@ -1234,7 +1243,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
         <div className="flex items-center justify-between mb-5">
           <div>
             <h3 className="text-sm font-semibold">Nova Notificação</h3>
-            <p className="text-xs text-muted mt-1">A notificação será entregue na próxima vez que os clientes abrirem o sistema</p>
+            <p className="text-xs text-muted mt-1">A Notificação será entregue na próxima vez que os clientes abrirem o sistema</p>
           </div>
           <div className="flex gap-2">
             {TEMPLATES.map(tpl => (
@@ -1306,7 +1315,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
               value={form.title}
               onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
               className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
-              placeholder="Título da notificação"
+              placeholder="Título da Notificação"
             />
           </div>
           <div>
@@ -1334,7 +1343,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
         <div className="flex justify-end gap-3">
           <button
             id="notif-save-draft"
-            onClick={handleSaveDraft}
+            onClick={() => void handleSaveDraft()}
             disabled={!form.title || !form.body}
             className={`h-10 px-4 rounded-control border text-xs font-medium disabled:opacity-40 ${elevatedClass}`}
           >
@@ -1342,7 +1351,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
           </button>
           <button
             id="notif-publish"
-            onClick={handlePublish}
+            onClick={() => void handlePublish()}
             disabled={!form.title || !form.body}
             className="h-10 px-4 rounded-control bg-accent text-white text-xs font-medium hover:bg-accent-hover disabled:opacity-40"
           >
@@ -1352,7 +1361,11 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
       </section>
 
       {/* History */}
-      {drafts.length > 0 && (
+      {loadingNotifs ? (
+        <section className={`p-5 rounded-section border ${panelClass}`}>
+          <p className="text-xs text-muted">Carregando histórico...</p>
+        </section>
+      ) : notifications.length > 0 && (
         <section className={`p-5 rounded-section border ${panelClass}`}>
           <h3 className="text-sm font-semibold mb-5">Histórico de notificações</h3>
           <div className="overflow-x-auto">
@@ -1369,7 +1382,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
                 </tr>
               </thead>
               <tbody className={`divide-y ${isDark ? 'divide-border' : 'divide-border-light'}`}>
-                {[...drafts].sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()).map(d => {
+                {[...notifications].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).map(d => {
                   const expired = isExpired(d);
                   const Icon = NOTIF_ICON[d.type];
                   return (
@@ -1381,7 +1394,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
                         </span>
                       </td>
                       <td className="px-4 py-3 text-xs text-muted">{d.targetPlans.map(p => PLAN_LABELS[p]).join(', ') || 'Todos'}</td>
-                      <td className="px-4 py-3 text-xs text-muted">{new Date(d.publishedAt).toLocaleDateString('pt-BR')}</td>
+                      <td className="px-4 py-3 text-xs text-muted">{d.publishedAt ? new Date(d.publishedAt).toLocaleDateString('pt-BR') : '—'}</td>
                       <td className="px-4 py-3 text-xs text-muted">{d.expiresAt ? new Date(d.expiresAt).toLocaleDateString('pt-BR') : '—'}</td>
                       <td className="px-4 py-3">
                         <span className={`text-xs font-medium ${d.status === 'draft' ? 'text-muted' : expired ? 'text-danger' : 'text-success'}`}>
@@ -1393,7 +1406,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
                           {d.status === 'draft' && (
                             <button
                               title="Publicar"
-                              onClick={() => { publishDraft(d.id); reload(); }}
+                              onClick={async () => { await publishNotification(d.id); await reloadNotifs(); }}
                               className="h-7 w-7 flex items-center justify-center rounded-control text-muted hover:text-success transition-colors"
                             >
                               <Bell className="w-3.5 h-3.5" />
@@ -1401,14 +1414,14 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
                           )}
                           <button
                             title="Duplicar"
-                            onClick={() => { duplicateDraft(d.id); reload(); }}
+                            onClick={async () => { await duplicateNotification(d.id); await reloadNotifs(); }}
                             className="h-7 w-7 flex items-center justify-center rounded-control text-muted hover:text-accent transition-colors"
                           >
                             <Copy className="w-3.5 h-3.5" />
                           </button>
                           <button
                             title="Excluir"
-                            onClick={() => { deleteDraft(d.id); reload(); }}
+                            onClick={async () => { await deleteNotification(d.id); await reloadNotifs(); }}
                             className="h-7 w-7 flex items-center justify-center rounded-control text-muted hover:text-danger transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1427,7 +1440,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
   );
 };
 
-// ─── Tab: Comercial ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Tab: Comercial â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type ChurnFilter = '30d' | '90d' | 'todos';
 
@@ -1437,13 +1450,11 @@ interface TabComercialProps {
 }
 
 const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevatedClass, onUpsellNotify }) => {
-  const { products, orders } = useApp();
   const { prospects, loading, error, refresh, create, update, remove } = usePlenaProspects();
   const [showProspectModal, setShowProspectModal] = useState(false);
   const [editProspect, setEditProspect] = useState<PlenaProspect | undefined>(undefined);
   const [activityFor, setActivityFor] = useState<{ id: string; name: string } | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
-  const [upsellOpen, setUpsellOpen] = useState(false);
   const [churnsOpen, setChurnsOpen] = useState(false);
   const [churnFilter, setChurnFilter] = useState<ChurnFilter>('30d');
   const [mrrHistory, setMrrHistory] = useState(() => getMrrHistory());
@@ -1453,7 +1464,9 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
     setMrrHistory(getMrrHistory());
   }, [refresh]);
 
-  const upsellOpps = useMemo(() => getUpsellOpportunities(products, orders), [products, orders]);
+  const upsellCandidates = prospects.filter(
+    p => p.stage === 'ativo' && p.planInterest === 'essencial'
+  );
 
   // KPIs
   const activeProspects = prospects.filter(p => p.stage === 'ativo');
@@ -1656,53 +1669,23 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
         </div>
       </section>
 
-      {/* Upsell */}
-      {upsellOpps.length > 0 && (
-        <section className={`rounded-section border ${panelClass}`}>
-          <button
-            onClick={() => setUpsellOpen(o => !o)}
-            className="w-full flex items-center justify-between p-5 text-left"
-          >
-            <div>
-              <h3 className="text-sm font-semibold">Clientes com potencial de upgrade</h3>
-              <p className="text-xs text-muted mt-1">{upsellOpps.length} oportunidade{upsellOpps.length > 1 ? 's' : ''} identificada{upsellOpps.length > 1 ? 's' : ''}</p>
-            </div>
-            {upsellOpen ? <ChevronDown className="w-4 h-4 text-muted" /> : <ChevronRight className="w-4 h-4 text-muted" />}
-          </button>
-          <AnimatePresence>
-            {upsellOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className={`px-5 pb-5 space-y-3 border-t ${isDark ? 'border-border' : 'border-border-light'}`}>
-                  <div className="pt-4 space-y-3">
-                    {upsellOpps.map(opp => (
-                      <div key={opp.empresaId} className={`p-4 rounded-panel border flex items-center justify-between gap-4 ${elevatedClass}`}>
-                        <div>
-                          <p className="text-sm font-semibold">{opp.businessName}</p>
-                          <p className="text-xs text-muted mt-0.5">{opp.reason}</p>
-                          <span className="inline-flex items-center gap-1.5 mt-1.5 text-xs font-medium text-accent">
-                            {PLAN_LABELS[opp.currentPlan]} <ArrowRight className="w-3 h-3" /> {opp.suggestedPlan}
-                          </span>
-                        </div>
-                        <button
-                          onClick={onUpsellNotify}
-                          className="shrink-0 h-8 px-3 rounded-control bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors"
-                        >
-                          Enviar notificação
-                        </button>
-                      </div>
-                    ))}
-                  </div>
+      <section className={`rounded-section border ${panelClass}`}>
+        <div className="p-5">
+          <h3 className="text-sm font-semibold">Clientes Essencial com potencial de upgrade ({upsellCandidates.length})</h3>
+          <div className="mt-3 space-y-2">
+            {upsellCandidates.length === 0 ? (
+              <p className="text-xs text-muted">Nenhuma oportunidade identificada</p>
+            ) : (
+              upsellCandidates.map(candidate => (
+                <div key={candidate.id} className={`p-3 rounded-panel border flex items-center justify-between ${elevatedClass}`}>
+                  <p className="text-xs font-medium">{candidate.businessName}</p>
+                  <button onClick={onUpsellNotify} className="h-7 px-3 rounded-control bg-accent/10 text-accent text-xs font-medium">Notificar upgrade</button>
                 </div>
-              </motion.div>
+              ))
             )}
-          </AnimatePresence>
-        </section>
-      )}
+          </div>
+        </div>
+      </section>
 
       {/* MRR History */}
       <section className={`p-5 rounded-section border ${panelClass}`}>
@@ -1942,7 +1925,7 @@ const TabSuporte: React.FC<TabSuporteProps> = ({ panelClass, elevatedClass }) =>
   );
 };
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export const MasterDashboard: React.FC = () => {
   const { theme } = useApp();
@@ -1950,8 +1933,6 @@ export const MasterDashboard: React.FC = () => {
   const isDark = theme === 'dark';
   const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
   const elevatedClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
-  const empresasAtivas = master.empresas.filter(e => e.licenseStatus === 'active').length;
-  const licencasVencer = master.empresas.filter(e => e.licenseStatus === 'trial').length;
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [notifPrefillType, setNotifPrefillType] = useState<AppNotification['type'] | undefined>(undefined);
@@ -1964,7 +1945,7 @@ export const MasterDashboard: React.FC = () => {
   const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: 'overview',      label: 'Visão Geral',  icon: LineChart },
     { id: 'companies',     label: 'Empresas',     icon: Building2 },
-    { id: 'notifications', label: 'Notificações', icon: Bell },
+    { id: 'notifications', label: 'notificações', icon: Bell },
     { id: 'comercial',     label: 'Comercial',    icon: ClipboardList },
     { id: 'suporte',       label: 'Suporte',      icon: MessageSquare },
   ];
@@ -2024,9 +2005,7 @@ export const MasterDashboard: React.FC = () => {
               isDark={isDark}
               panelClass={panelClass}
               elevatedClass={elevatedClass}
-              totalEmpresas={master.empresas.length}
-              empresasAtivas={empresasAtivas}
-              licencasVencer={licencasVencer}
+              empresas={master.empresas}
             />
           )}
           {activeTab === 'companies' && (
@@ -2059,7 +2038,7 @@ export const MasterDashboard: React.FC = () => {
   );
 };
 
-// ─── Filter Control ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Filter Control â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 type FilterControlProps = {
   icon: React.ComponentType<{ className?: string }>;
@@ -2076,5 +2055,11 @@ const FilterControl: React.FC<FilterControlProps> = ({ icon: Icon, label, value,
     </span>
   </button>
 );
+
+
+
+
+
+
 
 
