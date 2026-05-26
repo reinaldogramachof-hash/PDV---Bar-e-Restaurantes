@@ -100,6 +100,14 @@ export interface CreateEmpresaInput {
   adminPassword: string;
 }
 
+export interface ProfileSummary {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  active: boolean;
+}
+
 export async function createEmpresaForTrial(input: CreateEmpresaInput): Promise<Empresa> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) throw new Error('Não autenticado.');
@@ -132,4 +140,22 @@ export async function createEmpresaForTrial(input: CreateEmpresaInput): Promise<
 
   const row: EmpresaRow = await res.json();
   return toEmpresa(row);
+}
+
+export async function listEmpresaProfiles(empresaId: string): Promise<ProfileSummary[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, name, role, active')
+    .eq('empresa_id', empresaId)
+    .returns<{ id: string; name: string; role: string; active: boolean }[]>();
+
+  if (error) throw new Error(`Erro ao buscar perfis: ${error.message}`);
+
+  return (data ?? []).map(profile => ({
+    id: profile.id,
+    name: profile.name,
+    role: profile.role,
+    active: profile.active,
+    email: '',
+  }));
 }

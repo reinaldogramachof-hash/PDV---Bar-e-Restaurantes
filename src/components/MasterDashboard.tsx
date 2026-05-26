@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   AlertTriangle, Bell, Building2, CalendarDays, ChevronDown,
   ChevronRight, Copy, Filter, Info, LineChart, MessageSquare,
@@ -16,7 +16,8 @@ import {
   calcCurrentMrr, recordCurrentMrr, addActivity,
   getActivitiesForProspect, getUpsellOpportunities,
 } from '../services/plenaHubService';
-import type { CreateEmpresaInput } from '../services/masterService';
+import { listEmpresaProfiles } from '../services/masterService';
+import type { CreateEmpresaInput, ProfileSummary } from '../services/masterService';
 import type {
   Prospect, ProspectStage, MasterNotificationDraft,
   CommercialActivity, AppNotification, Empresa,
@@ -348,6 +349,9 @@ const CreateEmpresaModal: React.FC<CreateEmpresaModalProps> = ({ onClose, onCrea
     if (msg.includes('already registered') || msg.includes('already been registered')) {
       return 'E-mail já cadastrado no sistema.';
     }
+    if (msg.includes('Failed to fetch') || msg.includes('404') || msg.includes('FunctionsHttpError')) {
+      return 'Serviço de criação indisponível. Contate o suporte técnico da Plena.';
+    }
     return msg;
   };
 
@@ -470,6 +474,176 @@ const CreateEmpresaModal: React.FC<CreateEmpresaModalProps> = ({ onClose, onCrea
   );
 };
 
+interface EmpresaDetailModalProps {
+  empresa: Empresa;
+  onClose: () => void;
+  onUpdatePlano: (id: string, plano: Empresa['plano']) => Promise<void>;
+  onUpdateLicense: (id: string, status: Empresa['licenseStatus']) => Promise<void>;
+  isDark: boolean;
+  elevatedClass: string;
+  panelClass: string;
+}
+
+const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
+  empresa,
+  onClose,
+  onUpdatePlano,
+  onUpdateLicense,
+  isDark,
+  elevatedClass,
+  panelClass,
+}) => {
+  const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
+  const [loadingProfiles, setLoadingProfiles] = useState(true);
+  const [updatingPlano, setUpdatingPlano] = useState(false);
+  const [updatingLicense, setUpdatingLicense] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setLoadingProfiles(true);
+      try {
+        const next = await listEmpresaProfiles(empresa.id);
+        if (!cancelled) setProfiles(next);
+      } finally {
+        if (!cancelled) setLoadingProfiles(false);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [empresa.id]);
+
+  const copyId = async () => {
+    await navigator.clipboard.writeText(empresa.id);
+  };
+
+  const licenseTone = empresa.licenseStatus === 'active'
+    ? 'text-success'
+    : empresa.licenseStatus === 'trial'
+      ? 'text-warning'
+      : 'text-danger';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className={`w-full max-w-xl rounded-section border shadow-elevated ${panelClass}`}
+      >
+        <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
+          <h3 className="text-sm font-semibold">Detalhes da empresa</h3>
+          <button onClick={onClose} className="text-muted hover:text-text transition-colors"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="p-5 space-y-5 max-h-[75vh] overflow-y-auto">
+          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
+            <h4 className="text-xs font-semibold text-muted">Dados da empresa</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+              <div>
+                <p className="text-muted">Nome</p>
+                <p className="font-medium">{empresa.name}</p>
+              </div>
+              <div>
+                <p className="text-muted">Documento/CNPJ</p>
+                <p className="font-medium">{empresa.document || '-'}</p>
+              </div>
+              <div>
+                <p className="text-muted">ID da empresa</p>
+                <button onClick={() => void copyId()} className="inline-flex items-center gap-1 font-medium hover:text-accent">
+                  {empresa.id}
+                  <Copy className="w-3 h-3" />
+                </button>
+              </div>
+              <div>
+                <p className="text-muted">Data de criação</p>
+                <p className="font-medium">{empresa.createdAt ? new Intl.DateTimeFormat('pt-BR').format(new Date(empresa.createdAt)) : '-'}</p>
+              </div>
+              <div>
+                <p className="text-muted">Plano</p>
+                <select
+                  value={empresa.plano}
+                  disabled={updatingPlano}
+                  onChange={async e => {
+                    setUpdatingPlano(true);
+                    try {
+                      await onUpdatePlano(empresa.id, e.target.value as Empresa['plano']);
+                    } finally {
+                      setUpdatingPlano(false);
+                    }
+                  }}
+                  className={`h-8 rounded-control border px-2 text-xs ${elevatedClass}`}
+                >
+                  <option value="essencial">essencial</option>
+                  <option value="profissional">profissional</option>
+                  <option value="gestao">gestao</option>
+                </select>
+              </div>
+              <div>
+                <p className="text-muted">Status Licença</p>
+                <select
+                  value={empresa.licenseStatus}
+                  disabled={updatingLicense}
+                  onChange={async e => {
+                    setUpdatingLicense(true);
+                    try {
+                      await onUpdateLicense(empresa.id, e.target.value as Empresa['licenseStatus']);
+                    } finally {
+                      setUpdatingLicense(false);
+                    }
+                  }}
+                  className={`h-8 rounded-control border px-2 text-xs ${elevatedClass} ${licenseTone}`}
+                >
+                  <option value="active">active</option>
+                  <option value="trial">trial</option>
+                  <option value="suspended">suspended</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
+            <h4 className="text-xs font-semibold text-muted">Usuários desta empresa</h4>
+            {loadingProfiles ? (
+              <div className="space-y-2">
+                {[0, 1, 2].map(idx => (
+                  <div key={idx} className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} />
+                ))}
+              </div>
+            ) : profiles.length === 0 ? (
+              <p className="text-xs text-muted">Nenhum usuário cadastrado</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className={`border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
+                      <th className="text-left py-2">Nome</th>
+                      <th className="text-left py-2">Role</th>
+                      <th className="text-left py-2">E-mail</th>
+                      <th className="text-left py-2">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {profiles.map(profile => (
+                      <tr key={profile.id} className={`border-b ${isDark ? 'border-border/50' : 'border-border-light/50'}`}>
+                        <td className="py-2">{profile.name}</td>
+                        <td className="py-2">{profile.role}</td>
+                        <td className="py-2">{profile.email || '-'}</td>
+                        <td className="py-2">{profile.active ? 'ativo' : 'inativo'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 // ─── Tab: Overview ────────────────────────────────────────────────────────────
 
 interface TabOverviewProps {
@@ -578,7 +752,9 @@ interface TabCompaniesProps { isDark: boolean; panelClass: string; elevatedClass
 const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevatedClass }) => {
   const { empresas, loading, error, updateLicense, updatePlano, createEmpresa, refresh } = useMaster();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [detailEmpresa, setDetailEmpresa] = useState<Empresa | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [loadingPlanoById, setLoadingPlanoById] = useState<Record<string, boolean>>({});
   const [loadingLicenseById, setLoadingLicenseById] = useState<Record<string, boolean>>({});
 
@@ -597,6 +773,11 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
     setLoadingPlanoById(prev => ({ ...prev, [id]: true }));
     try {
       await updatePlano(id, plano);
+      setActionError(null);
+      setSuccessMessage('Plano atualizado com sucesso.');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Erro ao atualizar plano.');
     } finally {
       setLoadingPlanoById(prev => ({ ...prev, [id]: false }));
     }
@@ -606,6 +787,11 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
     setLoadingLicenseById(prev => ({ ...prev, [id]: true }));
     try {
       await updateLicense(id, licenseStatus);
+      setActionError(null);
+      setSuccessMessage('Status da licença atualizado com sucesso.');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : 'Erro ao atualizar status da licença.');
     } finally {
       setLoadingLicenseById(prev => ({ ...prev, [id]: false }));
     }
@@ -637,6 +823,9 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
       </div>
       {successMessage && (
         <div className="mb-4 text-xs text-success">{successMessage}</div>
+      )}
+      {actionError && (
+        <div className="mb-4 text-xs text-danger">{actionError}</div>
       )}
       {error && (
         <div className="mb-4 inline-flex items-center gap-2 text-xs text-danger">
@@ -697,9 +886,8 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
                   </td>
                   <td className="px-4 py-3 text-right">
                     <button
-                      disabled
-                      title="Em breve"
-                      className={`inline-flex h-8 items-center gap-2 rounded-control border px-3 text-xs font-medium opacity-60 cursor-not-allowed ${elevatedClass}`}
+                      onClick={() => setDetailEmpresa(empresa)}
+                      className={`inline-flex h-8 items-center gap-2 rounded-control border px-3 text-xs font-medium ${elevatedClass}`}
                     >
                       Ver
                       <MoreHorizontal className="w-3.5 h-3.5" />
@@ -720,6 +908,25 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
               void refresh();
             }}
             onSubmit={createEmpresa}
+            isDark={isDark}
+            elevatedClass={elevatedClass}
+            panelClass={panelClass}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {detailEmpresa && (
+          <EmpresaDetailModal
+            empresa={detailEmpresa}
+            onClose={() => setDetailEmpresa(null)}
+            onUpdatePlano={async (id, plano) => {
+              await handleUpdatePlano(id, plano);
+              setDetailEmpresa(prev => prev ? { ...prev, plano } : null);
+            }}
+            onUpdateLicense={async (id, status) => {
+              await handleUpdateLicense(id, status);
+              setDetailEmpresa(prev => prev ? { ...prev, licenseStatus: status } : null);
+            }}
             isDark={isDark}
             elevatedClass={elevatedClass}
             panelClass={panelClass}
