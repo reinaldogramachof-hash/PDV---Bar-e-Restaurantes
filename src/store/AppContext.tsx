@@ -1,8 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission, DeliveryOrder, Entregador, MenuConfig, MenuDigitalConfig, Promotion, Combo, LoyaltyConfig, LoyaltyEntry, Campaign, OnlineOrder, OnlineOrderStatus, KitchenItemStatus } from '../types';
-import { mockProducts, mockTables, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers, mockSettings } from './mock';
-import { DEFAULT_EMPRESA_ID, buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, hasRolePermission, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId } from '../domain/saas';
+import { mockProducts, mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers } from './mock';
+import { buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId } from '../domain/saas';
 import { buildOnlineOrderStockAdjustments, getDeliveredOnlineOrdersInWindow, getOnlineSalesTotal } from '../services/onlineOrdersService';
+import { useOrders } from '../hooks/useOrders';
+import { useTables } from '../hooks/useTables';
+import { useBase } from './AppBaseContext';
+import type { CreateOrderInput, UpdateOrderInput } from '../services/ordersSupabaseService';
+import type { UpdateTableInput } from '../services/tablesSupabaseService';
 
 interface AppState {
   currentEmpresa: Empresa;
@@ -32,6 +37,10 @@ interface AppState {
   settings: AppSettings;
   readGuides: string[];
   theme: 'dark' | 'light';
+  ordersLoading: boolean;
+  ordersError: string | null;
+  tablesLoading: boolean;
+  tablesError: string | null;
 }
 
 interface AppContextType extends AppState {
@@ -98,6 +107,8 @@ interface AppContextType extends AppState {
   importData: (json: string) => void;
   exportData: () => string;
   resetToMocks: () => void;
+  refreshOrders: () => Promise<void>;
+  refreshTables: () => Promise<void>;
 }
 
 const parseJSON = <T,>(key: string, fallback: T): T => {
@@ -159,38 +170,29 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 interface AppProviderProps {
   children: React.ReactNode
-  authUser?: Usuario
-  authEmpresa?: Empresa
 }
 
-export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, authEmpresa }) => {
-  const currentEmpresa: Empresa = authEmpresa ?? {
-    id: DEFAULT_EMPRESA_ID,
-    empresaId: DEFAULT_EMPRESA_ID,
-    name: 'Gestao Gastro Demo',
-    document: '00.000.000/0001-00',
-    plano: 'gestao',
-    licenseStatus: 'active',
-  };
-
-  const currentUser: Usuario = authUser ?? {
-    id: 'user-master-demo',
-    empresaId: DEFAULT_EMPRESA_ID,
-    name: 'Administrador Demo',
-    email: 'admin@gestaogastro.local',
-    role: 'master',
-    active: true,
-  };
+export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
+  const {
+    currentEmpresa,
+    currentUser,
+    theme,
+    setTheme,
+    hasPermission,
+    settings,
+    updateSettings,
+    readGuides,
+    toggleGuideRead,
+  } = useBase();
+  const ordersHook = useOrders();
+  const tablesHook = useTables();
+  const orders = ordersHook.openOrders;
+  const tables = tablesHook.tables;
 
   const [products, setProducts] = useState<Product[]>(() => parseScopedJSON('products', currentEmpresa.id, mockProducts, true));
   const [stockItems, setStockItems] = useState<StockItem[]>(() => parseScopedJSON('stockItems', currentEmpresa.id, mockStockItems, true));
   const [suppliers, setSuppliers] = useState<Supplier[]>(() => parseScopedJSON('suppliers', currentEmpresa.id, mockSuppliers, true));
-  const [tables, setTables] = useState<Table[]>(() => {
-    const saved = parseScopedJSON<Table[]>('tables', currentEmpresa.id, mockTables, true);
-    return saved.length !== mockTables.length ? mockTables : saved;
-  });
   const [waiters] = useState<Waiter[]>(() => parseScopedJSON('waiters', currentEmpresa.id, mockWaiters, true));
-  const [orders, setOrders] = useState<Order[]>(() => parseScopedJSON('orders', currentEmpresa.id, [], true));
   const [draftOrder, setDraftOrderState] = useState<Order | null>(() => parseScopedJSON('draftOrder', currentEmpresa.id, null, true));
   const [expenses, setExpenses] = useState<Expense[]>(() => parseScopedJSON('expenses', currentEmpresa.id, [], true));
   const [cashierSession, setCashierSession] = useState<CashierSession | null>(() => parseScopedJSON('cashierSession', currentEmpresa.id, null, true));
@@ -220,20 +222,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
   const [loyaltyEntries, setLoyaltyEntries] = useState<LoyaltyEntry[]>(() => parseScopedJSON('loyaltyEntries', currentEmpresa.id, [], true));
   const [campaigns, setCampaigns] = useState<Campaign[]>(() => parseScopedJSON('campaigns', currentEmpresa.id, [], true));
   const [onlineOrders, setOnlineOrders] = useState<OnlineOrder[]>(() => parseScopedJSON('online-orders', currentEmpresa.id, [], true));
-  const [settings, setSettings] = useState<AppSettings>(() => parseScopedJSON('settings', currentEmpresa.id, mockSettings, true));
-  const [readGuides, setReadGuides] = useState<string[]>(() => parseScopedJSON('readGuides', currentEmpresa.id, []));
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    const th = parseJSON(buildScopedStorageKey('theme', currentEmpresa.id), parseJSON('theme', 'dark'));
-    return th === 'dark' || th === 'light' ? th : 'dark';
-  });
 
   useEffect(() => {
     localStorage.setItem(buildScopedStorageKey('products', currentEmpresa.id), JSON.stringify(products));
     localStorage.setItem(buildScopedStorageKey('stockItems', currentEmpresa.id), JSON.stringify(stockItems));
     localStorage.setItem(buildScopedStorageKey('suppliers', currentEmpresa.id), JSON.stringify(suppliers));
-    localStorage.setItem(buildScopedStorageKey('tables', currentEmpresa.id), JSON.stringify(tables));
     localStorage.setItem(buildScopedStorageKey('waiters', currentEmpresa.id), JSON.stringify(waiters));
-    localStorage.setItem(buildScopedStorageKey('orders', currentEmpresa.id), JSON.stringify(orders));
     localStorage.setItem(buildScopedStorageKey('draftOrder', currentEmpresa.id), JSON.stringify(draftOrder));
     localStorage.setItem(buildScopedStorageKey('expenses', currentEmpresa.id), JSON.stringify(expenses));
     localStorage.setItem(buildScopedStorageKey('cashierSession', currentEmpresa.id), JSON.stringify(cashierSession));
@@ -250,10 +244,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
     localStorage.setItem(buildScopedStorageKey('loyaltyEntries', currentEmpresa.id), JSON.stringify(loyaltyEntries));
     localStorage.setItem(buildScopedStorageKey('campaigns', currentEmpresa.id), JSON.stringify(campaigns));
     localStorage.setItem(buildScopedStorageKey('online-orders', currentEmpresa.id), JSON.stringify(onlineOrders));
-    localStorage.setItem(buildScopedStorageKey('settings', currentEmpresa.id), JSON.stringify(settings));
-    localStorage.setItem(buildScopedStorageKey('readGuides', currentEmpresa.id), JSON.stringify(readGuides));
-    localStorage.setItem(buildScopedStorageKey('theme', currentEmpresa.id), theme);
-  }, [products, stockItems, suppliers, tables, waiters, orders, draftOrder, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, settings, readGuides, theme, currentEmpresa.id]);
+  }, [products, stockItems, suppliers, waiters, draftOrder, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, currentEmpresa.id]);
 
   const resetToMocks = () => {
     clearAppStorage(currentEmpresa.id);
@@ -277,8 +268,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
       if (data.products) setProducts(normalizeImportedCollection(data.products, currentEmpresa.id));
       if (data.stockItems) setStockItems(normalizeImportedCollection(data.stockItems, currentEmpresa.id));
       if (data.suppliers) setSuppliers(normalizeImportedCollection(data.suppliers, currentEmpresa.id));
-      if (data.tables) setTables(normalizeImportedCollection(data.tables, currentEmpresa.id));
-      if (data.orders) setOrders(normalizeImportedCollection(data.orders, currentEmpresa.id));
       if ('draftOrder' in data) setDraftOrderState(data.draftOrder ? ensureEmpresaId(data.draftOrder, currentEmpresa.id) : null);
       if (data.expenses) setExpenses(normalizeImportedCollection(data.expenses, currentEmpresa.id));
       if (data.cashierHistory) setCashierHistory(normalizeImportedCollection(data.cashierHistory, currentEmpresa.id));
@@ -294,26 +283,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
       if (data.loyaltyEntries) setLoyaltyEntries(normalizeImportedCollection(data.loyaltyEntries, currentEmpresa.id));
       if (data.campaigns) setCampaigns(normalizeImportedCollection(data.campaigns, currentEmpresa.id));
       if (data.cashierSession) setCashierSession(ensureEmpresaId(data.cashierSession, currentEmpresa.id));
-      if (data.settings) setSettings(ensureEmpresaId(data.settings, currentEmpresa.id));
-      if (data.readGuides) setReadGuides(data.readGuides);
+      if (data.settings) updateSettings(ensureEmpresaId(data.settings, currentEmpresa.id));
       alert('Dados importados com sucesso!');
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Erro ao importar JSON. Verifique o formato.');
     }
   };
 
-  const hasPermission = (permission: Permission) => hasRolePermission(currentUser.role, permission);
-
-  const updateSettings = (newSettings: AppSettings) => setSettings(ensureEmpresaId(newSettings, currentEmpresa.id));
-
   const updateMenuConfig = (config: Partial<MenuConfig>) => {
     setMenuConfig(prev => ({ ...prev, ...config, empresaId: currentEmpresa.id }));
-  };
-
-  const toggleGuideRead = (guideId: string) => {
-    setReadGuides(prev => 
-      prev.includes(guideId) ? prev.filter(id => id !== guideId) : [...prev, guideId]
-    );
   };
 
   const updateProduct = (updatedProduct: Product) => {
@@ -366,8 +344,31 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
     setSuppliers(prev => prev.filter(s => s.id !== id));
   };
 
+  const runOperationalTask = (task: () => Promise<void>) => {
+    void task();
+  };
+
+  const toCreateOrderInput = (order: Order): CreateOrderInput => {
+    const { id: _id, empresaId: _empresaId, createdAt: _createdAt, updatedAt: _updatedAt, ...input } = order;
+    void _id;
+    void _empresaId;
+    void _createdAt;
+    void _updatedAt;
+    return input;
+  };
+
+  const toUpdateOrderInput = (order: Order): UpdateOrderInput => {
+    const { id: _id, empresaId: _empresaId, createdAt: _createdAt, updatedAt: _updatedAt, ...input } = order;
+    void _id;
+    void _empresaId;
+    void _createdAt;
+    void _updatedAt;
+    return input;
+  };
+
   const updateTable = (updatedTable: Table) => {
-    setTables(prev => prev.map(t => t.number === updatedTable.number ? ensureEmpresaId(updatedTable, currentEmpresa.id) : t));
+    const tableInput: UpdateTableInput = ensureEmpresaId(updatedTable, currentEmpresa.id);
+    runOperationalTask(() => tablesHook.updateTable(updatedTable.number, tableInput));
   };
 
   const setDraftOrder: React.Dispatch<React.SetStateAction<Order | null>> = value => {
@@ -385,20 +386,21 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
 
   const addOrder = (order: Order) => {
     const scopedOrder = ensureEmpresaId(order, currentEmpresa.id);
-    setOrders(prev => [...prev, scopedOrder]);
-    if (order.mode === 'mesa' && order.tableNumber) {
-      setTables(prev => prev.map(t =>
-        t.number === order.tableNumber ? { ...t, status: 'ocupada', activeOrderId: scopedOrder.id } : t
-      ));
-    }
+    runOperationalTask(async () => {
+      const created = await ordersHook.createOrder(toCreateOrderInput(scopedOrder));
+      if (created.mode === 'mesa' && created.tableNumber) {
+        await tablesHook.setOccupied(created.tableNumber, created.id);
+      }
+    });
   };
 
   const updateOrder = (updatedOrder: Order) => {
-    setOrders(prev => prev.map(o => o.id === updatedOrder.id ? ensureEmpresaId(updatedOrder, currentEmpresa.id) : o));
+    const scopedOrder = ensureEmpresaId(updatedOrder, currentEmpresa.id);
+    runOperationalTask(() => ordersHook.updateOrder(scopedOrder.id, toUpdateOrderInput(scopedOrder)));
   };
 
   const deleteOrder = (id: string) => {
-    setOrders(prev => prev.filter(o => o.id !== id));
+    runOperationalTask(() => ordersHook.deleteOrder(id));
   };
 
   const closeOrder = (order: Order, payments: PaymentItem[], serviceCharge: number) => {
@@ -411,18 +413,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
       total: Math.max(0, order.subtotal + serviceCharge - (order.loyaltyDiscount || 0)),
     };
 
-    setOrders(prev => {
-      const exists = prev.some(o => o.id === order.id);
-      return exists
-        ? prev.map(o => o.id === order.id ? closedOrder : o)
-        : [...prev, closedOrder];
+    runOperationalTask(async () => {
+      await ordersHook.closeOrder(order.id, {
+        payments,
+        serviceCharge,
+        total: closedOrder.total,
+        loyaltyDiscount: closedOrder.loyaltyDiscount,
+        loyaltyPointsEarned: closedOrder.loyaltyPointsEarned,
+        loyaltyPointsRedeemed: closedOrder.loyaltyPointsRedeemed,
+      });
+      if (order.tableNumber) {
+        await tablesHook.clear(order.tableNumber);
+      }
     });
-
-    if (order.tableNumber) {
-      setTables(prev => prev.map(t =>
-        t.number === order.tableNumber ? { ...t, status: 'livre', activeOrderId: undefined } : t
-      ));
-    }
 
     setStockItems(prevStock => {
       const nextStock = [...prevStock];
@@ -553,7 +556,6 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
     };
     setCashierHistory(prev => [...prev.slice(-30), closedSession]);
     setCashierSession(null);
-    setOrders(prev => prev.filter(o => !(o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId))));
     setExpenses(prev => prev.filter(e => !belongsToCurrentSession(e.timestamp, e.empresaId)));
   };
 
@@ -565,12 +567,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
 
     const orderId = fromTable.activeOrderId;
 
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, tableNumber: toNumber } : o));
-    setTables(prev => prev.map(t => {
-      if (t.number === fromNumber) return { ...t, status: 'livre', activeOrderId: undefined };
-      if (t.number === toNumber) return { ...t, status: 'ocupada', activeOrderId: orderId };
-      return t;
-    }));
+    runOperationalTask(async () => {
+      await ordersHook.updateOrder(orderId, { tableNumber: toNumber });
+      await tablesHook.transfer(fromNumber, toNumber, orderId);
+    });
   };
 
   const mergeTables = (sourceNumber: number, targetNumber: number) => {
@@ -605,31 +605,19 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
       total: subtotal 
     };
 
-    setOrders(prev => prev
-      .filter(o => o.id !== sourceOrder.id)
-      .map(o => o.id === targetOrder.id ? updatedTargetOrder : o)
-    );
-
-    setTables(prev => prev.map(t => {
-      if (t.number === sourceNumber) return { ...t, status: 'livre', activeOrderId: undefined };
-      return t;
-    }));
+    runOperationalTask(async () => {
+      await ordersHook.updateOrder(targetOrder.id, toUpdateOrderInput(updatedTargetOrder));
+      await ordersHook.deleteOrder(sourceOrder.id);
+      await tablesHook.clear(sourceNumber);
+    });
   };
 
   const reserveTable = (numbers: number[], reason: string) => {
-    setTables(prev => prev.map(t => 
-      numbers.includes(t.number) 
-        ? { ...t, status: 'reservada', reservationReason: reason } 
-        : t
-    ));
+    runOperationalTask(() => tablesHook.reserve(numbers, reason));
   };
 
   const clearTable = (number: number) => {
-    setTables(prev => prev.map(t => 
-      t.number === number 
-        ? { ...t, status: 'livre', activeOrderId: undefined, reservationReason: undefined } 
-        : t
-    ));
+    runOperationalTask(() => tablesHook.clear(number));
   };
 
   const addCustomer = (customer: Customer) => {
@@ -772,19 +760,16 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
 
   const updateOrderItemKitchenStatus = (orderId: string, itemIndex: number, status: KitchenItemStatus) => {
     const now = new Date().toISOString();
+    const order = orders.find(item => item.id === orderId);
 
-    setOrders(prev => prev.map(order => {
-      if (order.id !== orderId) return order;
-
-      return ensureEmpresaId({
-        ...order,
-        items: order.items.map((item, index) =>
-          index === itemIndex
-            ? { ...item, kitchenStatus: status, addedAt: item.addedAt ?? order.timestamp }
-            : item
-        ),
-      }, currentEmpresa.id);
-    }));
+    if (order) {
+      const updatedItems = order.items.map((item, index) =>
+        index === itemIndex
+          ? { ...item, kitchenStatus: status, addedAt: item.addedAt ?? order.timestamp }
+          : item
+      );
+      runOperationalTask(() => ordersHook.updateOrderItems(orderId, updatedItems));
+    }
 
     setDeliveryOrders(prev => prev.map(order => {
       if (order.id !== orderId) return order;
@@ -858,6 +843,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
   return (
     <AppContext.Provider value={{
       currentEmpresa, currentUser, products, stockItems, suppliers, tables, waiters, orders, draftOrder, expenses, cashierSession, cashierHistory, customers, collaborators, stockMovements, deliveryOrders, entregadores, menuConfig, promotions, combos, loyaltyConfig, loyaltyEntries, campaigns, onlineOrders, settings, readGuides, theme,
+      ordersLoading: ordersHook.loading,
+      ordersError: ordersHook.error,
+      tablesLoading: tablesHook.loading,
+      tablesError: tablesHook.error,
       hasPermission, setTheme, updateProduct, addProduct, deleteProduct, 
       updateStockItem, addStockItem, deleteStockItem,
       updateSupplier, addSupplier, deleteSupplier,
@@ -873,7 +862,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children, authUser, au
       updateLoyaltyConfig, addLoyaltyEntry,
       addCampaign, updateCampaign, deleteCampaign,
       addOnlineOrder, updateOnlineOrderStatus, cancelOnlineOrder, updateOrderItemKitchenStatus, applyOnlineOrderStockDeduction, registerOnlineSale,
-      updateSettings, toggleGuideRead, importData, exportData, resetToMocks
+      updateSettings, toggleGuideRead, importData, exportData, resetToMocks,
+      refreshOrders: ordersHook.refresh,
+      refreshTables: tablesHook.refresh
     }}>
       {children}
     </AppContext.Provider>
@@ -885,3 +876,5 @@ export const useApp = () => {
   if (!context) throw new Error('useApp must be used within AppProvider');
   return context;
 };
+
+export { useBase } from './AppBaseContext';

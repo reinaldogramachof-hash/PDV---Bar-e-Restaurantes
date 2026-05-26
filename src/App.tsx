@@ -1,19 +1,20 @@
 import React, { lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './store/AppContext';
+import { AppBaseProvider } from './store/AppBaseContext';
 import { Layout } from './components/Layout';
 import { useNavigation } from './hooks/useNavigation';
 import { PlanGuard } from './components/PlanGuard';
-import { Dashboard } from './components/Dashboard';
-import { MasterDashboard } from './components/MasterDashboard';
-import { LicenseLock } from './components/LicenseLock';
-import { CustomerMenuView } from './components/CustomerMenuView';
-import { LoginPage } from './components/LoginPage';
 import { useAuth } from './hooks/useAuth';
 import { LICENSE_STATUS_URL } from './domain/saas';
 import { checkLicense, LicenseCheckResult } from './services/licenseService';
 import { purgeOldLogs } from './services/auditService';
 
-// Lazy loading das views para otimização de performance (bundle principal < 150KB)
+const Dashboard = lazy(() => import('./components/Dashboard').then(m => ({ default: m.Dashboard })));
+const MasterDashboard = lazy(() => import('./components/MasterDashboard').then(m => ({ default: m.MasterDashboard })));
+const LicenseLock = lazy(() => import('./components/LicenseLock').then(m => ({ default: m.LicenseLock })));
+const CustomerMenuView = lazy(() => import('./components/CustomerMenuView').then(m => ({ default: m.CustomerMenuView })));
+const LoginPage = lazy(() => import('./components/LoginPage').then(m => ({ default: m.LoginPage })));
+
 const PDV = lazy(() => import('./components/PDV').then(module => ({ default: module.PDV })));
 const Stock = lazy(() => import('./components/Stock').then(module => ({ default: module.Stock })));
 const Cashier = lazy(() => import('./components/Cashier').then(module => ({ default: module.Cashier })));
@@ -82,6 +83,49 @@ const AppContent = () => {
     return (
       <div className="h-screen w-full bg-[#121214] flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  const isKiosk = typeof window !== 'undefined' && window.location.pathname.startsWith('/kiosk/');
+  const kioskModule = isKiosk ? window.location.pathname.split('/')[2] : null;
+
+  if (isKiosk) {
+    const KioskWrapper = ({ children }: { children: React.ReactNode }) => {
+      const isDark = theme === 'dark';
+      return (
+        <div className={`flex flex-col h-screen overflow-hidden font-sans ${isDark ? 'bg-app-base text-text' : 'bg-app-base-light text-text-light'}`}>
+          <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+              {children}
+            </div>
+          </main>
+        </div>
+      );
+    };
+
+    if (kioskModule === 'mesas') {
+      return (
+        <KioskWrapper>
+          <Suspense fallback={<LoadingSpinner />}>
+            <PlanGuard moduleId="mesas"><Tables /></PlanGuard>
+          </Suspense>
+        </KioskWrapper>
+      );
+    }
+    if (kioskModule === 'cozinha') {
+      return (
+        <KioskWrapper>
+          <Suspense fallback={<LoadingSpinner />}>
+            <PlanGuard moduleId="cozinha"><Kitchen /></PlanGuard>
+          </Suspense>
+        </KioskWrapper>
+      );
+    }
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-[var(--color-app-base)] text-[var(--color-text)]">
+        <h2 className="text-xl font-semibold mb-2">Painel não encontrado</h2>
+        <p className="text-sm opacity-70">O módulo Kiosk solicitado não existe.</p>
       </div>
     );
   }
@@ -157,15 +201,21 @@ const AuthGate: React.FC = () => {
   }
 
   return (
-    <AppProvider authUser={user} authEmpresa={empresa}>
-      <AppContent />
-    </AppProvider>
+    <AppBaseProvider authUser={user} authEmpresa={empresa}>
+      <AppProvider>
+        <AppContent />
+      </AppProvider>
+    </AppBaseProvider>
   );
 };
 
 export default function App() {
   if (typeof window !== 'undefined' && window.location.pathname.startsWith('/cardapio/')) {
-    return <CustomerMenuView />;
+    return (
+      <Suspense fallback={<div className="h-screen w-full flex items-center justify-center bg-[#0F0F11]"><div className="w-12 h-12 border-4 border-[var(--color-accent)] border-t-transparent rounded-full animate-spin" /></div>}>
+        <CustomerMenuView />
+      </Suspense>
+    );
   }
 
   return <AuthGate />;
