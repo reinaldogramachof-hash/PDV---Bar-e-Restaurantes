@@ -11,6 +11,7 @@ import { useCashier } from '../hooks/useCashier';
 import { useProducts } from '../hooks/useProducts';
 import { useBase } from './AppBaseContext';
 import type { CreateOrderInput, UpdateOrderInput } from '../services/ordersSupabaseService';
+import { listClosedOrdersInWindow } from '../services/ordersSupabaseService';
 import type { UpdateTableInput } from '../services/tablesSupabaseService';
 import type { CreateDeliveryOrderInput, UpdateDeliveryOrderInput, CreateEntregadorInput } from '../services/deliverySupabaseService';
 import type { CreateOnlineOrderInput, UpdateOnlineOrderStatusInput } from '../services/onlineOrdersSupabaseService';
@@ -509,50 +510,48 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   // CAI-001/002/003: closeCashier expandido para incluir delivery, suprimentos e contagem física
   const closeCashier = (tipsTotal: number, countedCash?: number) => {
     if (!cashierHook.cashierSession) return;
-    const openedAt = new Date(cashierHook.cashierSession.openedAt).getTime();
-    const belongsToCurrentSession = (timestamp: string, empId?: string) =>
-      (empId || currentEmpresa.id) === currentEmpresa.id && new Date(timestamp).getTime() >= openedAt;
+    const session = cashierHook.cashierSession;
 
-    // Pedidos de mesa/balcão fechados na sessão
-    const allOrders = ordersHook.openOrders;
-    const closedOrders = allOrders.filter(o => o.status === 'closed' && belongsToCurrentSession(o.timestamp, o.empresaId));
+    runOperationalTask(async () => {
+      // Buscar pedidos de mesa/balcao fechados na janela da sessao via Supabase
+      const closedOrders = await listClosedOrdersInWindow(currentEmpresa.id, session.openedAt);
 
-    // CAI-002: Pedidos online entregues na janela da sessão
-    const deliveredOnlineOrders = getDeliveredOnlineOrdersInWindow(onlineOrders, cashierHook.cashierSession.openedAt);
-    const onlineSalesTotal = getOnlineSalesTotal(deliveredOnlineOrders);
+      // CAI-002: Pedidos online entregues na janela da sessao
+      const deliveredOnlineOrders = getDeliveredOnlineOrdersInWindow(onlineOrders, session.openedAt);
+      const onlineSalesTotal = getOnlineSalesTotal(deliveredOnlineOrders);
 
-    // CAI-002: Pedidos de delivery entregues na janela da sessão
-    const deliveredDeliveryOrders = deliveryOrders.filter(
-      d => d.status === 'entregue' && d.empresaId === currentEmpresa.id && new Date(d.createdAt).getTime() >= openedAt
-    );
-    const deliverySalesTotal = deliveredDeliveryOrders.reduce((acc, d) => acc + d.total, 0);
+      // CAI-002: Pedidos de delivery entregues na janela da sessao
+      const openedAtMs = new Date(session.openedAt).getTime();
+      const deliveredDeliveryOrders = deliveryOrders.filter(
+        d => d.status === 'entregue' && d.empresaId === currentEmpresa.id && new Date(d.createdAt).getTime() >= openedAtMs
+      );
+      const deliverySalesTotal = deliveredDeliveryOrders.reduce((acc, d) => acc + d.total, 0);
 
-    const salesTotal = closedOrders.reduce((acc, o) => acc + o.subtotal, 0) + onlineSalesTotal + deliverySalesTotal;
-    const serviceTaxTotal = closedOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
+      const salesTotal = closedOrders.reduce((acc, o) => acc + o.subtotal, 0) + onlineSalesTotal + deliverySalesTotal;
+      const serviceTaxTotal = closedOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
 
-    // CAI-003: suprimentos (entryType='entrada') somam ao saldo; saídas subtraem
-    const sessionExpenses = getSessionScopedExpenses(expenses, cashierHook.cashierSession.openedAt, currentEmpresa.id);
-    const expensesTotal = sessionExpenses.reduce((acc, e) => {
-      return e.entryType === 'entrada' ? acc - e.amount : acc + e.amount;
-    }, 0);
+      // CAI-003: suprimentos (entryType='entrada') somam ao saldo; saidas subtraem
+      const sessionExpenses = getSessionScopedExpenses(expenses, session.openedAt, currentEmpresa.id);
+      const expensesTotal = sessionExpenses.reduce((acc, e) => {
+        return e.entryType === 'entrada' ? acc - e.amount : acc + e.amount;
+      }, 0);
 
-    const finalBalance = cashierHook.cashierSession.initialBalance + salesTotal + serviceTaxTotal - expensesTotal + tipsTotal;
+      const finalBalance = session.initialBalance + salesTotal + serviceTaxTotal - expensesTotal + tipsTotal;
+      const cashBreakdown = countedCash !== undefined ? countedCash - finalBalance : undefined;
 
-    // CAI-001: calcular quebra de caixa se contagem física foi informada
-    const cashBreakdown = countedCash !== undefined ? countedCash - finalBalance : undefined;
+      const input: CloseSessionInput = {
+        salesTotal,
+        serviceTaxTotal,
+        expensesTotal,
+        tipsTotal,
+        ordersCount: closedOrders.length + deliveredOnlineOrders.length + deliveredDeliveryOrders.length,
+        finalBalance,
+        countedCash,
+        cashBreakdown,
+      };
 
-    const input: CloseSessionInput = {
-      salesTotal,
-      serviceTaxTotal,
-      expensesTotal,
-      tipsTotal,
-      ordersCount: closedOrders.length + deliveredOnlineOrders.length + deliveredDeliveryOrders.length,
-      finalBalance,
-      countedCash,
-      cashBreakdown,
-    };
-
-    runOperationalTask(() => cashierHook.closeCashier(input));
+      await cashierHook.closeCashier(input);
+    });
   };
 
   const transferTable = (fromNumber: number, toNumber: number) => {

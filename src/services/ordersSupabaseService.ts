@@ -196,6 +196,21 @@ export async function listClosedOrders(empresaId: string, limit = 100): Promise<
   return (data ?? []).map(toOrder);
 }
 
+export async function listClosedOrdersInWindow(empresaId: string, openedAt: string): Promise<Order[]> {
+  const { data, error } = await supabase
+    .from('orders')
+    .select('*')
+    .eq('empresa_id', empresaId)
+    .eq('status', 'closed')
+    .gte('updated_at', openedAt)
+    .order('updated_at', { ascending: true })
+    .returns<OrderRow[]>();
+
+  throwSupabaseError('Erro ao listar pedidos fechados na sessao', error);
+
+  return (data ?? []).map(toOrder);
+}
+
 export async function getOrder(empresaId: string, id: string): Promise<Order | null> {
   const { data, error } = await supabase
     .from('orders')
