@@ -5,7 +5,7 @@ import {
   Download, Upload, RefreshCw, Check, AlertTriangle, ShieldCheck, 
   Globe, Phone, MapPin, FileText, Layout, Crown, ChefHat
 } from 'lucide-react';
-import { getPlanModules } from '../domain/saas';
+import { getPlanModules, planModules, ModuleId } from '../domain/saas';
 import { useAudit } from '../hooks/useAudit';
 import { motion } from 'motion/react';
 import { AppSettings } from '../types';
@@ -56,8 +56,86 @@ export const Settings: React.FC = () => {
     { id: 'plan', label: 'Plano Atual', icon: Crown },
   ];
 
+  const moduleNames: Record<ModuleId, string> = {
+    dashboard: 'Dashboard',
+    intelligence: 'Inteligencia',
+    pdv: 'PDV',
+    mesas: 'Mesas',
+    delivery: 'Delivery',
+    'cardapio-digital': 'Cardapio Digital',
+    vendas: 'Vendas',
+    cozinha: 'Cozinha',
+    estoque: 'Estoque',
+    caixa: 'Caixa',
+    produtos: 'Cardapio',
+    clientes: 'Clientes',
+    colaboradores: 'Colaboradores',
+    fornecedores: 'Fornecedores',
+    relatorios: 'Financeiro',
+    configuracoes: 'Configuracoes',
+    seguranca: 'Seguranca',
+    suporte: 'Suporte',
+    manual: 'Manual',
+  };
+
+  const planLabel = currentEmpresa.plano === 'essencial'
+    ? 'Essencial'
+    : currentEmpresa.plano === 'profissional'
+      ? 'Profissional'
+      : 'Gestao';
+
+  const licenseBadge = currentEmpresa.licenseStatus === 'active'
+    ? { label: 'Ativa', className: 'bg-[var(--color-success)]/15 text-[var(--color-success)]' }
+    : currentEmpresa.licenseStatus === 'trial'
+      ? { label: 'Trial', className: 'bg-[var(--color-warning)]/15 text-[var(--color-warning)]' }
+      : { label: 'Suspensa', className: 'bg-[var(--color-danger)]/15 text-[var(--color-danger)]' };
+
   return (
     <div className="space-y-5 animate-in fade-in duration-700 pb-8">
+      <section className="p-5 rounded-panel border border-[var(--color-border)] bg-[var(--color-elevated)] space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="space-y-1">
+            <h3 className="text-sm font-semibold">Plano e Licenca</h3>
+            <p className="text-xs text-[var(--color-muted)]">Resumo do plano contratado e status da licenca</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-control bg-[var(--color-accent)]/10 flex items-center justify-center">
+              <Crown className="w-4 h-4 text-[var(--color-accent)]" />
+            </div>
+            <div className="w-8 h-8 rounded-control bg-[var(--color-success)]/10 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4 text-[var(--color-success)]" />
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="text-xs text-[var(--color-muted)]">Plano atual</span>
+          <span className="text-sm font-semibold">{planLabel}</span>
+          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${licenseBadge.className}`}>
+            {licenseBadge.label}
+          </span>
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs text-[var(--color-muted)]">Modulos incluidos</p>
+          <div className="flex flex-wrap gap-2">
+            {planModules[currentEmpresa.plano].map(moduleId => (
+              <span key={moduleId} className="px-2.5 py-1 text-[10px] font-medium rounded-full bg-black/10 text-[var(--color-muted)]">
+                {moduleNames[moduleId]}
+              </span>
+            ))}
+          </div>
+        </div>
+        {(currentEmpresa.plano === 'essencial' || currentEmpresa.plano === 'profissional') && (
+          <a
+            href="https://wa.me/5512992191018"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-10 px-4 rounded-control bg-[var(--color-accent)] text-white text-xs font-medium items-center justify-center hover:bg-[var(--color-accent-hover)]"
+          >
+            Fazer upgrade do plano
+          </a>
+        )}
+      </section>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>

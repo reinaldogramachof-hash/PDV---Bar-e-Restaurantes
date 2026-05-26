@@ -21,6 +21,17 @@ assert.deepEqual(getPlanModules('essencial'), ['pdv', 'mesas', 'caixa', 'produto
 assert.ok(canAccessModule('profissional', 'gerente', 'cozinha'));
 assert.ok(!canAccessModule('essencial', 'garcom', 'estoque'));
 assert.ok(canAccessModule('gestao', 'master', 'colaboradores'));
+assert.ok(canAccessModule('essencial', 'gerente', 'pdv'));
+assert.ok(!canAccessModule('essencial', 'gerente', 'cozinha'));
+assert.ok(!canAccessModule('essencial', 'gerente', 'dashboard'));
+assert.ok(canAccessModule('profissional', 'gerente', 'pdv'));
+assert.ok(canAccessModule('profissional', 'gerente', 'cozinha'));
+assert.ok(!canAccessModule('profissional', 'gerente', 'dashboard'));
+assert.ok(canAccessModule('gestao', 'gerente', 'pdv'));
+assert.ok(canAccessModule('gestao', 'gerente', 'cozinha'));
+assert.ok(canAccessModule('gestao', 'gerente', 'dashboard'));
+assert.ok(canAccessModule('gestao', 'garcom', 'pdv'));
+assert.ok(!canAccessModule('gestao', 'garcom', 'relatorios'));
 
 const legacyProducts = [
   { id: 'p1', name: 'Produto legado', description: '', price: 10, category: 'Teste' },

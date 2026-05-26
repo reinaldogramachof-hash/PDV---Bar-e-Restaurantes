@@ -135,7 +135,16 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
 
   const isDark = theme === 'dark';
 
-  const visibleNavGroups = navGroups;
+  const visibleNavGroups = navGroups
+    .map(group => ({
+      ...group,
+      items: group.items.filter(item => {
+        const alwaysVisible: string[] = ['master', 'configuracoes', 'manual', 'suporte', 'pedidos-online'];
+        if (alwaysVisible.includes(item.id)) return true;
+        return canAccessModule(currentEmpresa.plano, currentUser.role, item.id as ModuleId);
+      }),
+    }))
+    .filter(group => group.items.length > 0);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -208,19 +217,11 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
 
           <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 scrollbar-none">
             {visibleNavGroups.map((group) => {
-              const filteredItems = group.items.filter(item => {
-                if (item.id === 'master') return currentUser.role === 'master';
-                if (item.id === 'pedidos-online') return currentEmpresa.plano !== 'essencial';
-                return canAccessModule(currentEmpresa.plano, currentUser.role, item.id as ModuleId);
-              });
-
-              if (filteredItems.length === 0) return null;
-
               return (
                 <div key={group.title} className="space-y-1">
                   {!isCollapsed && <h3 className="px-3 text-xs font-medium text-muted">{group.title}</h3>}
                   <div className="space-y-1">
-                    {filteredItems.map((item) => {
+                    {group.items.map((item) => {
                       const active = currentView === item.id;
                       const Icon = item.icon;
                       return (
