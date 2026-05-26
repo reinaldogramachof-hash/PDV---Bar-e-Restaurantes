@@ -235,6 +235,8 @@ export interface Expense extends BaseEntity {
   entryType?: 'saida' | 'entrada'; // CAI-003: default 'saida'; 'entrada' = suprimento de troco
   paymentMethod?: PaymentMethod;
   dueDate?: string;
+  supplierId?: string;
+  collaboratorId?: string;
   timestamp: string;
 }
 
