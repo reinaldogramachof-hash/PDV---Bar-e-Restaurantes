@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../store/AppContext';
 import {
   Clock,
@@ -16,21 +16,22 @@ import {
 import { AnimatePresence, motion } from 'motion/react';
 import { SecurityGate } from './SecurityGate';
 import { ReceiptModal } from './ReceiptModal';
-import { buildEditedClosedOrder, getAttendanceRanking } from '../services/dashboardOrderTools';
+import { buildEditedClosedOrder, getAttendanceRanking, resolveAttendanceName } from '../services/dashboardOrderTools';
 import { Order, PaymentMethod } from '../types';
 
 export const Dashboard: React.FC = () => {
   const { orders, tables, products, expenses, collaborators, theme, updateOrder, deleteOrder } = useApp();
   const isDark = theme === 'dark';
 
-  const closedOrders = orders.filter(o => o.status === 'closed');
-  const salesToday = closedOrders.reduce((acc, o) => acc + o.total, 0);
+  const closedOrders = useMemo(() => orders.filter(o => o.status === 'closed'), [orders]);
+  const salesToday = useMemo(() => closedOrders.reduce((acc, o) => acc + o.total, 0), [closedOrders]);
   const totalOrders = closedOrders.length;
   const avgTicket = totalOrders > 0 ? salesToday / totalOrders : 0;
-  const occupiedTables = tables.filter(t => t.status !== 'livre').length;
-  const sortedOperators = getAttendanceRanking(closedOrders, collaborators);
-  const expensesToday = expenses.reduce((acc, e) => acc + e.amount, 0);
+  const occupiedTables = useMemo(() => tables.filter(t => t.status !== 'livre').length, [tables]);
+  const sortedOperators = useMemo(() => getAttendanceRanking(closedOrders, collaborators), [closedOrders, collaborators]);
+  const expensesToday = useMemo(() => expenses.reduce((acc, e) => acc + e.amount, 0), [expenses]);
   const netProfit = salesToday - expensesToday;
+  const openOrders = useMemo(() => orders.filter(o => o.status === 'open').length, [orders]);
 
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [subtotalInput, setSubtotalInput] = useState('');
@@ -41,24 +42,24 @@ export const Dashboard: React.FC = () => {
   const [onGateSuccess, setOnGateSuccess] = useState<() => void>(() => () => {});
   const [reprintOrder, setReprintOrder] = useState<Order | null>(null);
 
-  const categorySales = closedOrders.flatMap(o => o.items).reduce<Record<string, number>>((acc, item) => {
+  const categorySales = useMemo(() => closedOrders.flatMap(o => o.items).reduce<Record<string, number>>((acc, item) => {
     acc[item.product.category] = (acc[item.product.category] || 0) + item.price * item.quantity;
     return acc;
-  }, {});
+  }, {}), [closedOrders]);
 
-  const recentOrders = [...orders].reverse().slice(0, 6);
+  const recentOrders = useMemo(() => [...closedOrders].reverse().slice(0, 6), [closedOrders]);
 
-  const productSales = closedOrders.flatMap(o => o.items).reduce((acc, item) => {
+  const productSales = useMemo(() => closedOrders.flatMap(o => o.items).reduce((acc, item) => {
     if (!acc[item.product.id]) {
       acc[item.product.id] = { name: item.product.name, qty: 0, category: item.product.category };
     }
     acc[item.product.id].qty += item.quantity;
     return acc;
-  }, {} as Record<string, { name: string; qty: number; category: string }>);
+  }, {} as Record<string, { name: string; qty: number; category: string }>), [closedOrders]);
 
-  const topProducts = (Object.values(productSales) as Array<{ name: string; qty: number; category: string }>)
+  const topProducts = useMemo(() => (Object.values(productSales) as Array<{ name: string; qty: number; category: string }>)
     .sort((a, b) => b.qty - a.qty)
-    .slice(0, 5);
+    .slice(0, 5), [productSales]);
 
   const startEditOrder = (order: Order) => {
     setEditingOrder(order);
@@ -82,8 +83,8 @@ export const Dashboard: React.FC = () => {
     setGateOpen(true);
   };
 
-  const handleDeleteOrder = (order: Order) => {
-    if (!window.confirm(`Excluir o pedido #${order.id.slice(-6)} no valor de R$ ${order.total.toFixed(2)}?`)) return;
+  const handleDeleteOrder = (order: Order, skipConfirm = false) => {
+    if (!skipConfirm && !window.confirm(`Excluir o pedido #${order.id.slice(-6)} no valor de R$ ${order.total.toFixed(2)}?`)) return;
     setGateTitle('Autorizar Exclusão de Pedido');
     setOnGateSuccess(() => () => {
       deleteOrder(order.id);
@@ -92,10 +93,37 @@ export const Dashboard: React.FC = () => {
     setGateOpen(true);
   };
 
+  const handleExportCSV = () => {
+    const headers = ['ID', 'Data/Hora', 'Modo', 'Status', 'Total', 'Operador'];
+    const rows = recentOrders.map(o => [
+      o.id,
+      new Date(o.timestamp).toLocaleString('pt-BR'),
+      o.mode,
+      o.status,
+      o.total.toFixed(2).replace('.', ','),
+      resolveAttendanceName(o.waiterId, collaborators)
+    ]);
+    
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `pedidos_${new Date().toISOString().slice(0,10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const kpis = [
-    { label: 'Vendas hoje', value: `R$ ${salesToday.toFixed(2)}`, icon: TrendingUp, tone: 'text-success', bg: 'bg-success/10', detail: '+12.5%' },
-    { label: 'Ticket médio', value: `R$ ${avgTicket.toFixed(2)}`, icon: ShoppingBag, tone: 'text-blue-500', bg: 'bg-blue-500/10', detail: '+3.2%' },
-    { label: 'Pedidos', value: totalOrders.toString(), icon: Clock, tone: 'text-accent', bg: 'bg-accent/10', detail: '+5.4%' },
+    { label: 'Vendas hoje', value: `R$ ${salesToday.toFixed(2)}`, icon: TrendingUp, tone: 'text-success', bg: 'bg-success/10', detail: `${totalOrders} fechados` },
+    { label: 'Ticket médio', value: `R$ ${avgTicket.toFixed(2)}`, icon: ShoppingBag, tone: 'text-blue-500', bg: 'bg-blue-500/10', detail: 'Por pedido' },
+    { label: 'Pedidos', value: totalOrders.toString(), icon: Clock, tone: 'text-accent', bg: 'bg-accent/10', detail: `${openOrders} abertos` },
     { label: 'Mesas ocupadas', value: occupiedTables.toString(), icon: TableIcon, tone: 'text-warning', bg: 'bg-warning/10', detail: `${occupiedTables}/${tables.length}` },
   ];
 
@@ -133,6 +161,17 @@ export const Dashboard: React.FC = () => {
             <p className="text-2xl font-semibold">{kpi.value}</p>
           </motion.div>
         ))}
+      </div>
+
+      <div className={`p-4 rounded-panel border flex items-center justify-between text-sm ${panelClass}`}>
+        <div className="flex gap-4">
+          <span className="text-muted">Despesas do dia:</span>
+          <span className="font-semibold text-danger">R$ {expensesToday.toFixed(2)}</span>
+        </div>
+        <div className="flex gap-4">
+          <span className="text-muted">Lucro Líquido:</span>
+          <span className="font-semibold text-success">R$ {netProfit.toFixed(2)}</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -174,7 +213,7 @@ export const Dashboard: React.FC = () => {
         <section className={`p-5 rounded-panel border lg:col-span-2 ${panelClass}`}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="font-semibold text-sm">Últimos pedidos</h3>
-            <button className={`px-3 py-2 rounded-control text-sm font-medium border transition-colors ${subtlePanelClass}`}>
+            <button onClick={handleExportCSV} className={`px-3 py-2 rounded-control text-sm font-medium border transition-colors ${subtlePanelClass}`}>
               Exportar
             </button>
           </div>
@@ -203,9 +242,9 @@ export const Dashboard: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-3 py-3">
-                      <span className="inline-flex items-center gap-2 text-success">
-                        <span className="w-1.5 h-1.5 rounded-full bg-success" />
-                        <span className="text-xs font-medium">Concluído</span>
+                      <span className={`inline-flex items-center gap-2 ${order.status === 'closed' ? 'text-success' : 'text-warning'}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${order.status === 'closed' ? 'bg-success' : 'bg-warning'}`} />
+                        <span className="text-xs font-medium">{order.status === 'closed' ? 'Concluído' : 'Aberto'}</span>
                       </span>
                     </td>
                     <td className="px-3 py-3 text-right font-semibold">R$ {order.total.toFixed(2)}</td>
@@ -233,7 +272,7 @@ export const Dashboard: React.FC = () => {
             </table>
             {recentOrders.length === 0 && (
               <div className="py-12">
-                <EmptyState icon={Clock} title="Nenhum pedido recente" description="Pedidos abertos e fechados serão listados aqui." />
+                <EmptyState icon={Clock} title="Nenhum pedido fechado hoje" description="Pedidos concluídos serão listados aqui." />
               </div>
             )}
           </div>
@@ -354,7 +393,7 @@ export const Dashboard: React.FC = () => {
                   <span className="text-lg font-semibold text-accent">R$ {((parseMoney(subtotalInput) || 0) + (parseMoney(serviceInput) || 0)).toFixed(2)}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <button onClick={() => handleDeleteOrder(editingOrder)}
+                  <button onClick={() => handleDeleteOrder(editingOrder, true)}
                     className="h-10 rounded-control bg-danger/10 text-danger text-xs font-medium flex items-center justify-center gap-2 hover:bg-danger/20 transition-all">
                     <Trash2 className="w-4 h-4" /> Excluir
                   </button>
