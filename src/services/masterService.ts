@@ -94,6 +94,7 @@ export interface CreateEmpresaInput {
   name: string;
   document?: string;
   plano: 'essencial' | 'profissional' | 'gestao';
+  packId?: string;
   licenseStatus: 'active' | 'trial' | 'suspended';
   adminName: string;
   adminEmail: string;
@@ -125,6 +126,7 @@ export async function createEmpresaForTrial(input: CreateEmpresaInput): Promise<
         name: input.name,
         document: input.document,
         plano: input.plano,
+        packId: input.packId,
         licenseStatus: input.licenseStatus,
         adminName: input.adminName,
         adminEmail: input.adminEmail,

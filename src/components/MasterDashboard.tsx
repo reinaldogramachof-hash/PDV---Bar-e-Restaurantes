@@ -10,14 +10,18 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../store/AppContext';
 import { useMaster } from '../hooks/useMaster';
 import {
-  getProspects, saveProspect, deleteProspect, createProspect,
-  advanceProspectStage, getDrafts, createDraft, saveDraft,
+  getDrafts, createDraft, saveDraft,
   publishDraft, deleteDraft, duplicateDraft, getMrrHistory,
-  calcCurrentMrr, recordCurrentMrr, addActivity,
-  getActivitiesForProspect, getUpsellOpportunities,
+  calcCurrentMrr, recordCurrentMrr, getUpsellOpportunities,
 } from '../services/plenaHubService';
 import { listEmpresaProfiles } from '../services/masterService';
 import type { CreateEmpresaInput, ProfileSummary } from '../services/masterService';
+import { usePlenaProspects } from '../hooks/usePlenaProspects';
+import { createActivity, listActivities, type PlenaActivity, type PlenaProspect } from '../services/plenaProspectsService';
+import { listEmpresaModules, removeEmpresaModule, upsertEmpresaModule, type EmpresaModule } from '../services/empresaModulesService';
+import { addonLabels, addonModules, addonPricing, packDescriptions, packLabels, packModules, packPricing, planDescriptions, planModules, planPricing, type AddonModuleId, type ModuleId, type PackId } from '../domain/saas';
+import { addMessage, listAllTickets, listMessages, updateTicketStatus, type SupportMessage, type SupportTicket } from '../services/supportService';
+import { supabase } from '../lib/supabase';
 import type {
   Prospect, ProspectStage, MasterNotificationDraft,
   CommercialActivity, AppNotification, Empresa,
@@ -25,7 +29,7 @@ import type {
 
 // ─── Tab Types ────────────────────────────────────────────────────────────────
 
-type Tab = 'overview' | 'companies' | 'notifications' | 'comercial';
+type Tab = 'overview' | 'companies' | 'notifications' | 'comercial' | 'suporte';
 
 // ─── Static mock data (overview tab) ─────────────────────────────────────────
 
@@ -86,9 +90,9 @@ const addDays = (days: number) => {
 // ─── Prospect Modal ───────────────────────────────────────────────────────────
 
 interface ProspectModalProps {
-  prospect?: Prospect;
+  prospect?: PlenaProspect;
   onClose: () => void;
-  onSave: () => void;
+  onSave: (input: Omit<PlenaProspect, 'id' | 'createdAt' | 'updatedAt'>, id?: string) => Promise<void>;
   isDark: boolean;
   elevatedClass: string;
   panelClass: string;
@@ -104,20 +108,20 @@ const ProspectModal: React.FC<ProspectModalProps> = ({ prospect, onClose, onSave
   const [form, setForm] = useState({ ...BLANK_PROSPECT, ...prospect });
   const isEdit = Boolean(prospect);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.businessName || !form.contactName || !form.contactPhone) return;
-    if (isEdit && prospect) {
-      saveProspect({ ...prospect, ...form });
-    } else {
-      createProspect({
-        businessName: form.businessName, contactName: form.contactName,
-        contactPhone: form.contactPhone, contactEmail: form.contactEmail,
-        planInterest: form.planInterest, stage: form.stage,
-        notes: form.notes, lostReason: form.lostReason || undefined,
-        monthlyValue: form.monthlyValue,
-      });
-    }
-    onSave();
+    await onSave({
+      businessName: form.businessName,
+      contactName: form.contactName,
+      contactPhone: form.contactPhone,
+      contactEmail: form.contactEmail || '',
+      planInterest: form.planInterest,
+      stage: form.stage,
+      notes: form.notes,
+      lostReason: form.lostReason || undefined,
+      monthlyValue: form.monthlyValue,
+      lastInteractionAt: prospect?.lastInteractionAt || new Date().toISOString(),
+    }, prospect?.id);
     onClose();
   };
 
@@ -216,7 +220,7 @@ const ProspectModal: React.FC<ProspectModalProps> = ({ prospect, onClose, onSave
           <button onClick={onClose} className={`h-10 px-4 rounded-control border text-xs font-medium ${elevatedClass}`}>Cancelar</button>
           <button
             id="prospect-save"
-            onClick={handleSave}
+            onClick={() => void handleSave()}
             disabled={!form.businessName || !form.contactName || !form.contactPhone}
             className="h-10 px-4 rounded-control bg-accent text-white text-xs font-medium hover:bg-accent-hover disabled:opacity-40"
           >
@@ -234,7 +238,7 @@ interface ActivityModalProps {
   prospectId: string;
   prospectName: string;
   onClose: () => void;
-  onSave: () => void;
+  onSave: () => Promise<void>;
   isDark: boolean;
   elevatedClass: string;
   panelClass: string;
@@ -243,14 +247,23 @@ interface ActivityModalProps {
 const ActivityModal: React.FC<ActivityModalProps> = ({ prospectId, prospectName, onClose, onSave, isDark, elevatedClass, panelClass }) => {
   const [type, setType] = useState<CommercialActivity['type']>('note');
   const [description, setDescription] = useState('');
+  const [activities, setActivities] = useState<PlenaActivity[]>([]);
 
-  const activities = useMemo(() => getActivitiesForProspect(prospectId), [prospectId]);
+  useEffect(() => {
+    const run = async () => {
+      const next = await listActivities(prospectId);
+      setActivities(next);
+    };
+    void run();
+  }, [prospectId]);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!description.trim()) return;
-    addActivity({ prospectId, type, description });
+    await createActivity({ prospectId, type, description });
     setDescription('');
-    onSave();
+    await onSave();
+    const next = await listActivities(prospectId);
+    setActivities(next);
   };
 
   return (
@@ -295,7 +308,7 @@ const ActivityModal: React.FC<ActivityModalProps> = ({ prospectId, prospectName,
           </div>
           <button
             id="activity-add"
-            onClick={handleAdd}
+            onClick={() => void handleAdd()}
             disabled={!description.trim()}
             className="h-10 w-full rounded-control bg-accent text-white text-xs font-medium hover:bg-accent-hover disabled:opacity-40"
           >
@@ -345,6 +358,7 @@ const CreateEmpresaModal: React.FC<CreateEmpresaModalProps> = ({ onClose, onCrea
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [contractType, setContractType] = useState<'plano' | 'pack'>('plano');
   const friendlyMessage = (msg: string) => {
     if (msg.includes('already registered') || msg.includes('already been registered')) {
       return 'E-mail já cadastrado no sistema.';
@@ -361,7 +375,10 @@ const CreateEmpresaModal: React.FC<CreateEmpresaModalProps> = ({ onClose, onCrea
     setError(null);
     setSuccess(null);
     try {
-      await onSubmit(form);
+      await onSubmit({
+        ...form,
+        plano: contractType === 'pack' ? 'essencial' : form.plano,
+      });
       setSuccess('Empresa criada com sucesso.');
       onCreated();
       onClose();
@@ -401,11 +418,59 @@ const CreateEmpresaModal: React.FC<CreateEmpresaModalProps> = ({ onClose, onCrea
               className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
             />
           </div>
+          <div className="space-y-2">
+            <label className="block text-xs text-muted">Tipo de contratação</label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setContractType('plano')}
+                className={`h-8 px-3 rounded-control text-xs font-medium ${contractType === 'plano' ? 'bg-accent text-white' : `border ${elevatedClass}`}`}
+              >
+                Plano fixo
+              </button>
+              <button
+                onClick={() => setContractType('pack')}
+                className={`h-8 px-3 rounded-control text-xs font-medium ${contractType === 'pack' ? 'bg-accent text-white' : `border ${elevatedClass}`}`}
+              >
+                Pack por segmento
+              </button>
+            </div>
+          </div>
+          {contractType === 'plano' ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {(['essencial', 'profissional', 'gestao'] as const).map(plano => (
+                <button
+                  key={plano}
+                  onClick={() => setForm(prev => ({ ...prev, plano, packId: undefined }))}
+                  className={`p-3 rounded-panel border text-left ${form.plano === plano ? 'border-accent bg-accent/10' : elevatedClass}`}
+                >
+                  <p className="text-xs font-semibold capitalize">{plano}</p>
+                  <p className="text-xs text-muted mt-1">R$ {planPricing[plano]}/mês</p>
+                  <p className="text-[10px] text-muted mt-1">{planDescriptions[plano]}</p>
+                  <p className="text-[10px] text-muted mt-1">{planModules[plano].slice(0, 4).join(', ')}</p>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {(Object.keys(packModules) as PackId[]).map(packId => (
+                <button
+                  key={packId}
+                  onClick={() => setForm(prev => ({ ...prev, packId }))}
+                  className={`p-3 rounded-panel border text-left ${form.packId === packId ? 'border-accent bg-accent/10' : elevatedClass}`}
+                >
+                  <p className="text-xs font-semibold">{packLabels[packId]}</p>
+                  <p className="text-xs text-muted mt-1">R$ {packPricing[packId]}/mês</p>
+                  <p className="text-[10px] text-muted mt-1">{packDescriptions[packId]}</p>
+                </button>
+              ))}
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-muted mb-1">Plano</label>
               <select
                 value={form.plano}
+                disabled={contractType === 'pack'}
                 onChange={e => setForm(prev => ({ ...prev, plano: e.target.value as CreateEmpresaInput['plano'] }))}
                 className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}
               >
@@ -479,6 +544,7 @@ interface EmpresaDetailModalProps {
   onClose: () => void;
   onUpdatePlano: (id: string, plano: Empresa['plano']) => Promise<void>;
   onUpdateLicense: (id: string, status: Empresa['licenseStatus']) => Promise<void>;
+  onModulesChanged: () => Promise<void>;
   isDark: boolean;
   elevatedClass: string;
   panelClass: string;
@@ -489,12 +555,19 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
   onClose,
   onUpdatePlano,
   onUpdateLicense,
+  onModulesChanged,
   isDark,
   elevatedClass,
   panelClass,
 }) => {
   const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
+  const [modules, setModules] = useState<EmpresaModule[]>([]);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
+  const [loadingModules, setLoadingModules] = useState(true);
+  const [showModuleForm, setShowModuleForm] = useState(false);
+  const [moduleId, setModuleId] = useState<ModuleId>('delivery');
+  const [moduleLabel, setModuleLabel] = useState('');
+  const [moduleExpiresAt, setModuleExpiresAt] = useState('');
   const [updatingPlano, setUpdatingPlano] = useState(false);
   const [updatingLicense, setUpdatingLicense] = useState(false);
 
@@ -515,6 +588,32 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
     };
   }, [empresa.id]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setLoadingModules(true);
+      try {
+        const next = await listEmpresaModules(empresa.id);
+        if (!cancelled) setModules(next);
+      } finally {
+        if (!cancelled) setLoadingModules(false);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [empresa.id]);
+
+  const baseModules = planModules[empresa.plano];
+  const availableExtraModules = planModules.gestao.filter(item => !baseModules.includes(item));
+
+  const refreshModules = async () => {
+    const next = await listEmpresaModules(empresa.id);
+    setModules(next);
+    await onModulesChanged();
+  };
+
   const copyId = async () => {
     await navigator.clipboard.writeText(empresa.id);
   };
@@ -524,6 +623,18 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
     : empresa.licenseStatus === 'trial'
       ? 'text-warning'
       : 'text-danger';
+  const enabledAddonModules = modules.filter(item => item.enabled).map(item => item.moduleId);
+
+  const toggleAddon = async (moduleId: string, enabled: boolean) => {
+    await supabase.from('empresa_modules').upsert({
+      empresa_id: empresa.id,
+      module_id: moduleId,
+      enabled,
+      label: addonLabels[moduleId as AddonModuleId],
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'empresa_id,module_id' });
+    await refreshModules();
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -604,6 +715,40 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
           </section>
 
           <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
+            <h4 className="text-xs font-semibold text-muted">Plano & M�dulos</h4>
+            <div>
+              <p className="text-xs text-muted mb-2">M�dulos do plano</p>
+              <div className="flex flex-wrap gap-2">
+                {planModules[empresa.plano].map(module => (
+                  <span key={module} className={`px-2 py-1 rounded-control text-[10px] border ${elevatedClass}`}>? {module}</span>
+                ))}
+              </div>
+            </div>
+            <div className="border-t pt-3">
+              <p className="text-xs text-muted mb-2">Add-ons extras</p>
+              <div className="space-y-2">
+                {addonModules.map(moduleId => {
+                  const enabled = enabledAddonModules.includes(moduleId);
+                  return (
+                    <div key={moduleId} className={`p-2 rounded-control border flex items-center justify-between ${elevatedClass}`}>
+                      <div>
+                        <p className="text-xs font-medium">{addonLabels[moduleId]}</p>
+                        <p className="text-[10px] text-muted">+R$ {addonPricing[moduleId]}/m�s</p>
+                      </div>
+                      <button
+                        onClick={() => void toggleAddon(moduleId, !enabled)}
+                        className={`h-7 px-3 rounded-control text-xs font-medium ${enabled ? 'bg-accent text-white' : `border ${elevatedClass}`}`}
+                      >
+                        {enabled ? 'Ativo' : 'Ativar'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
             <h4 className="text-xs font-semibold text-muted">Usuários desta empresa</h4>
             {loadingProfiles ? (
               <div className="space-y-2">
@@ -635,6 +780,74 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </section>
+
+          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-semibold text-muted">Módulos Extras</h4>
+              <button onClick={() => setShowModuleForm(prev => !prev)} className="h-8 px-3 rounded-control bg-accent/10 text-accent text-xs font-medium">
+                + Habilitar módulo
+              </button>
+            </div>
+            {showModuleForm && (
+              <div className={`p-3 rounded-panel border space-y-2 ${elevatedClass}`}>
+                <select value={moduleId} onChange={e => setModuleId(e.target.value as ModuleId)} className={`h-9 w-full rounded-control border px-2 text-xs ${elevatedClass}`}>
+                  {availableExtraModules.map(item => (
+                    <option key={item} value={item}>{item}</option>
+                  ))}
+                </select>
+                <input value={moduleLabel} onChange={e => setModuleLabel(e.target.value)} placeholder="Label opcional" className={`h-9 w-full rounded-control border px-2 text-xs ${elevatedClass}`} />
+                <input type="date" value={moduleExpiresAt} onChange={e => setModuleExpiresAt(e.target.value)} className={`h-9 w-full rounded-control border px-2 text-xs ${elevatedClass}`} />
+                <button
+                  onClick={async () => {
+                    await upsertEmpresaModule(empresa.id, moduleId, true, {
+                      label: moduleLabel || undefined,
+                      expiresAt: moduleExpiresAt ? `${moduleExpiresAt}T23:59:59.000Z` : undefined,
+                    });
+                    setModuleLabel('');
+                    setModuleExpiresAt('');
+                    await refreshModules();
+                  }}
+                  className="h-9 w-full rounded-control bg-accent text-white text-xs font-medium"
+                >
+                  Habilitar
+                </button>
+              </div>
+            )}
+            {loadingModules ? (
+              <div className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} />
+            ) : modules.length === 0 ? (
+              <p className="text-xs text-muted">Nenhum módulo extra ativo.</p>
+            ) : (
+              <div className="space-y-2">
+                {modules.map(item => {
+                  const expired = item.expiresAt ? new Date(item.expiresAt) < new Date() : false;
+                  return (
+                    <div key={item.id} className={`p-3 rounded-panel border flex items-center justify-between gap-3 ${elevatedClass}`}>
+                      <div>
+                        <p className="text-xs font-semibold">{item.moduleId}</p>
+                        <p className="text-xs text-muted">{item.label || 'Sem label'}</p>
+                        {item.expiresAt && (
+                          <p className="text-xs text-muted">
+                            Expira em {new Date(item.expiresAt).toLocaleDateString('pt-BR')}
+                            {expired && <span className="ml-2 px-1.5 py-0.5 rounded-control bg-danger/20 text-danger">Expirado</span>}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={async () => {
+                          await removeEmpresaModule(item.id);
+                          await refreshModules();
+                        }}
+                        className="h-7 w-7 rounded-control border text-danger"
+                      >
+                        X
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -750,6 +963,7 @@ const TabOverview: React.FC<TabOverviewProps> = ({
 interface TabCompaniesProps { isDark: boolean; panelClass: string; elevatedClass: string }
 
 const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevatedClass }) => {
+  const { refreshExtraModules } = useApp();
   const { empresas, loading, error, updateLicense, updatePlano, createEmpresa, refresh } = useMaster();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [detailEmpresa, setDetailEmpresa] = useState<Empresa | null>(null);
@@ -927,6 +1141,7 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
               await handleUpdateLicense(id, status);
               setDetailEmpresa(prev => prev ? { ...prev, licenseStatus: status } : null);
             }}
+            onModulesChanged={refreshExtraModules}
             isDark={isDark}
             elevatedClass={elevatedClass}
             panelClass={panelClass}
@@ -1223,10 +1438,9 @@ interface TabComercialProps {
 
 const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevatedClass, onUpsellNotify }) => {
   const { products, orders } = useApp();
-
-  const [prospects, setProspects] = useState<Prospect[]>(() => getProspects());
+  const { prospects, loading, error, refresh, create, update, remove } = usePlenaProspects();
   const [showProspectModal, setShowProspectModal] = useState(false);
-  const [editProspect, setEditProspect] = useState<Prospect | undefined>(undefined);
+  const [editProspect, setEditProspect] = useState<PlenaProspect | undefined>(undefined);
   const [activityFor, setActivityFor] = useState<{ id: string; name: string } | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [upsellOpen, setUpsellOpen] = useState(false);
@@ -1234,10 +1448,10 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
   const [churnFilter, setChurnFilter] = useState<ChurnFilter>('30d');
   const [mrrHistory, setMrrHistory] = useState(() => getMrrHistory());
 
-  const reload = useCallback(() => {
-    setProspects(getProspects());
+  const reload = useCallback(async () => {
+    await refresh();
     setMrrHistory(getMrrHistory());
-  }, []);
+  }, [refresh]);
 
   const upsellOpps = useMemo(() => getUpsellOpportunities(products, orders), [products, orders]);
 
@@ -1286,11 +1500,24 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
     return Math.round(((curr - prev) / prev) * 100);
   })();
 
-  const handleAdvance = (id: string) => { advanceProspectStage(id); reload(); };
-  const handleDelete = (id: string) => { deleteProspect(id); reload(); setMenuOpen(null); };
-  const handleMarkLost = (p: Prospect) => {
-    saveProspect({ ...p, stage: 'perdido', updatedAt: new Date().toISOString() });
-    reload(); setMenuOpen(null);
+  const handleAdvance = async (id: string) => {
+    const order: ProspectStage[] = ['contato', 'demo', 'proposta', 'contrato', 'onboarding', 'ativo'];
+    const current = prospects.find(item => item.id === id);
+    if (!current) return;
+    const index = order.indexOf(current.stage);
+    if (index < 0 || index >= order.length - 1) return;
+    await update(id, { stage: order[index + 1], lastInteractionAt: new Date().toISOString() });
+    await reload();
+  };
+  const handleDelete = async (id: string) => {
+    await remove(id);
+    await reload();
+    setMenuOpen(null);
+  };
+  const handleMarkLost = async (p: PlenaProspect) => {
+    await update(p.id, { stage: 'perdido', updatedAt: new Date().toISOString() });
+    await reload();
+    setMenuOpen(null);
   };
 
   const kpis = [
@@ -1302,6 +1529,14 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
 
   return (
     <div className="space-y-5">
+      {loading && (
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map(item => (
+            <div key={item} className={`h-24 rounded-panel border animate-pulse ${panelClass}`} />
+          ))}
+        </div>
+      )}
+      {error && <p className="text-xs text-danger">{error}</p>}
       {/* KPIs */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {kpis.map((kpi, i) => (
@@ -1366,7 +1601,7 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
                         <div className="flex items-center gap-2 mt-3">
                           {stage.id !== 'ativo' && (
                             <button
-                              onClick={() => handleAdvance(p.id)}
+                              onClick={() => void handleAdvance(p.id)}
                               className="flex items-center gap-1 h-7 px-2 rounded-control bg-accent/10 text-accent text-xs font-medium hover:bg-accent/20 transition-colors"
                             >
                               Avançar <ArrowRight className="w-3 h-3" />
@@ -1390,8 +1625,8 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
                                   {[
                                     { label: 'Editar', action: () => { setEditProspect(p); setShowProspectModal(true); setMenuOpen(null); } },
                                     { label: 'Adicionar nota', action: () => { setActivityFor({ id: p.id, name: p.businessName }); setMenuOpen(null); } },
-                                    { label: 'Marcar perdido', action: () => handleMarkLost(p) },
-                                    { label: 'Excluir', action: () => handleDelete(p.id) },
+                                    { label: 'Marcar perdido', action: () => void handleMarkLost(p) },
+                                    { label: 'Excluir', action: () => void handleDelete(p.id) },
                                   ].map(item => (
                                     <button
                                       key={item.label}
@@ -1589,7 +1824,11 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
           <ProspectModal
             prospect={editProspect}
             onClose={() => setShowProspectModal(false)}
-            onSave={reload}
+            onSave={async (input, id) => {
+              if (id) await update(id, input);
+              else await create(input);
+              await reload();
+            }}
             isDark={isDark}
             elevatedClass={elevatedClass}
             panelClass={panelClass}
@@ -1609,6 +1848,96 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
           />
         )}
       </AnimatePresence>
+    </div>
+  );
+};
+
+interface TabSuporteProps { panelClass: string; elevatedClass: string }
+
+const TabSuporte: React.FC<TabSuporteProps> = ({ panelClass, elevatedClass }) => {
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [filter, setFilter] = useState<'todos' | SupportTicket['status']>('todos');
+  const [selected, setSelected] = useState<SupportTicket | null>(null);
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
+  const [reply, setReply] = useState('');
+
+  const refresh = useCallback(async () => {
+    const next = await listAllTickets();
+    setTickets(next);
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const visible = filter === 'todos' ? tickets : tickets.filter(item => item.status === filter);
+  const openCount = tickets.filter(item => item.status === 'open').length;
+  const inProgressCount = tickets.filter(item => item.status === 'in_progress').length;
+  const urgentCount = tickets.filter(item => item.priority === 'urgent').length;
+
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+        {[['Abertos', openCount], ['Em andamento', inProgressCount], ['Resolvidos', tickets.filter(item => item.status === 'resolved').length], ['Urgentes', urgentCount]].map(([label, value]) => (
+          <div key={String(label)} className={`p-4 rounded-panel border ${panelClass}`}>
+            <p className="text-xs text-muted">{label}</p>
+            <p className="text-xl font-semibold">{value}</p>
+          </div>
+        ))}
+      </div>
+      <section className={`p-5 rounded-section border ${panelClass} space-y-4`}>
+        <div className="flex items-center gap-2">
+          {(['todos', 'open', 'in_progress', 'resolved'] as const).map(item => (
+            <button key={item} onClick={() => setFilter(item)} className={`h-8 px-3 rounded-control text-xs ${filter === item ? 'bg-accent text-white' : `border ${elevatedClass}`}`}>{item}</button>
+          ))}
+        </div>
+        <div className="space-y-2">
+          {visible.map(ticket => (
+            <button key={ticket.id} onClick={async () => { setSelected(ticket); setMessages(await listMessages(ticket.id)); }} className={`w-full p-3 rounded-panel border flex items-center justify-between text-left ${elevatedClass}`}>
+              <span className="text-xs">{ticket.empresaName || ticket.empresaId} - {ticket.title}</span>
+              <span className="text-xs text-muted">{ticket.priority} / {ticket.status}</span>
+            </button>
+          ))}
+        </div>
+      </section>
+      {selected && (
+        <section className={`p-5 rounded-section border ${panelClass} space-y-3`}>
+          <h3 className="text-sm font-semibold">Responder: {selected.title}</h3>
+          <div className="space-y-2 max-h-56 overflow-y-auto">
+            {messages.map(item => (
+              <div key={item.id} className={`p-3 rounded-panel border ${elevatedClass}`}>
+                <p className="text-xs font-semibold">{item.authorName}</p>
+                <p className="text-xs text-muted">{item.body}</p>
+              </div>
+            ))}
+          </div>
+          <textarea value={reply} onChange={e => setReply(e.target.value)} rows={3} className={`w-full rounded-control border px-3 py-2 text-xs ${elevatedClass}`} />
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                if (!reply.trim()) return;
+                await addMessage(selected.id, 'Time Master', reply, true);
+                await updateTicketStatus(selected.id, 'in_progress');
+                setReply('');
+                setMessages(await listMessages(selected.id));
+                await refresh();
+              }}
+              className="h-9 px-4 rounded-control bg-accent text-white text-xs"
+            >
+              Responder
+            </button>
+            <button
+              onClick={async () => {
+                await updateTicketStatus(selected.id, 'resolved');
+                await refresh();
+              }}
+              className={`h-9 px-4 rounded-control border text-xs ${elevatedClass}`}
+            >
+              Resolver
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   );
 };
@@ -1637,6 +1966,7 @@ export const MasterDashboard: React.FC = () => {
     { id: 'companies',     label: 'Empresas',     icon: Building2 },
     { id: 'notifications', label: 'Notificações', icon: Bell },
     { id: 'comercial',     label: 'Comercial',    icon: ClipboardList },
+    { id: 'suporte',       label: 'Suporte',      icon: MessageSquare },
   ];
 
   return (
@@ -1719,6 +2049,10 @@ export const MasterDashboard: React.FC = () => {
               onUpsellNotify={handleUpsellNotify}
             />
           )}
+          
+          {activeTab === 'suporte' && (
+            <TabSuporte panelClass={panelClass} elevatedClass={elevatedClass} />
+          )}
         </motion.div>
       </AnimatePresence>
     </div>
@@ -1742,3 +2076,5 @@ const FilterControl: React.FC<FilterControlProps> = ({ icon: Icon, label, value,
     </span>
   </button>
 );
+
+

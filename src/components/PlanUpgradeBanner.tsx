@@ -14,6 +14,7 @@ const moduleNames: Record<ModuleId, string> = {
   pdv: 'PDV',
   mesas: 'Mesas',
   delivery: 'Delivery',
+  'pedidos-online': 'Pedidos Online',
   'cardapio-digital': 'Cardapio Digital',
   vendas: 'Vendas',
   cozinha: 'Cozinha',

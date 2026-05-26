@@ -5,7 +5,7 @@ import {
   Download, Upload, RefreshCw, Check, AlertTriangle, ShieldCheck, 
   Globe, Phone, MapPin, FileText, Layout, Crown, ChefHat
 } from 'lucide-react';
-import { getPlanModules, planModules, ModuleId } from '../domain/saas';
+import { addonLabels, addonModules, addonPricing, getPlanModules, ModuleId, planDescriptions, planPricing, PLENA_WHATSAPP } from '../domain/saas';
 import { useAudit } from '../hooks/useAudit';
 import { motion } from 'motion/react';
 import { AppSettings } from '../types';
@@ -62,6 +62,7 @@ export const Settings: React.FC = () => {
     pdv: 'PDV',
     mesas: 'Mesas',
     delivery: 'Delivery',
+    'pedidos-online': 'Pedidos Online',
     'cardapio-digital': 'Cardapio Digital',
     vendas: 'Vendas',
     cozinha: 'Cozinha',
@@ -89,50 +90,64 @@ export const Settings: React.FC = () => {
     : currentEmpresa.licenseStatus === 'trial'
       ? { label: 'Trial', className: 'bg-[var(--color-warning)]/15 text-[var(--color-warning)]' }
       : { label: 'Suspensa', className: 'bg-[var(--color-danger)]/15 text-[var(--color-danger)]' };
+  const extraModules = ((currentEmpresa as unknown as { extraModules?: string[] }).extraModules ?? []);
+  const availableAddons = addonModules.filter(moduleId =>
+    !getPlanModules(currentEmpresa.plano).includes(moduleId) && !extraModules.includes(moduleId)
+  );
 
   return (
     <div className="space-y-5 animate-in fade-in duration-700 pb-8">
       <section className="p-5 rounded-panel border border-[var(--color-border)] bg-[var(--color-elevated)] space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <div className="space-y-1">
-            <h3 className="text-sm font-semibold">Plano e Licenca</h3>
-            <p className="text-xs text-[var(--color-muted)]">Resumo do plano contratado e status da licenca</p>
-          </div>
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-control bg-[var(--color-accent)]/10 flex items-center justify-center">
-              <Crown className="w-4 h-4 text-[var(--color-accent)]" />
+            <div className="w-8 h-8 rounded-control bg-accent/10 flex items-center justify-center">
+              <Crown className="w-4 h-4 text-accent" />
             </div>
-            <div className="w-8 h-8 rounded-control bg-[var(--color-success)]/10 flex items-center justify-center">
-              <ShieldCheck className="w-4 h-4 text-[var(--color-success)]" />
-            </div>
+            <h3 className="text-sm font-semibold">Plano {planLabel}</h3>
           </div>
+          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${licenseBadge.className}`}>{licenseBadge.label}</span>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-xs text-[var(--color-muted)]">Plano atual</span>
-          <span className="text-sm font-semibold">{planLabel}</span>
-          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${licenseBadge.className}`}>
-            {licenseBadge.label}
-          </span>
+        <p className="text-xs text-muted">{planDescriptions[currentEmpresa.plano]}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-lg font-semibold">R$ {planPricing[currentEmpresa.plano]}/mês</p>
+          <p className="text-xs text-muted">Renovação: {currentEmpresa.licenseStatus}</p>
         </div>
-        <div className="space-y-2">
-          <p className="text-xs text-[var(--color-muted)]">Modulos incluidos</p>
-          <div className="flex flex-wrap gap-2">
-            {planModules[currentEmpresa.plano].map(moduleId => (
-              <span key={moduleId} className="px-2.5 py-1 text-[10px] font-medium rounded-full bg-black/10 text-[var(--color-muted)]">
-                {moduleNames[moduleId]}
-              </span>
+        <div className="border-t border-[var(--color-border)] pt-4 space-y-2">
+          <p className="text-xs text-muted">Módulos incluídos</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            {getPlanModules(currentEmpresa.plano).map(moduleId => (
+              <div key={moduleId} className="px-2.5 py-1.5 text-[11px] rounded-control border border-[var(--color-border)] flex items-center gap-2">
+                <Check className="w-3 h-3 text-success" />
+                <span>{moduleNames[moduleId]}</span>
+              </div>
             ))}
           </div>
         </div>
-        {(currentEmpresa.plano === 'essencial' || currentEmpresa.plano === 'profissional') && (
-          <a
-            href="https://wa.me/5512992191018"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex h-10 px-4 rounded-control bg-[var(--color-accent)] text-white text-xs font-medium items-center justify-center hover:bg-[var(--color-accent-hover)]"
-          >
-            Fazer upgrade do plano
-          </a>
+        {availableAddons.length > 0 && (
+          <div className="border-t border-[var(--color-border)] pt-4 space-y-2">
+            <p className="text-xs text-muted">Add-ons disponíveis</p>
+            <div className="space-y-2">
+              {availableAddons.map(moduleId => (
+                <div key={moduleId} className="p-2.5 rounded-control border border-[var(--color-border)] flex items-center justify-between gap-2">
+                  <span className="text-xs">{addonLabels[moduleId]} +R$ {addonPricing[moduleId]}/mês</span>
+                  <button className="h-7 px-3 rounded-control border border-[var(--color-border)] text-xs font-medium">Adicionar</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {currentEmpresa.plano !== 'gestao' && (
+          <div className="border-t border-[var(--color-border)] pt-4 space-y-2">
+            <a
+              href={`https://wa.me/${PLENA_WHATSAPP}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 px-4 rounded-control bg-accent text-white text-xs font-medium items-center justify-center hover:bg-[var(--color-accent-hover)]"
+            >
+              Fazer upgrade
+            </a>
+            <p className="text-xs text-muted">Falar com especialista</p>
+          </div>
         )}
       </section>
 
@@ -497,3 +512,4 @@ export const Settings: React.FC = () => {
     </div>
   );
 };
+

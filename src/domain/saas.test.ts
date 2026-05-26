@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict';
 import {
+  addonPricing,
   DEFAULT_EMPRESA_ID,
   buildScopedStorageKey,
   canAccessModule,
   ensureEmpresaId,
   getPlanModules,
   hasForeignEmpresaId,
+  packModules,
+  packPricing,
+  planModules,
+  planPricing,
   getSessionScopedExpenses,
   migrateLegacyCollection,
   normalizeImportedCollection,
@@ -17,12 +22,19 @@ import { parseLicensePayload } from '../services/licenseService';
 const scopedKey = buildScopedStorageKey('products', 'empresa-alpha');
 assert.equal(scopedKey, 'gestao-gastro:empresa-alpha:products');
 
-assert.deepEqual(getPlanModules('essencial'), ['pdv', 'mesas', 'caixa', 'produtos', 'relatorios']);
+assert.deepEqual(getPlanModules('essencial'), ['pdv', 'mesas', 'caixa', 'produtos', 'relatorios', 'cozinha', 'cardapio-digital']);
+assert.ok(planModules.essencial.includes('cozinha'));
+assert.ok(planModules.essencial.includes('cardapio-digital'));
+assert.ok(planModules.profissional.includes('delivery'));
+assert.ok(packModules.delivery.includes('pedidos-online'));
+assert.equal(planPricing.gestao, 329);
+assert.equal(packPricing.autonomo, 69);
+assert.equal(addonPricing.intelligence, 49);
 assert.ok(canAccessModule('profissional', 'gerente', 'cozinha'));
 assert.ok(!canAccessModule('essencial', 'garcom', 'estoque'));
 assert.ok(canAccessModule('gestao', 'master', 'colaboradores'));
 assert.ok(canAccessModule('essencial', 'gerente', 'pdv'));
-assert.ok(!canAccessModule('essencial', 'gerente', 'cozinha'));
+assert.ok(canAccessModule('essencial', 'gerente', 'cozinha'));
 assert.ok(!canAccessModule('essencial', 'gerente', 'dashboard'));
 assert.ok(canAccessModule('profissional', 'gerente', 'pdv'));
 assert.ok(canAccessModule('profissional', 'gerente', 'cozinha'));
