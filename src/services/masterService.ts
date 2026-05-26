@@ -101,33 +101,35 @@ export interface CreateEmpresaInput {
 }
 
 export async function createEmpresaForTrial(input: CreateEmpresaInput): Promise<Empresa> {
-  const generatedId = `empresa-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const now = new Date().toISOString();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) throw new Error('Não autenticado.');
 
-  const { data, error } = await supabase
-    .from('empresas')
-    .insert({
-      id: generatedId,
-      name: input.name,
-      document: input.document ?? null,
-      plano: input.plano,
-      license_status: input.licenseStatus,
-      created_at: now,
-      updated_at: now,
-    })
-    .select('*')
-    .single<EmpresaRow>();
+  const res = await fetch(
+    `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-empresa`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+        'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+      },
+      body: JSON.stringify({
+        name: input.name,
+        document: input.document,
+        plano: input.plano,
+        licenseStatus: input.licenseStatus,
+        adminName: input.adminName,
+        adminEmail: input.adminEmail,
+        adminPassword: input.adminPassword,
+      }),
+    }
+  );
 
-  throwSupabaseError('Erro ao criar empresa', error);
-
-  if (!data) {
-    throw new Error('Erro ao criar empresa: resposta vazia do Supabase.');
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: 'Erro desconhecido' }));
+    throw new Error(body.error ?? `Erro ${res.status}`);
   }
 
-  // A criacao de usuario auth exige service_role e deve ser feita server-side.
-  void input.adminName;
-  void input.adminEmail;
-  void input.adminPassword;
-
-  return toEmpresa(data);
+  const row: EmpresaRow = await res.json();
+  return toEmpresa(row);
 }

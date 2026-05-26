@@ -344,6 +344,12 @@ const CreateEmpresaModal: React.FC<CreateEmpresaModalProps> = ({ onClose, onCrea
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const friendlyMessage = (msg: string) => {
+    if (msg.includes('already registered') || msg.includes('already been registered')) {
+      return 'E-mail já cadastrado no sistema.';
+    }
+    return msg;
+  };
 
   const handleCreate = async () => {
     if (!form.name.trim()) return;
@@ -356,7 +362,7 @@ const CreateEmpresaModal: React.FC<CreateEmpresaModalProps> = ({ onClose, onCrea
       onCreated();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao criar empresa.');
+      setError(friendlyMessage(err instanceof Error ? err.message : 'Erro ao criar empresa.'));
     } finally {
       setLoading(false);
     }
