@@ -3,7 +3,7 @@ import {
   AlertTriangle, Bell, Building2, CalendarDays, ChevronDown,
   ChevronRight, Copy, Filter, Info, LineChart, MessageSquare,
   MoreHorizontal, Plus, ReceiptText, ShieldAlert, ShoppingBag,
-  Sparkles, Tag, TrendingUp, Trash2, Zap, X, Phone, Mail,
+  Sparkles, Tag, TrendingUp, Trash2, Zap, X, Phone, Mail, Search,
   ArrowRight, ClipboardList,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -853,6 +853,7 @@ interface TabOverviewProps {
   panelClass: string;
   elevatedClass: string;
   empresas: Empresa[];
+  onNavigate: (tab: Tab, filter?: string) => void;
 }
 
 const TabOverview: React.FC<TabOverviewProps> = ({
@@ -860,6 +861,7 @@ const TabOverview: React.FC<TabOverviewProps> = ({
   panelClass,
   elevatedClass,
   empresas,
+  onNavigate,
 }) => {
   const totalEmpresas = empresas.length;
   const empresasAtivas = empresas.filter(e => e.licenseStatus === 'active').length;
@@ -872,10 +874,10 @@ const TabOverview: React.FC<TabOverviewProps> = ({
   const trialEmpresas = empresas.filter(e => e.licenseStatus === 'trial').slice(0, 5);
 
   const kpis = [
-    { label: 'MRR Ativo', value: fmtBRL(mrrReal), detail: `${totalEmpresas} empresas`, icon: ReceiptText, tone: 'text-success', bg: 'bg-success/10' },
-    { label: 'Empresas Ativas', value: String(empresasAtivas), detail: `${totalEmpresas} no total`, icon: Building2, tone: 'text-success', bg: 'bg-success/10' },
-    { label: 'Em Trial', value: String(empresasTrial), detail: `${licencasVencer} requerem atenção`, icon: CalendarDays, tone: 'text-warning', bg: 'bg-warning/10' },
-    { label: 'Suspensas', value: String(empresasSuspensas), detail: 'Licenças bloqueadas', icon: AlertTriangle, tone: 'text-danger', bg: 'bg-danger/10' },
+    { label: 'MRR Ativo', value: fmtBRL(mrrReal), detail: `${totalEmpresas} empresas`, icon: ReceiptText, tone: 'text-success', bg: 'bg-success/10', onClick: () => onNavigate('companies', 'active') },
+    { label: 'Empresas Ativas', value: String(empresasAtivas), detail: `${totalEmpresas} no total`, icon: Building2, tone: 'text-success', bg: 'bg-success/10', onClick: () => onNavigate('companies', 'active') },
+    { label: 'Em Trial', value: String(empresasTrial), detail: `${licencasVencer} requerem atenção`, icon: CalendarDays, tone: 'text-warning', bg: 'bg-warning/10', onClick: () => onNavigate('companies', 'trial') },
+    { label: 'Suspensas', value: String(empresasSuspensas), detail: 'Licenças bloqueadas', icon: AlertTriangle, tone: 'text-danger', bg: 'bg-danger/10', onClick: () => onNavigate('companies', 'suspended') },
   ];
 
   return (
@@ -887,7 +889,8 @@ const TabOverview: React.FC<TabOverviewProps> = ({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.04 }}
-            className={`p-5 rounded-panel border ${panelClass}`}
+            onClick={kpi.onClick}
+            className={`p-5 rounded-panel border cursor-pointer hover:border-accent/50 transition-colors ${panelClass}`}
           >
             <div className="flex items-start justify-between mb-5">
               <div className={`w-10 h-10 rounded-panel flex items-center justify-center ${kpi.bg}`}>
@@ -946,7 +949,10 @@ const TabOverview: React.FC<TabOverviewProps> = ({
           ) : (
             <p className="text-xs text-muted">Nenhuma licença requer atenção</p>
           )}
-          <button className="mt-5 h-10 w-full rounded-control bg-accent px-4 text-xs font-medium text-white hover:bg-accent-hover">
+          <button
+            onClick={() => onNavigate('companies', 'trial')}
+            className="mt-5 h-10 w-full rounded-control bg-accent px-4 text-xs font-medium text-white hover:bg-accent-hover"
+          >
             Abrir renovacoes
           </button>
         </section>
@@ -957,17 +963,35 @@ const TabOverview: React.FC<TabOverviewProps> = ({
 
 // â”€â”€â”€ Tab: Companies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-interface TabCompaniesProps { isDark: boolean; panelClass: string; elevatedClass: string }
+interface TabCompaniesProps {
+  isDark: boolean;
+  panelClass: string;
+  elevatedClass: string;
+  initialFilter?: 'all' | 'active' | 'trial' | 'suspended';
+}
 
-const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevatedClass }) => {
+const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevatedClass, initialFilter }) => {
   const { refreshExtraModules } = useApp();
   const { empresas, loading, error, updateLicense, updatePlano, createEmpresa, refresh } = useMaster();
+  const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'trial' | 'suspended'>(initialFilter ?? 'all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [detailEmpresa, setDetailEmpresa] = useState<Empresa | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [loadingPlanoById, setLoadingPlanoById] = useState<Record<string, boolean>>({});
   const [loadingLicenseById, setLoadingLicenseById] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (initialFilter) setFilterStatus(initialFilter);
+  }, [initialFilter]);
+
+  const filteredEmpresas = empresas.filter(e => {
+    const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) ||
+      (e.document ?? '').includes(search);
+    const matchStatus = filterStatus === 'all' || e.licenseStatus === filterStatus;
+    return matchSearch && matchStatus;
+  });
 
   const exportEmpresas = () => {
     const payload = JSON.stringify(empresas, null, 2);
@@ -1044,6 +1068,30 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
           {error}
         </div>
       )}
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex-1 min-w-[200px] relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted pointer-events-none" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Buscar empresa..."
+            className={`w-full h-9 pl-9 pr-3 rounded-control border text-xs ${elevatedClass}`}
+          />
+        </div>
+        <div className="flex gap-1.5">
+          {(['all', 'active', 'trial', 'suspended'] as const).map(s => (
+            <button
+              key={s}
+              onClick={() => setFilterStatus(s)}
+              className={`h-9 px-3 rounded-control text-xs font-medium border transition-colors ${
+                filterStatus === s ? 'bg-accent text-white border-accent' : elevatedClass
+              }`}
+            >
+              {s === 'all' ? 'Todos' : LICENSE_LABELS[s]}
+            </button>
+          ))}
+        </div>
+      </div>
       {loading ? (
         <div className="space-y-3">
           {[0, 1, 2].map(idx => (
@@ -1052,18 +1100,25 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] text-left text-sm">
+          <table className="w-full min-w-[980px] text-left text-sm">
             <thead>
               <tr className={`border-b text-xs font-medium text-muted ${isDark ? 'border-border' : 'border-border-light'}`}>
                 <th className="px-4 py-3">Nome</th>
                 <th className="px-4 py-3">Plano</th>
                 <th className="px-4 py-3">Status Licenca</th>
                 <th className="px-4 py-3">Criada em</th>
+                <th className="px-4 py-3">MRR</th>
                 <th className="px-4 py-3 text-right">Acoes</th>
               </tr>
             </thead>
             <tbody className={`divide-y ${isDark ? 'divide-border' : 'divide-border-light'}`}>
-              {empresas.map(empresa => (
+              {filteredEmpresas.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-8 text-center text-xs text-muted">
+                    Nenhuma empresa encontrada
+                  </td>
+                </tr>
+              ) : filteredEmpresas.map(empresa => (
                 <tr key={empresa.id} className={isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'}>
                   <td className="px-4 py-3 font-medium">{empresa.name}</td>
                   <td className="px-4 py-3">
@@ -1095,6 +1150,11 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
                       ? new Intl.DateTimeFormat('pt-BR').format(new Date(empresa.createdAt))
                       : '-'}
                   </td>
+                  <td className="px-4 py-3 font-medium tabular-nums">
+                    {empresa.licenseStatus === 'active'
+                      ? fmtBRL(planPricing[empresa.plano] ?? 0)
+                      : <span className="text-muted text-xs">—</span>}
+                  </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => setDetailEmpresa(empresa)}
@@ -1107,6 +1167,19 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr className={`border-t text-xs font-semibold ${isDark ? 'border-border' : 'border-border-light'}`}>
+                <td className="px-4 py-3">Total</td>
+                <td className="px-4 py-3" colSpan={2} />
+                <td className="px-4 py-3" />
+                <td className="px-4 py-3 tabular-nums text-success">
+                  {fmtBRL(filteredEmpresas.reduce((acc, e) =>
+                    acc + (e.licenseStatus === 'active' ? (planPricing[e.plano] ?? 0) : 0), 0
+                  ))}
+                </td>
+                <td className="px-4 py-3" />
+              </tr>
+            </tfoot>
           </table>
         </div>
       )}
@@ -1835,9 +1908,13 @@ const TabComercial: React.FC<TabComercialProps> = ({ isDark, panelClass, elevate
   );
 };
 
-interface TabSuporteProps { panelClass: string; elevatedClass: string }
+interface TabSuporteProps {
+  panelClass: string;
+  elevatedClass: string;
+  onTicketResolved: () => void;
+}
 
-const TabSuporte: React.FC<TabSuporteProps> = ({ panelClass, elevatedClass }) => {
+const TabSuporte: React.FC<TabSuporteProps> = ({ panelClass, elevatedClass, onTicketResolved }) => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [filter, setFilter] = useState<'todos' | SupportTicket['status']>('todos');
   const [selected, setSelected] = useState<SupportTicket | null>(null);
@@ -1912,6 +1989,7 @@ const TabSuporte: React.FC<TabSuporteProps> = ({ panelClass, elevatedClass }) =>
             <button
               onClick={async () => {
                 await updateTicketStatus(selected.id, 'resolved');
+                onTicketResolved();
                 await refresh();
               }}
               className={`h-9 px-4 rounded-control border text-xs ${elevatedClass}`}
@@ -1936,10 +2014,33 @@ export const MasterDashboard: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [notifPrefillType, setNotifPrefillType] = useState<AppNotification['type'] | undefined>(undefined);
+  const [pendingFilter, setPendingFilter] = useState<'all' | 'active' | 'trial' | 'suspended'>('all');
+  const [openTicketsCount, setOpenTicketsCount] = useState(0);
 
   const handleUpsellNotify = useCallback(() => {
     setNotifPrefillType('sales');
     setActiveTab('notifications');
+  }, []);
+
+  const handleOverviewNavigate = useCallback((tab: Tab, filter?: string) => {
+    setActiveTab(tab);
+    if (filter) setPendingFilter(filter as 'active' | 'trial' | 'suspended' | 'all');
+  }, []);
+
+  const handleTicketResolved = useCallback(() => {
+    setOpenTicketsCount(prev => Math.max(0, prev - 1));
+  }, []);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        const tickets = await listAllTickets();
+        setOpenTicketsCount(tickets.filter(t => t.status === 'open').length);
+      } catch {
+        // silencioso
+      }
+    };
+    void run();
   }, []);
 
   const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -1986,6 +2087,11 @@ export const MasterDashboard: React.FC = () => {
             >
               <Icon className="w-3.5 h-3.5" />
               {tab.label}
+              {tab.id === 'suporte' && openTicketsCount > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-danger text-white text-[9px] font-bold leading-none">
+                  {openTicketsCount > 9 ? '9+' : openTicketsCount}
+                </span>
+              )}
             </button>
           );
         })}
@@ -2006,10 +2112,11 @@ export const MasterDashboard: React.FC = () => {
               panelClass={panelClass}
               elevatedClass={elevatedClass}
               empresas={master.empresas}
+              onNavigate={handleOverviewNavigate}
             />
           )}
           {activeTab === 'companies' && (
-            <TabCompanies isDark={isDark} panelClass={panelClass} elevatedClass={elevatedClass} />
+            <TabCompanies isDark={isDark} panelClass={panelClass} elevatedClass={elevatedClass} initialFilter={pendingFilter} />
           )}
           {activeTab === 'notifications' && (
             <TabNotificacoes
@@ -2030,7 +2137,7 @@ export const MasterDashboard: React.FC = () => {
           )}
           
           {activeTab === 'suporte' && (
-            <TabSuporte panelClass={panelClass} elevatedClass={elevatedClass} />
+            <TabSuporte panelClass={panelClass} elevatedClass={elevatedClass} onTicketResolved={handleTicketResolved} />
           )}
         </motion.div>
       </AnimatePresence>
