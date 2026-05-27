@@ -4,7 +4,7 @@ import {
   ChevronRight, Copy, Filter, Info, LineChart, MessageSquare,
   MoreHorizontal, Plus, ReceiptText, ShieldAlert, ShoppingBag,
   Sparkles, Tag, TrendingUp, Trash2, Zap, X, Phone, Mail, Search,
-  ArrowRight, ClipboardList,
+  ArrowRight, ClipboardList, Upload, Download, FileText, History, Settings,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../store/AppContext';
@@ -14,8 +14,24 @@ import {
   calcCurrentMrr,
   recordCurrentMrr,
 } from '../services/plenaHubService';
-import { listEmpresaProfiles } from '../services/masterService';
-import type { CreateEmpresaInput, ProfileSummary } from '../services/masterService';
+import {
+  addEmpresaHistory,
+  deleteEmpresaDocument,
+  getDocumentSignedUrl,
+  getEmpresaDetail,
+  listEmpresaDocuments,
+  listEmpresaHistory,
+  listEmpresaProfiles,
+  updateEmpresaDetail,
+  uploadEmpresaDocument,
+} from '../services/masterService';
+import type {
+  CreateEmpresaInput,
+  EmpresaDetail,
+  EmpresaDocument,
+  EmpresaHistoryEntry,
+  ProfileSummary,
+} from '../services/masterService';
 import { usePlenaProspects } from '../hooks/usePlenaProspects';
 import { createActivity, listActivities, type PlenaActivity, type PlenaProspect } from '../services/plenaProspectsService';
 import { listEmpresaModules, removeEmpresaModule, upsertEmpresaModule, type EmpresaModule } from '../services/empresaModulesService';
@@ -25,13 +41,13 @@ import { supabase } from '../lib/supabase';
 import { createNotification, deleteNotification, duplicateNotification, listNotifications, publishNotification, type MasterNotification } from '../services/masterNotificationsService';
 import type { Prospect, ProspectStage, CommercialActivity, AppNotification, Empresa } from '../types';
 
-// â”€â”€â”€ Tab Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 type Tab = 'overview' | 'companies' | 'notifications' | 'comercial' | 'suporte';
 
-// â”€â”€â”€ Static mock data (overview tab) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
-// â”€â”€â”€ Pipeline stages â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 const STAGES: { id: ProspectStage; label: string; color: string }[] = [
   { id: 'contato',    label: 'Contato',    color: 'text-muted' },
@@ -65,7 +81,7 @@ const NOTIF_ICON: Record<AppNotification['type'], React.ComponentType<{ classNam
   support: MessageSquare, sales: Tag, info: Info,
 };
 
-// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 const fmtBRL = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
@@ -88,7 +104,7 @@ const addDays = (days: number) => {
   return d.toISOString();
 };
 
-// â”€â”€â”€ Prospect Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 interface ProspectModalProps {
   prospect?: PlenaProspect;
@@ -233,7 +249,7 @@ const ProspectModal: React.FC<ProspectModalProps> = ({ prospect, onClose, onSave
   );
 };
 
-// â”€â”€â”€ Activity Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 interface ActivityModalProps {
   prospectId: string;
@@ -536,6 +552,8 @@ interface EmpresaDetailModalProps {
   panelClass: string;
 }
 
+type DetailTab = 'dados' | 'contrato' | 'documentos' | 'historico';
+
 const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
   empresa,
   onClose,
@@ -546,16 +564,62 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
   elevatedClass,
   panelClass,
 }) => {
+  const { currentUser } = useApp();
+  const [detailTab, setDetailTab] = useState<DetailTab>('dados');
+  const [detail, setDetail] = useState<EmpresaDetail | null>(null);
   const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
   const [modules, setModules] = useState<EmpresaModule[]>([]);
+  const [documents, setDocuments] = useState<EmpresaDocument[]>([]);
+  const [history, setHistory] = useState<EmpresaHistoryEntry[]>([]);
+  const [loadingDetail, setLoadingDetail] = useState(true);
   const [loadingProfiles, setLoadingProfiles] = useState(true);
   const [loadingModules, setLoadingModules] = useState(true);
+  const [loadingDocuments, setLoadingDocuments] = useState(true);
+  const [loadingHistory, setLoadingHistory] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [moduleId, setModuleId] = useState<ModuleId>('delivery');
   const [moduleLabel, setModuleLabel] = useState('');
   const [moduleExpiresAt, setModuleExpiresAt] = useState('');
-  const [updatingPlano, setUpdatingPlano] = useState(false);
-  const [updatingLicense, setUpdatingLicense] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [docName, setDocName] = useState('');
+  const [docDescription, setDocDescription] = useState('');
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [confirmDeleteDoc, setConfirmDeleteDoc] = useState<string | null>(null);
+
+  const refreshModules = useCallback(async () => {
+    const next = await listEmpresaModules(empresa.id);
+    setModules(next);
+    await onModulesChanged();
+  }, [empresa.id, onModulesChanged]);
+
+  const refreshDocuments = useCallback(async () => {
+    const next = await listEmpresaDocuments(empresa.id);
+    setDocuments(next);
+  }, [empresa.id]);
+
+  const refreshHistory = useCallback(async () => {
+    const next = await listEmpresaHistory(empresa.id);
+    setHistory(next);
+  }, [empresa.id]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setLoadingDetail(true);
+      try {
+        const next = await getEmpresaDetail(empresa.id);
+        if (!cancelled) setDetail(next);
+      } finally {
+        if (!cancelled) setLoadingDetail(false);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [empresa.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -591,262 +655,406 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
     };
   }, [empresa.id]);
 
-  const baseModules = planModules[empresa.plano];
-  const availableExtraModules = planModules.gestao.filter(item => !baseModules.includes(item));
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setLoadingDocuments(true);
+      try {
+        await refreshDocuments();
+      } finally {
+        if (!cancelled) setLoadingDocuments(false);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshDocuments]);
 
-  const refreshModules = async () => {
-    const next = await listEmpresaModules(empresa.id);
-    setModules(next);
-    await onModulesChanged();
-  };
+  useEffect(() => {
+    let cancelled = false;
+    const run = async () => {
+      setLoadingHistory(true);
+      try {
+        await refreshHistory();
+      } finally {
+        if (!cancelled) setLoadingHistory(false);
+      }
+    };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshHistory]);
+
+  const baseModules = planModules[detail?.plano ?? empresa.plano];
+  const availableExtraModules = planModules.gestao.filter(item => !baseModules.includes(item));
+  const enabledAddonModules = modules.filter(item => item.enabled).map(item => item.moduleId);
 
   const copyId = async () => {
     await navigator.clipboard.writeText(empresa.id);
   };
 
-  const licenseTone = empresa.licenseStatus === 'active'
-    ? 'text-success'
-    : empresa.licenseStatus === 'trial'
-      ? 'text-warning'
-      : 'text-danger';
-  const enabledAddonModules = modules.filter(item => item.enabled).map(item => item.moduleId);
-
-  const toggleAddon = async (moduleId: string, enabled: boolean) => {
+  const toggleAddon = async (itemModuleId: string, enabled: boolean) => {
     await supabase.from('empresa_modules').upsert({
       empresa_id: empresa.id,
-      module_id: moduleId,
+      module_id: itemModuleId,
       enabled,
-      label: addonLabels[moduleId as AddonModuleId],
+      label: addonLabels[itemModuleId as AddonModuleId],
       updated_at: new Date().toISOString(),
     }, { onConflict: 'empresa_id,module_id' });
     await refreshModules();
   };
 
+  const handleSaveDados = async () => {
+    if (!detail) return;
+    setSaving(true);
+    setSaveSuccess(false);
+    try {
+      const updated = await updateEmpresaDetail(empresa.id, {
+        name: detail.name,
+        legalName: detail.legalName,
+        document: detail.document,
+        phone: detail.phone,
+        email: detail.email,
+        website: detail.website,
+        address: detail.address,
+        city: detail.city,
+        state: detail.state,
+        notes: detail.notes,
+      });
+      setDetail(updated);
+      await addEmpresaHistory(empresa.id, 'Dados atualizados', { performedByName: currentUser?.name });
+      await refreshHistory();
+      setSaveSuccess(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveContrato = async () => {
+    if (!detail) return;
+    setSaving(true);
+    setSaveSuccess(false);
+    try {
+      const updated = await updateEmpresaDetail(empresa.id, {
+        contractType: detail.contractType,
+        contractStatus: detail.contractStatus,
+        contractStart: detail.contractStart,
+        contractEnd: detail.contractEnd,
+        contractValue: detail.contractValue,
+      });
+      setDetail(updated);
+      await addEmpresaHistory(empresa.id, 'Contrato atualizado', { performedByName: currentUser?.name });
+      await refreshHistory();
+      setSaveSuccess(true);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUploadDocument = async () => {
+    if (!selectedFile || !docName.trim()) return;
+    setUploadingDoc(true);
+    try {
+      await uploadEmpresaDocument(empresa.id, selectedFile, docName.trim(), docDescription.trim() || undefined);
+      await addEmpresaHistory(empresa.id, 'Documento enviado', { newValue: docName.trim(), performedByName: currentUser?.name });
+      await refreshDocuments();
+      await refreshHistory();
+      setSelectedFile(null);
+      setDocName('');
+      setDocDescription('');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const contractRemainingMonths = (() => {
+    if (!detail?.contractEnd) return 0;
+    return Math.max(0, Math.round((new Date(detail.contractEnd).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30)));
+  })();
+
+  const historyIcon = (action: string) => {
+    const v = action.toLowerCase();
+    if (v.includes('contrato')) return ReceiptText;
+    if (v.includes('documento')) return FileText;
+    if (v.includes('plano') || v.includes('licen')) return Settings;
+    return ClipboardList;
+  };
+
+  const renderHistory = () => {
+    if (loadingHistory) return <div className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} />;
+    if (history.length === 0) return <p className="text-xs text-muted">Nenhuma alteração registrada ainda</p>;
+    return history.map(entry => {
+      const Icon = historyIcon(entry.action);
+      return (
+        <div key={entry.id} className={`p-3 rounded-panel border ${elevatedClass}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Icon className="w-4 h-4 text-muted" />
+              <p className="text-xs font-semibold">{entry.action}</p>
+            </div>
+            <span className="text-xs text-muted">{relativeTime(entry.createdAt)}</span>
+          </div>
+          {entry.field && <p className="text-xs text-muted mt-1">{entry.field}: {entry.oldValue || '-'} -&gt; {entry.newValue || '-'}</p>}
+          <p className="text-xs text-muted mt-1">por {entry.performedByName || 'Sistema'}</p>
+        </div>
+      );
+    });
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className={`w-full max-w-xl rounded-section border shadow-elevated ${panelClass}`}
-      >
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className={`w-full max-w-3xl rounded-section border shadow-elevated ${panelClass}`}>
         <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
-          <h3 className="text-sm font-semibold">Detalhes da empresa</h3>
+          <h3 className="text-sm font-semibold">Detalhes da empresa - {empresa.name}</h3>
           <button onClick={onClose} className="text-muted hover:text-text transition-colors"><X className="w-4 h-4" /></button>
         </div>
+        <div className={`px-5 pt-4 border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
+          <div className="flex items-center gap-2 pb-3">
+            {([['dados','Dados'],['contrato','Contrato'],['documentos','Documentos'],['historico','Histórico']] as [DetailTab, string][]).map(([id, label]) => (
+              <button key={id} onClick={() => setDetailTab(id)} className={`h-8 px-3 rounded-control text-xs font-medium border ${detailTab === id ? 'bg-accent text-white border-accent' : elevatedClass}`}>{label}</button>
+            ))}
+          </div>
+        </div>
         <div className="p-5 space-y-5 max-h-[75vh] overflow-y-auto">
-          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
-            <h4 className="text-xs font-semibold text-muted">Dados da empresa</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-              <div>
-                <p className="text-muted">Nome</p>
-                <p className="font-medium">{empresa.name}</p>
-              </div>
-              <div>
-                <p className="text-muted">Documento/CNPJ</p>
-                <p className="font-medium">{empresa.document || '-'}</p>
-              </div>
-              <div>
-                <p className="text-muted">ID da empresa</p>
-                <button onClick={() => void copyId()} className="inline-flex items-center gap-1 font-medium hover:text-accent">
-                  {empresa.id}
-                  <Copy className="w-3 h-3" />
-                </button>
-              </div>
-              <div>
-                <p className="text-muted">Data de criação</p>
-                <p className="font-medium">{empresa.createdAt ? new Intl.DateTimeFormat('pt-BR').format(new Date(empresa.createdAt)) : '-'}</p>
-              </div>
-              <div>
-                <p className="text-muted">Plano</p>
-                <select
-                  value={empresa.plano}
-                  disabled={updatingPlano}
-                  onChange={async e => {
-                    setUpdatingPlano(true);
-                    try {
-                      await onUpdatePlano(empresa.id, e.target.value as Empresa['plano']);
-                    } finally {
-                      setUpdatingPlano(false);
-                    }
-                  }}
-                  className={`h-8 rounded-control border px-2 text-xs ${elevatedClass}`}
-                >
-                  <option value="essencial">{PLANO_LABELS.essencial}</option>
-                  <option value="profissional">{PLANO_LABELS.profissional}</option>
-                  <option value="gestao">{PLANO_LABELS.gestao}</option>
-                </select>
-              </div>
-              <div>
-                <p className="text-muted">Status Licença</p>
-                <select
-                  value={empresa.licenseStatus}
-                  disabled={updatingLicense}
-                  onChange={async e => {
-                    setUpdatingLicense(true);
-                    try {
-                      await onUpdateLicense(empresa.id, e.target.value as Empresa['licenseStatus']);
-                    } finally {
-                      setUpdatingLicense(false);
-                    }
-                  }}
-                  className={`h-8 rounded-control border px-2 text-xs ${elevatedClass} ${licenseTone}`}
-                >
-                  <option value="active">{LICENSE_LABELS.active}</option>
-                  <option value="trial">{LICENSE_LABELS.trial}</option>
-                  <option value="suspended">{LICENSE_LABELS.suspended}</option>
-                </select>
-              </div>
-            </div>
-          </section>
-
-          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
-            <h4 className="text-xs font-semibold text-muted">Módulos & Add-ons</h4>
-            <div>
-              <p className="text-xs text-muted mb-2">Módulos incluídos no plano [{PLANO_LABELS[empresa.plano]}]</p>
-              <div className="flex flex-wrap gap-2">
-                {planModules[empresa.plano].map(module => (
-                  <span key={module} className={`px-2 py-1 rounded-control text-[10px] border ${elevatedClass}`}>{module}</span>
-                ))}
-              </div>
-            </div>
-            <div className="border-t pt-3">
-              <p className="text-xs text-muted mb-2">Add-ons padrão (toggle on/off)</p>
-              <div className="space-y-2">
-                {addonModules.map(moduleId => {
-                  const enabled = enabledAddonModules.includes(moduleId);
-                  return (
-                    <div key={moduleId} className={`p-2 rounded-control border flex items-center justify-between ${elevatedClass}`}>
-                      <div>
-                        <p className="text-xs font-medium">{addonLabels[moduleId]}</p>
-                        <p className="text-[10px] text-muted">+R$ {addonPricing[moduleId]}/mês</p>
-                      </div>
-                      <button
-                        onClick={() => void toggleAddon(moduleId, !enabled)}
-                        className={`h-7 px-3 rounded-control text-xs font-medium ${enabled ? 'bg-accent text-white' : `border ${elevatedClass}`}`}
-                      >
-                        {enabled ? 'Ativo' : 'Ativar'}
+          {loadingDetail && <div className={`h-12 rounded-panel border animate-pulse ${elevatedClass}`} />}
+          {!loadingDetail && detailTab === 'dados' && detail && (
+            <section className={`p-4 rounded-panel border ${elevatedClass} space-y-5`}>
+              <div className="space-y-3">
+                <h5 className="text-xs font-semibold text-muted">Identificação</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-muted mb-1">Nome fantasia</label>
+                    <input value={detail.name} onChange={e => setDetail(prev => prev ? { ...prev, name: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted mb-1">Razão social</label>
+                    <input value={detail.legalName ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, legalName: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted mb-1">CNPJ / Documento</label>
+                    <input value={detail.document ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, document: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted mb-1">ID da empresa</label>
+                    <div className={`flex items-center gap-2 h-10 px-3 rounded-control border text-sm ${elevatedClass}`}>
+                      <span className="truncate flex-1 text-muted text-xs">{detail.id}</span>
+                      <button onClick={() => void navigator.clipboard.writeText(detail.id)} title="Copiar">
+                        <Copy className="w-3.5 h-3.5 text-muted hover:text-accent" />
                       </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t pt-4">
+                <h5 className="text-xs font-semibold text-muted">Contato</h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs text-muted mb-1">Telefone</label>
+                    <input value={detail.phone ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, phone: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted mb-1">E-mail</label>
+                    <input type="email" value={detail.email ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, email: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted mb-1">Website</label>
+                    <input value={detail.website ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, website: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t pt-4">
+                <h5 className="text-xs font-semibold text-muted">Localização</h5>
+                <div>
+                  <label className="block text-xs text-muted mb-1">Endereço</label>
+                  <input value={detail.address ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, address: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-muted mb-1">Cidade</label>
+                    <input value={detail.city ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, city: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted mb-1">Estado</label>
+                    <select value={detail.state ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, state: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}>
+                      <option value="">Selecione</option>
+                      {['AC','AL','AM','AP','BA','CE','DF','ES','GO','MA','MG','MS','MT','PA','PB','PE','PI','PR','RJ','RN','RO','RR','RS','SC','SE','SP','TO'].map(uf => (
+                        <option key={uf} value={uf}>{uf}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t pt-4">
+                <h5 className="text-xs font-semibold text-muted">Plano & Licença</h5>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-muted mb-1">Plano</label>
+                    <select value={empresa.plano} onChange={async e => { await onUpdatePlano(empresa.id, e.target.value as Empresa['plano']); }} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}>
+                      {Object.entries(PLANO_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-muted mb-1">Status da licença</label>
+                    <select value={empresa.licenseStatus} onChange={async e => { await onUpdateLicense(empresa.id, e.target.value as Empresa['licenseStatus']); }} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}>
+                      {Object.entries(LICENSE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 border-t pt-4">
+                <h5 className="text-xs font-semibold text-muted">Notas internas</h5>
+                <textarea
+                  value={detail.notes ?? ''}
+                  onChange={e => setDetail(prev => prev ? { ...prev, notes: e.target.value } : prev)}
+                  rows={3}
+                  placeholder="Observações internas sobre este cliente..."
+                  className={`w-full px-3 py-2 rounded-control border text-sm resize-none ${elevatedClass}`}
+                />
+              </div>
+
+              <div className="space-y-3 border-t pt-4">
+                <h5 className="text-xs font-semibold text-muted">Add-ons padrão</h5>
+                {addonModules.map(addon => {
+                  const enabled = enabledAddonModules.includes(addon);
+                  return (
+                    <div key={addon} className={`p-2 rounded-control border flex items-center justify-between ${elevatedClass}`}>
+                      <span className="text-xs">{addonLabels[addon]} (+R$ {addonPricing[addon]}/mês)</span>
+                      <button onClick={() => void toggleAddon(addon, !enabled)} className={`h-7 px-3 rounded-control text-xs ${enabled ? 'bg-accent text-white' : `border ${elevatedClass}`}`}>{enabled ? 'Ativo' : 'Ativar'}</button>
                     </div>
                   );
                 })}
               </div>
-            </div>
-            <div className="border-t pt-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted">Módulos personalizados</p>
-                <button onClick={() => setShowModuleForm(prev => !prev)} className="h-8 px-3 rounded-control bg-accent/10 text-accent text-xs font-medium">
-                  + Habilitar módulo
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-semibold text-muted">Módulos personalizados ativos</h4>
-            </div>
-            {showModuleForm && (
-              <div className={`p-3 rounded-panel border space-y-2 ${elevatedClass}`}>
-                <select value={moduleId} onChange={e => setModuleId(e.target.value as ModuleId)} className={`h-9 w-full rounded-control border px-2 text-xs ${elevatedClass}`}>
-                  {availableExtraModules.map(item => (
-                    <option key={item} value={item}>{item}</option>
-                  ))}
-                </select>
-                <input value={moduleLabel} onChange={e => setModuleLabel(e.target.value)} placeholder="Label opcional" className={`h-9 w-full rounded-control border px-2 text-xs ${elevatedClass}`} />
-                <input type="date" value={moduleExpiresAt} onChange={e => setModuleExpiresAt(e.target.value)} className={`h-9 w-full rounded-control border px-2 text-xs ${elevatedClass}`} />
-                <button
-                  onClick={async () => {
-                    await upsertEmpresaModule(empresa.id, moduleId, true, {
-                      label: moduleLabel || undefined,
-                      expiresAt: moduleExpiresAt ? `${moduleExpiresAt}T23:59:59.000Z` : undefined,
-                    });
-                    setModuleLabel('');
-                    setModuleExpiresAt('');
-                    await refreshModules();
-                  }}
-                  className="h-9 w-full rounded-control bg-accent text-white text-xs font-medium"
-                >
-                  Habilitar
-                </button>
-              </div>
-            )}
-            {loadingModules ? (
-              <div className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} />
-            ) : modules.length === 0 ? (
-              <p className="text-xs text-muted">Nenhum módulo extra ativo.</p>
-            ) : (
-              <div className="space-y-2">
-                {modules.map(item => {
-                  const expired = item.expiresAt ? new Date(item.expiresAt) < new Date() : false;
-                  return (
-                    <div key={item.id} className={`p-3 rounded-panel border flex items-center justify-between gap-3 ${elevatedClass}`}>
-                      <div>
-                        <p className="text-xs font-semibold">{item.moduleId}</p>
-                        <p className="text-xs text-muted">{item.label || 'Sem label'}</p>
-                        {item.expiresAt && (
-                          <p className="text-xs text-muted">
-                            Expira em {new Date(item.expiresAt).toLocaleDateString('pt-BR')}
-                            {expired && <span className="ml-2 px-1.5 py-0.5 rounded-control bg-danger/20 text-danger">Expirado</span>}
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        onClick={async () => {
-                          await removeEmpresaModule(item.id);
-                          await refreshModules();
-                        }}
-                        title="Remover módulo"
-                        className={`h-7 w-7 rounded-control border flex items-center justify-center text-muted hover:text-danger hover:border-danger transition-colors ${elevatedClass}`}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
 
-          <section className={`p-4 rounded-panel border ${elevatedClass} space-y-3`}>
-            <h4 className="text-xs font-semibold text-muted">Usuários desta empresa</h4>
-            {loadingProfiles ? (
-              <div className="space-y-2">
-                {[0, 1, 2].map(idx => (
-                  <div key={idx} className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} />
+              <div className="space-y-3 border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <h5 className="text-xs font-semibold text-muted">Módulos personalizados</h5>
+                  <button onClick={() => setShowModuleForm(prev => !prev)} className="h-8 px-3 rounded-control bg-accent/10 text-accent text-xs">+ Habilitar módulo</button>
+                </div>
+                {showModuleForm && (
+                  <div className={`p-3 rounded-panel border space-y-2 ${elevatedClass}`}>
+                    <select value={moduleId} onChange={e => setModuleId(e.target.value as ModuleId)} className={`h-9 w-full rounded-control border px-2 text-xs ${elevatedClass}`}>
+                      {availableExtraModules.map(item => <option key={item} value={item}>{item}</option>)}
+                    </select>
+                    <input value={moduleLabel} onChange={e => setModuleLabel(e.target.value)} placeholder="Label opcional" className={`h-9 w-full rounded-control border px-2 text-xs ${elevatedClass}`} />
+                    <input type="date" value={moduleExpiresAt} onChange={e => setModuleExpiresAt(e.target.value)} className={`h-9 w-full rounded-control border px-2 text-xs ${elevatedClass}`} />
+                    <button
+                      onClick={async () => {
+                        await upsertEmpresaModule(empresa.id, moduleId, true, {
+                          label: moduleLabel || undefined,
+                          expiresAt: moduleExpiresAt ? `${moduleExpiresAt}T23:59:59.000Z` : undefined,
+                        });
+                        setModuleLabel('');
+                        setModuleExpiresAt('');
+                        await refreshModules();
+                      }}
+                      className="h-9 w-full rounded-control bg-accent text-white text-xs"
+                    >
+                      Habilitar
+                    </button>
+                  </div>
+                )}
+                {loadingModules ? <div className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} /> : modules.map(item => (
+                  <div key={item.id} className={`p-3 rounded-panel border flex items-center justify-between ${elevatedClass}`}>
+                    <div>
+                      <p className="text-xs font-semibold">{item.moduleId}</p>
+                      <p className="text-xs text-muted">{item.label || 'Sem label'}</p>
+                    </div>
+                    <button onClick={async () => { await removeEmpresaModule(item.id); await refreshModules(); }} className={`h-7 w-7 rounded-control border flex items-center justify-center ${elevatedClass}`}><X className="w-3.5 h-3.5" /></button>
+                  </div>
                 ))}
               </div>
-            ) : profiles.length === 0 ? (
-              <p className="text-xs text-muted">Nenhum usuário cadastrado</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className={`border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
-                      <th className="text-left py-2">Nome</th>
-                      <th className="text-left py-2">Role</th>
-                      <th className="text-left py-2">E-mail</th>
-                      <th className="text-left py-2">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {profiles.map(profile => (
-                      <tr key={profile.id} className={`border-b ${isDark ? 'border-border/50' : 'border-border-light/50'}`}>
-                        <td className="py-2">{profile.name}</td>
-                        <td className="py-2">{profile.role}</td>
-                        <td className="py-2">{profile.email || '-'}</td>
-                        <td className="py-2">{profile.active ? 'ativo' : 'inativo'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+
+              <div className="space-y-3 border-t pt-4">
+                <h5 className="text-xs font-semibold text-muted">Usuários desta empresa</h5>
+                {loadingProfiles ? <div className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} /> : profiles.length === 0 ? <p className="text-xs text-muted">Nenhum usuário cadastrado</p> : <div className="space-y-2">{profiles.map(profile => <div key={profile.id} className={`p-2 rounded-control border text-xs flex justify-between ${elevatedClass}`}><span>{profile.name} ({profile.role})</span><span className="text-muted">{profile.active ? 'ativo' : 'inativo'}</span></div>)}</div>}
               </div>
-            )}
-          </section>
+
+              <div className="flex justify-end pt-2">
+                <button onClick={() => void handleSaveDados()} disabled={saving} className="h-10 px-5 rounded-control bg-accent text-white text-xs font-medium hover:bg-accent-hover disabled:opacity-40">
+                  {saving ? 'Salvando...' : 'Salvar dados'}
+                </button>
+                {saveSuccess && <span className="ml-3 self-center text-xs text-success">Salvo com sucesso.</span>}
+              </div>
+            </section>
+          )}
+          {!loadingDetail && detailTab === 'contrato' && detail && (
+            <section className={`p-4 rounded-panel border ${elevatedClass} space-y-4`}>
+              {(detail.contractStart || detail.contractValue) && (
+                <div className={`p-4 rounded-panel border ${elevatedClass} space-y-1`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold">
+                      {detail.contractType === 'anual' ? 'Contrato Anual' : detail.contractType === 'mensal' ? 'Contrato Mensal' : 'Contrato Personalizado'}
+                    </span>
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                      detail.contractStatus === 'ativo' ? 'bg-success/10 text-success' :
+                      detail.contractStatus === 'encerrado' ? 'bg-danger/10 text-danger' :
+                      'bg-warning/10 text-warning'
+                    }`}>
+                      {detail.contractStatus === 'ativo' ? 'Ativo' : detail.contractStatus === 'encerrado' ? 'Encerrado' : detail.contractStatus === 'negociacao' ? 'Em negociação' : 'Suspenso'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted">
+                    {detail.contractValue ? fmtBRL(detail.contractValue) + '/mês' : '—'}
+                    {detail.contractStart ? ' · Início: ' + new Intl.DateTimeFormat('pt-BR').format(new Date(detail.contractStart)) : ''}
+                    {detail.contractEnd ? ' · Fim: ' + new Intl.DateTimeFormat('pt-BR').format(new Date(detail.contractEnd)) : ''}
+                  </p>
+                  {contractRemainingMonths > 0 && (
+                    <p className="text-xs text-muted">Tempo restante: {contractRemainingMonths} meses</p>
+                  )}
+                </div>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-muted mb-1">Tipo de contrato</label>
+                  <select value={detail.contractType ?? 'mensal'} onChange={e => setDetail(prev => prev ? { ...prev, contractType: e.target.value as EmpresaDetail['contractType'] } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}>
+                    <option value="mensal">Mensal</option>
+                    <option value="anual">Anual</option>
+                    <option value="personalizado">Personalizado</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-muted mb-1">Status do contrato</label>
+                  <select value={detail.contractStatus ?? 'ativo'} onChange={e => setDetail(prev => prev ? { ...prev, contractStatus: e.target.value as EmpresaDetail['contractStatus'] } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`}>
+                    <option value="ativo">Ativo</option>
+                    <option value="negociacao">Em negociação</option>
+                    <option value="suspenso">Suspenso</option>
+                    <option value="encerrado">Encerrado</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-muted mb-1">Data de início</label>
+                  <input type="date" value={detail.contractStart ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, contractStart: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                </div>
+                <div>
+                  <label className="block text-xs text-muted mb-1">Data de término</label>
+                  <input type="date" value={detail.contractEnd ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, contractEnd: e.target.value } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-xs text-muted mb-1">Valor contratado (R$/mês)</label>
+                  <input type="number" min="0" value={detail.contractValue ?? ''} onChange={e => setDetail(prev => prev ? { ...prev, contractValue: e.target.value ? Number(e.target.value) : undefined } : prev)} className={`w-full h-10 px-3 rounded-control border text-sm ${elevatedClass}`} />
+                </div>
+              </div>
+              <div className="flex justify-end pt-2">
+                <button onClick={() => void handleSaveContrato()} disabled={saving} className="h-10 px-5 rounded-control bg-accent text-white text-xs font-medium hover:bg-accent-hover disabled:opacity-40">
+                  {saving ? 'Salvando...' : 'Salvar contrato'}
+                </button>
+              </div>
+            </section>
+          )}
+          {!loadingDetail && detailTab === 'documentos' && <section className={`p-4 rounded-panel border ${elevatedClass} space-y-4`}><label className={`p-6 rounded-panel border border-dashed text-center cursor-pointer block ${elevatedClass}`}><Upload className="w-6 h-6 mx-auto text-muted mb-2" /><p className="text-xs">Arraste um PDF ou clique para selecionar</p><p className="text-[10px] text-muted mt-1">Máximo 10MB · Apenas PDF</p><input type="file" accept=".pdf" className="hidden" onChange={e => { const file = e.target.files?.[0] ?? null; setSelectedFile(file); if (file) setDocName(file.name.replace(/\.pdf$/i, '')); }} /></label>{selectedFile && <div className="space-y-2"><p className="text-xs text-muted">{selectedFile.name} · {(selectedFile.size / 1024).toFixed(0)} KB</p><input value={docName} onChange={e => setDocName(e.target.value)} placeholder="Nome do documento" className={`h-9 w-full rounded-control border px-3 text-xs ${elevatedClass}`} /><input value={docDescription} onChange={e => setDocDescription(e.target.value)} placeholder="Descrição" className={`h-9 w-full rounded-control border px-3 text-xs ${elevatedClass}`} /><button onClick={() => void handleUploadDocument()} disabled={uploadingDoc} className="h-9 px-4 rounded-control bg-accent text-white text-xs">{uploadingDoc ? 'Enviando...' : 'Fazer upload'}</button></div>}{loadingDocuments ? <div className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} /> : documents.map(doc => <div key={doc.id} className={`p-3 rounded-panel border text-xs flex items-center justify-between ${elevatedClass}`}><div><p className="font-medium">{doc.name}</p><p className="text-muted">{doc.description || '-'} · {((doc.fileSize ?? 0) / 1024).toFixed(0)} KB</p></div><div className="flex gap-2"><button onClick={async () => { const url = await getDocumentSignedUrl(doc.filePath); window.open(url, '_blank'); }} className={`h-8 px-2 rounded-control border ${elevatedClass}`}><Download className="w-3.5 h-3.5" /></button><button onClick={async () => { if (confirmDeleteDoc !== doc.id) { setConfirmDeleteDoc(doc.id); setTimeout(() => setConfirmDeleteDoc(null), 3000); return; } await deleteEmpresaDocument(doc); await refreshDocuments(); setConfirmDeleteDoc(null); }} className={`h-8 px-2 rounded-control border ${elevatedClass}`}>{confirmDeleteDoc === doc.id ? 'Confirmar?' : <Trash2 className="w-3.5 h-3.5" />}</button></div></div>)}</section>}
+          {!loadingDetail && detailTab === 'historico' && <section className={`p-4 rounded-panel border ${elevatedClass} space-y-2`}>{renderHistory()}</section>}
         </div>
       </motion.div>
     </div>
   );
 };
-
-// â”€â”€â”€ Tab: Overview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 interface TabOverviewProps {
   isDark: boolean;
@@ -934,7 +1142,7 @@ const TabOverview: React.FC<TabOverviewProps> = ({
         </section>
         <section className={`p-5 rounded-section border ${panelClass}`}>
           <div className="flex items-center justify-between mb-5">
-            <h3 className="text-sm font-semibold">Alertas de licenca</h3>
+            <h3 className="text-sm font-semibold">Alertas de licença</h3>
             <span className="text-xs font-medium text-warning">{trialEmpresas.length} abertas</span>
           </div>
           {trialEmpresas.length > 0 ? (
@@ -953,7 +1161,7 @@ const TabOverview: React.FC<TabOverviewProps> = ({
             onClick={() => onNavigate('companies', 'trial')}
             className="mt-5 h-10 w-full rounded-control bg-accent px-4 text-xs font-medium text-white hover:bg-accent-hover"
           >
-            Abrir renovacoes
+            Abrir renovações
           </button>
         </section>
       </div>
@@ -961,7 +1169,7 @@ const TabOverview: React.FC<TabOverviewProps> = ({
   );
 };
 
-// â”€â”€â”€ Tab: Companies â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 interface TabCompaniesProps {
   isDark: boolean;
@@ -1043,7 +1251,7 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
       <div className="flex items-center justify-between mb-5">
         <div>
           <h3 className="text-sm font-semibold">Empresas clientes</h3>
-          <p className="text-xs text-muted mt-1">Gestao real de empresas, plano e licenca</p>
+          <p className="text-xs text-muted mt-1">Gestão real de empresas, plano e licença</p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -1105,7 +1313,7 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
               <tr className={`border-b text-xs font-medium text-muted ${isDark ? 'border-border' : 'border-border-light'}`}>
                 <th className="px-4 py-3">Nome</th>
                 <th className="px-4 py-3">Plano</th>
-                <th className="px-4 py-3">Status Licenca</th>
+                <th className="px-4 py-3">Status Licença</th>
                 <th className="px-4 py-3">Criada em</th>
                 <th className="px-4 py-3">MRR</th>
                 <th className="px-4 py-3 text-right">Acoes</th>
@@ -1222,7 +1430,7 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
   );
 };
 
-// â”€â”€â”€ Tab: Notifications â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 interface TabNotificacoesProps {
   isDark: boolean; panelClass: string; elevatedClass: string;
@@ -1440,7 +1648,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
         </section>
       ) : notifications.length > 0 && (
         <section className={`p-5 rounded-section border ${panelClass}`}>
-          <h3 className="text-sm font-semibold mb-5">Histórico de notificações</h3>
+          <h3 className="text-sm font-semibold mb-5">Histórico de Notificações</h3>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[860px] text-left text-sm">
               <thead>
@@ -1513,7 +1721,7 @@ const TabNotificacoes: React.FC<TabNotificacoesProps> = ({ isDark, panelClass, e
   );
 };
 
-// â”€â”€â”€ Tab: Comercial â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 type ChurnFilter = '30d' | '90d' | 'todos';
 
@@ -2003,7 +2211,7 @@ const TabSuporte: React.FC<TabSuporteProps> = ({ panelClass, elevatedClass, onTi
   );
 };
 
-// â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 export const MasterDashboard: React.FC = () => {
   const { theme } = useApp();
@@ -2046,7 +2254,7 @@ export const MasterDashboard: React.FC = () => {
   const TABS: { id: Tab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
     { id: 'overview',      label: 'Visão Geral',  icon: LineChart },
     { id: 'companies',     label: 'Empresas',     icon: Building2 },
-    { id: 'notifications', label: 'notificações', icon: Bell },
+    { id: 'notifications', label: 'Notificações', icon: Bell },
     { id: 'comercial',     label: 'Comercial',    icon: ClipboardList },
     { id: 'suporte',       label: 'Suporte',      icon: MessageSquare },
   ];
@@ -2145,7 +2353,7 @@ export const MasterDashboard: React.FC = () => {
   );
 };
 
-// â”€â”€â”€ Filter Control â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ---
 
 type FilterControlProps = {
   icon: React.ComponentType<{ className?: string }>;
@@ -2162,6 +2370,7 @@ const FilterControl: React.FC<FilterControlProps> = ({ icon: Icon, label, value,
     </span>
   </button>
 );
+
 
 
 
