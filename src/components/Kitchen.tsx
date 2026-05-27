@@ -158,7 +158,7 @@ export const Kitchen: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col gap-5 p-6 animate-in fade-in duration-500">
+    <div className="h-full flex flex-col gap-5 animate-in fade-in duration-500">
       <section className={`rounded-panel border ${panelClass}`}>
         <div className="p-6 border-b border-current/5">
           <div className="flex flex-col gap-5">

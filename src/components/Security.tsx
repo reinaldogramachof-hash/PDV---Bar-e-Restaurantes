@@ -82,7 +82,7 @@ export const Security: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-8">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
       {/* Hero Header */}
       <div className="flex items-center gap-4 border-b border-dashed border-current/10 pb-5">
         <div className="w-10 h-10 rounded-panel bg-blue-500/10 flex items-center justify-center shrink-0">

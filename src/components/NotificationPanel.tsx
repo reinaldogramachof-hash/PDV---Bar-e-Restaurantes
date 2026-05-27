@@ -17,6 +17,7 @@ import {
   getUnread,
   markAllRead,
   markAsRead,
+  addLocalNotification,
   NOTIFICATIONS_UPDATED_EVENT,
 } from '../services/notificationService';
 
@@ -68,7 +69,7 @@ const handleAction = (notification: AppNotification) => {
 };
 
 export const NotificationPanel: React.FC = () => {
-  const { currentEmpresa, theme } = useApp();
+  const { currentEmpresa, theme, stockItems } = useApp();
   const isDark = theme === 'dark';
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>(() => getUnread(currentEmpresa.id, currentEmpresa.plano));
@@ -86,6 +87,47 @@ export const NotificationPanel: React.FC = () => {
     window.addEventListener(NOTIFICATIONS_UPDATED_EVENT, refresh);
     return () => window.removeEventListener(NOTIFICATIONS_UPDATED_EVENT, refresh);
   }, [currentEmpresa.id, currentEmpresa.plano]);
+
+  // Sync expiring stock items to local notifications
+  useEffect(() => {
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    
+    const existingIds = new Set(
+       JSON.parse(sessionStorage.getItem(`gestao-gastro:notifications:local:${currentEmpresa.id}`) || '[]').map((n: any) => n.id)
+    );
+
+    stockItems.forEach(item => {
+      if (!item.expirationDate || item.currentStock <= 0) return;
+      const [year, month, day] = item.expirationDate.split('-').map(Number);
+      const expDate = new Date(year, month - 1, day);
+      expDate.setHours(0,0,0,0);
+      const diffDays = Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays <= 15) {
+        const level = diffDays < 0 ? 'vencido' : diffDays <= 3 ? '3dias' : diffDays <= 7 ? '7dias' : '15dias';
+        const notifId = `stock-alert-${item.id}-${item.expirationDate}-${level}`;
+        
+        if (!existingIds.has(notifId)) {
+          const title = diffDays < 0 ? `Insumo Vencido: ${item.name}` : `Vencimento Próximo: ${item.name}`;
+          const body = diffDays < 0 
+            ? `Atenção: O insumo ${item.name} (${item.currentStock.toFixed(2)} ${item.unit}) já venceu na data ${item.expirationDate}.` 
+            : diffDays <= 3
+            ? `Alerta Crítico: O insumo ${item.name} vence em ${diffDays} dias! Sugerimos fazer uma promoção para esgotar o estoque.`
+            : `O insumo ${item.name} vencerá em ${diffDays} dias.`;
+          const type = diffDays <= 3 ? 'security' : diffDays <= 7 ? 'update' : 'info';
+          
+          addLocalNotification({
+            id: notifId,
+            type,
+            title,
+            body,
+            publishedAt: new Date().toISOString(),
+          }, currentEmpresa.id);
+        }
+      }
+    });
+  }, [stockItems, currentEmpresa.id]);
 
   useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {

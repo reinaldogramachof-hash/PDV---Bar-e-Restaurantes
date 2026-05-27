@@ -89,7 +89,7 @@ export const UserManual: React.FC = () => {
   const progressPercent = Math.round((completedItems / totalItems) * 100);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5 animate-in fade-in duration-700 pb-8">
+    <div className="space-y-5 animate-in fade-in duration-700 pb-10">
       {/* Header */}
       <div className={`p-5 rounded-panel border flex flex-col md:flex-row items-center justify-between gap-5
         ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-sm'}`}>

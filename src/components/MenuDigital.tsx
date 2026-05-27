@@ -121,7 +121,7 @@ export const MenuDigital: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-5 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="text-xl font-semibold">Cardapio Digital</h2>

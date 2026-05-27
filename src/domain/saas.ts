@@ -26,6 +26,7 @@ export type ModuleId =
   | 'fornecedores'
   | 'relatorios'
   | 'configuracoes'
+  | 'diario'
   | 'seguranca'
   | 'suporte'
   | 'manual';
@@ -33,7 +34,7 @@ export type ModuleId =
 export const planModules: Record<Plano, ModuleId[]> = {
   essencial: ['pdv', 'mesas', 'caixa', 'produtos', 'relatorios', 'cozinha', 'cardapio-digital'],
   profissional: ['pdv', 'mesas', 'caixa', 'produtos', 'relatorios', 'cozinha', 'cardapio-digital', 'estoque', 'clientes', 'fornecedores', 'delivery', 'pedidos-online', 'vendas', 'colaboradores'],
-  gestao: ['pdv', 'mesas', 'caixa', 'produtos', 'relatorios', 'cozinha', 'cardapio-digital', 'estoque', 'clientes', 'fornecedores', 'delivery', 'pedidos-online', 'vendas', 'colaboradores', 'dashboard', 'intelligence', 'configuracoes', 'seguranca', 'suporte', 'manual'],
+  gestao: ['pdv', 'mesas', 'caixa', 'produtos', 'relatorios', 'cozinha', 'cardapio-digital', 'estoque', 'clientes', 'fornecedores', 'delivery', 'pedidos-online', 'vendas', 'colaboradores', 'dashboard', 'intelligence', 'configuracoes', 'diario', 'seguranca', 'suporte', 'manual'],
 };
 
 export type PackId = 'delivery' | 'lanchonete' | 'bar' | 'autonomo';
@@ -113,6 +114,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'fornecedores:write',
     'relatorios:read',
     'configuracoes:write',
+    'diario:write',
     'seguranca:read',
     'suporte:read',
     'master:write',
@@ -131,6 +133,7 @@ export const rolePermissions: Record<UserRole, Permission[]> = {
     'fornecedores:write',
     'relatorios:read',
     'configuracoes:write',
+    'diario:write',
     'seguranca:read',
     'suporte:read',
   ],
@@ -159,6 +162,7 @@ export const modulePermissions: Record<ModuleId, Permission> = {
   fornecedores: 'fornecedores:write',
   relatorios: 'relatorios:read',
   configuracoes: 'configuracoes:write',
+  diario: 'diario:write',
   seguranca: 'seguranca:read',
   suporte: 'suporte:read',
   manual: 'suporte:read',
@@ -253,3 +257,17 @@ export const getSessionScopedExpenses = (expenses: Expense[], openedAt: string, 
     return expense.empresaId === empresaId && new Date(createdAt).getTime() >= openedAtMs;
   });
 };
+
+export const ROLE_CODE_PREFIX: Record<UserRole, string> = {
+  master: 'MST',
+  gerente: 'GER',
+  caixa: 'CXA',
+  garcom: 'GAR',
+  cozinha: 'COZ',
+  estoque: 'EST',
+  suporte: 'SUP',
+};
+
+export const generateCodigoInterno = (role: UserRole, sequence: number): string =>
+  `${ROLE_CODE_PREFIX[role]}-${String(sequence).padStart(3, '0')}`;
+

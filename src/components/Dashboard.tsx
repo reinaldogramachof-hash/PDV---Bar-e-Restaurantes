@@ -12,6 +12,9 @@ import {
   Trophy,
   TrendingUp,
   X,
+  AlertTriangle,
+  Tag,
+  Calendar,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { SecurityGate } from './SecurityGate';
@@ -20,7 +23,7 @@ import { buildEditedClosedOrder, getAttendanceRanking, resolveAttendanceName } f
 import { Order, PaymentMethod } from '../types';
 
 export const Dashboard: React.FC = () => {
-  const { orders, tables, products, expenses, collaborators, theme, updateOrder, deleteOrder } = useApp();
+  const { orders, tables, products, expenses, collaborators, stockItems, theme, updateOrder, deleteOrder } = useApp();
   const isDark = theme === 'dark';
 
   const closedOrders = useMemo(() => orders.filter(o => o.status === 'closed'), [orders]);
@@ -60,6 +63,46 @@ export const Dashboard: React.FC = () => {
   const topProducts = useMemo(() => (Object.values(productSales) as Array<{ name: string; qty: number; category: string }>)
     .sort((a, b) => b.qty - a.qty)
     .slice(0, 5), [productSales]);
+
+  const expiringItems = useMemo(() => {
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    return stockItems
+      .filter(item => item.expirationDate && item.currentStock > 0)
+      .map(item => {
+        const expDate = new Date(item.expirationDate!);
+        const [year, month, day] = item.expirationDate!.split('-').map(Number);
+        const localExpDate = new Date(year, month - 1, day);
+        localExpDate.setHours(0,0,0,0);
+        
+        const diffTime = localExpDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        let alertLevel = '';
+        let tone: 'danger' | 'warning' | 'accent' | '' = '';
+        let suggestPromotion = false;
+
+        if (diffDays < 0) {
+          alertLevel = 'Vencido';
+          tone = 'danger';
+        } else if (diffDays <= 3) {
+          alertLevel = `Em ${diffDays} dias`;
+          tone = 'danger';
+          suggestPromotion = true;
+        } else if (diffDays <= 7) {
+          alertLevel = `Em ${diffDays} dias`;
+          tone = 'warning';
+        } else if (diffDays <= 15) {
+          alertLevel = `Em ${diffDays} dias`;
+          tone = 'accent';
+        } else {
+          return null;
+        }
+        return { ...item, diffDays, alertLevel, tone, suggestPromotion };
+      })
+      .filter((i): i is NonNullable<typeof i> => i !== null)
+      .sort((a, b) => a.diffDays - b.diffDays);
+  }, [stockItems]);
 
   const startEditOrder = (order: Order) => {
     setEditingOrder(order);
@@ -131,7 +174,7 @@ export const Dashboard: React.FC = () => {
   const subtlePanelClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+    <div className="space-y-5 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <h2 className="text-xl font-semibold leading-none">Visão Geral</h2>
@@ -173,6 +216,40 @@ export const Dashboard: React.FC = () => {
           <span className="font-semibold text-success">R$ {netProfit.toFixed(2)}</span>
         </div>
       </div>
+
+      {expiringItems.length > 0 && (
+        <section className={`p-5 rounded-panel border ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light shadow-2xl shadow-warning/10'}`}>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-10 h-10 rounded-panel bg-warning/10 flex items-center justify-center text-warning">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base text-warning">Alertas de Vencimento</h3>
+              <p className="text-xs font-medium text-muted">Insumos exigindo sua atenção nos próximos dias</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {expiringItems.map(item => (
+              <div key={item.id} className={`p-4 rounded-panel border flex flex-col ${isDark ? 'bg-elevated border-[var(--color-border)]' : 'bg-elevated-light border-border-light'}`}>
+                <div className="flex justify-between items-start mb-3">
+                  <h4 className="font-bold text-sm max-w-[70%] truncate">{item.name}</h4>
+                  <span className={`px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider bg-${item.tone}/10 text-${item.tone}`}>
+                    {item.alertLevel}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs font-medium text-muted mb-4">
+                  <Package className="w-3.5 h-3.5" /> {item.currentStock.toFixed(2)} {item.unit}
+                </div>
+                {item.suggestPromotion && (
+                  <div className={`mt-auto p-2.5 rounded-md text-xs font-bold flex items-center justify-center gap-2 border bg-${item.tone}/5 border-${item.tone}/20 text-${item.tone}`}>
+                    <Tag className="w-3.5 h-3.5" /> Sugerir Promoção
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <section className={`p-5 rounded-panel border ${panelClass}`}>

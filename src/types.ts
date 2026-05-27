@@ -20,6 +20,7 @@ export type Permission =
   | 'configuracoes:write'
   | 'seguranca:read'
   | 'suporte:read'
+  | 'diario:write'
   | 'master:write';
 
 export interface BaseEntity {
@@ -41,6 +42,7 @@ export interface Usuario extends BaseEntity {
   email: string;
   role: UserRole;
   active: boolean;
+  codigoInterno?: string;
 }
 
 export interface Licenca extends BaseEntity {
@@ -68,6 +70,7 @@ export interface StockItem extends BaseEntity {
   minStock: number;
   costPrice: number;
   supplierId?: string;
+  expirationDate?: string; // Data de vencimento do lote atual (YYYY-MM-DD)
 }
 
 export interface RecipeItem {
@@ -267,6 +270,7 @@ export interface Customer extends BaseEntity {
 export interface Collaborator extends BaseEntity {
   name: string;
   role: string;
+  codigoInterno?: string;
   email: string;
   status: 'active' | 'inactive' | 'break';
   joinedAt: string;
@@ -282,6 +286,48 @@ export interface Collaborator extends BaseEntity {
   address?: string;
   bankDetails?: string;
   password?: string;
+}
+
+export interface DiarioResposta {
+  id: string;
+  entryId: string;
+  empresaId: string;
+  authorId: string;
+  authorCodigo?: string;
+  corpo: string;
+  createdAt: string;
+}
+
+export interface DiarioEntry {
+  id: string;
+  empresaId: string;
+  authorId: string;
+  authorCodigo?: string;
+  categoria: 'funcionario' | 'fornecedor' | 'cliente' | 'operacional' | 'financeiro' | 'outro';
+  titulo: string;
+  corpo: string;
+  resolucao?: string;
+  ocorrencias: number;
+  status: 'aberto' | 'escalado' | 'resolvido' | 'arquivado';
+  escaladoEm?: string;
+  attachments: string[];
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
+  updatedBy?: string;
+  respostas?: DiarioResposta[];
+}
+
+export interface DiarioAuditLog {
+  id: string;
+  empresaId: string;
+  entryId?: string;
+  userId: string;
+  userCodigo?: string;
+  userRole: UserRole;
+  action: 'view' | 'create' | 'edit' | 'escalate' | 'resolve' | 'archive' | 'delete' | 'respond';
+  metadata: Record<string, unknown>;
+  createdAt: string;
 }
 
 export interface Supplier extends BaseEntity {
@@ -488,3 +534,4 @@ export interface AppSettings {
     paperWidth: '58mm' | '80mm';
   };
 }
+

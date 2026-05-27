@@ -116,13 +116,13 @@ export const Products: React.FC = () => {
         </div>
 
         <div className="flex gap-3">
-          <div className={`flex p-1 rounded-control ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>
-            <button onClick={() => toggleViewMode('grid')} className={`p-1.5 rounded-control transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><LayoutGrid className="w-3.5 h-3.5" /></button>
-            <button onClick={() => toggleViewMode('list')} className={`p-1.5 rounded-control transition-all ${viewMode === 'list' ? 'bg-white dark:bg-[var(--color-border)] shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><List className="w-3.5 h-3.5" /></button>
+          <div className="flex flex-shrink-0 p-1 gap-1 rounded-control bg-black/5 bg-surface-light/5 border border-current/5">
+            <button onClick={() => toggleViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-surface-light bg-elevated shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><LayoutGrid className="w-4 h-4" /></button>
+            <button onClick={() => toggleViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-surface-light bg-elevated shadow-sm text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}><List className="w-4 h-4" /></button>
           </div>
           <button
             onClick={() => openModal()}
-            className="px-4 h-10 rounded-control bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white font-medium text-xs transition-all flex items-center gap-2"
+            className="px-4 h-11 rounded-control bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white font-medium text-xs transition-all flex items-center gap-2"
           >
             <Plus className="w-3.5 h-3.5" /> Novo Produto
           </button>
@@ -138,7 +138,7 @@ export const Products: React.FC = () => {
             placeholder="Buscar no cardápio..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`w-full h-10 pl-10 pr-4 rounded-panel border outline-none text-sm transition-all focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200'}`}
+            className={`w-full h-11 pl-10 pr-4 rounded-panel border outline-none text-sm transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200'}`}
           />
         </div>
         <div className="flex gap-1.5 overflow-x-auto pb-0.5 custom-scrollbar">
@@ -146,10 +146,10 @@ export const Products: React.FC = () => {
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 h-10 rounded-panel text-xs font-medium transition-all whitespace-nowrap ${
+              className={`px-4 h-11 rounded-panel text-xs font-medium transition-all whitespace-nowrap ${
                 selectedCategory === cat
-                  ? 'bg-white dark:bg-[var(--color-border)] text-[var(--color-accent)] shadow border border-current/10'
-                  : 'opacity-40 hover:opacity-100'
+                  ? 'bg-accent text-white shadow border border-accent/20'
+                  : 'opacity-40 hover:opacity-100 hover:bg-current/5'
               }`}
             >
               {cat}
@@ -174,12 +174,12 @@ export const Products: React.FC = () => {
                 `}
               >
                 <div className="flex justify-between items-start mb-6">
-                  <div className={`w-12 h-12 rounded-panel flex items-center justify-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                  <div className={`w-14 h-14 rounded-panel flex items-center justify-center relative ${isDark ? 'bg-surface-light/5' : 'bg-elevated-light'}`}>
                     {getIcon(p.category)}
                   </div>
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
-                    <button onClick={() => openModal(p)} className="p-2.5 rounded-control hover:bg-[var(--color-accent)]/10 hover:text-[var(--color-accent)] transition-all"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => handleDeleteProduct(p)} className="p-2.5 rounded-control hover:bg-red-500/10 hover:text-red-500 transition-all"><Trash2 className="w-4 h-4" /></button>
+                     <button onClick={() => openModal(p)} className={`p-2.5 rounded-control transition-all ${isDark ? 'bg-surface-light/5 hover:bg-surface-light/10' : 'bg-elevated-light hover:bg-elevated-light'}`}><Edit2 className="w-4 h-4 opacity-40" /></button>
+                     <button onClick={() => handleDeleteProduct(p)} className="p-2.5 rounded-control bg-danger/10 text-danger hover:bg-danger/10 transition-all"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
 
@@ -217,9 +217,10 @@ export const Products: React.FC = () => {
         </div>
       ) : (
         <div className={`rounded-panel border overflow-hidden ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
-          <table className="w-full text-left">
-            <thead className={`text-xs font-semibold  ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-50 text-gray-400'}`}>
-              <tr>
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-left min-w-[800px] border-collapse">
+              <thead className={`text-xs font-semibold  ${isDark ? 'bg-white/5 text-white/40' : 'bg-gray-50 text-gray-400'}`}>
+                <tr>
                 <th className="px-4 py-3">Produto</th>
                 <th className="px-4 py-3">Categoria</th>
                 <th className="px-4 py-3">Ficha Técnica</th>
@@ -260,8 +261,9 @@ export const Products: React.FC = () => {
                   </tr>
                 );
               })}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -291,21 +293,21 @@ export const Products: React.FC = () => {
                   <div className="space-y-3">
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted ml-1">Nome do Produto</label>
-                      <input required name="name" defaultValue={editingProduct?.name} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                      <input required name="name" defaultValue={editingProduct?.name} className={`w-full h-11 px-3 rounded-control border outline-none text-sm transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
                         <label className="text-xs text-muted ml-1">Categoria</label>
-                        <input required name="category" defaultValue={editingProduct?.category} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                        <input required name="category" defaultValue={editingProduct?.category} className={`w-full h-11 px-3 rounded-control border outline-none text-sm transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-xs text-muted ml-1">Preço de Venda (R$)</label>
-                        <input required type="number" step="0.01" name="price" defaultValue={editingProduct?.price} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                        <input required type="number" step="0.01" name="price" defaultValue={editingProduct?.price} className={`w-full h-11 px-3 rounded-control border outline-none text-sm transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted ml-1">Descrição (opcional)</label>
-                      <textarea name="description" defaultValue={editingProduct?.description} rows={2} className={`w-full px-3 py-2 rounded-control border outline-none text-sm resize-none focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                      <textarea name="description" defaultValue={editingProduct?.description} rows={2} className={`w-full px-3 py-2 rounded-control border outline-none text-sm resize-none transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                     </div>
                   </div>
                 </div>
@@ -335,7 +337,7 @@ export const Products: React.FC = () => {
                             required
                             value={item.stockItemId}
                             onChange={e => updateRecipeItem(idx, 'stockItemId', e.target.value)}
-                            className={`w-full h-10 px-3 rounded-control border outline-none text-xs appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-200'}`}
+                            className={`w-full h-11 px-3 rounded-control border outline-none text-xs appearance-none transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-200'}`}
                           >
                             <option value="">Selecione...</option>
                             {stockItems.map(si => <option key={si.id} value={si.id}>{si.name} ({si.unit})</option>)}
@@ -349,10 +351,10 @@ export const Products: React.FC = () => {
                             step="0.001"
                             value={item.quantity}
                             onChange={e => updateRecipeItem(idx, 'quantity', e.target.value)}
-                            className={`w-full h-10 px-3 rounded-control border outline-none text-xs ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+                            className={`w-full h-11 px-3 rounded-control border outline-none text-xs transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
                           />
                         </div>
-                        <button type="button" onClick={() => removeRecipeItem(idx)} className="h-10 w-10 rounded-control flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><MinusCircle className="w-3.5 h-3.5" /></button>
+                        <button type="button" onClick={() => removeRecipeItem(idx)} className="h-11 w-11 rounded-control flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><MinusCircle className="w-3.5 h-3.5" /></button>
                       </div>
                     ))}
                   </div>
@@ -366,8 +368,8 @@ export const Products: React.FC = () => {
                 </div>
 
                 <div className="flex gap-3">
-                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-10 rounded-panel text-xs font-medium ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>Cancelar</button>
-                  <button type="submit" className="flex-[2] h-10 rounded-panel bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white text-xs font-medium transition-all">Salvar Produto</button>
+                  <button type="button" onClick={() => setIsModalOpen(false)} className={`flex-1 h-11 rounded-panel text-xs font-medium ${isDark ? 'bg-white/5' : 'bg-gray-100'}`}>Cancelar</button>
+                  <button type="submit" className="flex-[2] h-11 rounded-panel bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-white text-xs font-medium transition-all">Salvar Produto</button>
                 </div>
               </form>
             </motion.div>

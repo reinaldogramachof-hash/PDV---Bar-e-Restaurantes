@@ -17,6 +17,7 @@ export interface AuthActions {
 }
 
 interface ProfileRow {
+  codigo_interno: string | null
   id: string
   empresa_id: string
   name: string
@@ -63,6 +64,7 @@ export function useAuth(): AuthState & AuthActions {
       email: session.user.email ?? '',
       role: data.role as Usuario['role'],
       active: data.active,
+      codigoInterno: data.codigo_interno ?? undefined,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     }
@@ -112,3 +114,4 @@ export function useAuth(): AuthState & AuthActions {
 
   return { ...state, signIn, signOut }
 }
+

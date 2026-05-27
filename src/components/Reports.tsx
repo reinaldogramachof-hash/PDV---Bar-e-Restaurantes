@@ -93,7 +93,7 @@ export const Reports: React.FC = () => {
   const totalService = filteredOrders.reduce((acc, o) => acc + o.serviceCharge, 0);
   const totalDeliveryRevenue = filteredDeliveryOrders.reduce((acc, order) => acc + order.total, 0);
   const totalSalesAmount = totalRevenue + totalService + totalDeliveryRevenue;
-  const totalExpensesAmount = filteredExpenses.reduce((acc, e) => acc + e.amount, 0);
+  const totalExpensesAmount = filteredExpenses.filter(e => e.status === 'pago').reduce((acc, e) => acc + e.amount, 0);
   
   const cmvTotal = filteredOrders.flatMap(o => o.items).reduce((acc, item) => {
     const productRecipe = item.product.recipe || [];
@@ -190,12 +190,16 @@ export const Reports: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <div className="flex p-1 gap-1 rounded-panel bg-black/5 bg-surface-light/5 border border-border">
+          <div className="flex p-1 gap-1 rounded-panel bg-black/5 bg-surface-light/5 border border-current/5">
             {(['hoje', 'semana', 'mes', 'total'] as Period[]).map((p) => (
               <button
                 key={p}
                 onClick={() => setPeriod(p)}
-                className={`px-3 py-1.5 rounded-control text-xs font-medium transition-all ${period === p ? 'bg-surface-light bg-elevated shadow text-[var(--color-accent)]' : 'opacity-40 hover:opacity-100'}`}
+                className={`px-3 py-1.5 rounded-control text-xs font-medium transition-all capitalize ${
+                  period === p 
+                    ? 'bg-accent text-white shadow-sm' 
+                    : 'opacity-40 hover:opacity-100 hover:bg-current/5'
+                }`}
               >
                 {p}
               </button>
@@ -209,12 +213,16 @@ export const Reports: React.FC = () => {
       </div>
 
       {/* Tabs Selector */}
-      <div className="flex-shrink-0 flex p-1 gap-1 rounded-panel bg-black/5 bg-surface-light/5 border border-border w-fit">
+      <div className="flex-shrink-0 flex p-1 gap-1 rounded-panel bg-black/5 bg-surface-light/5 border border-current/5 w-fit overflow-x-auto custom-scrollbar">
         {(['dashboard', 'fluxo', 'vendas', 'produtos', 'atendentes'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setActiveTab(t)}
-            className={`px-4 py-1.5 rounded-control text-xs font-medium transition-all duration-200 relative ${activeTab === t ? 'bg-surface-light bg-elevated shadow text-[var(--color-accent)]' : 'opacity-40 hover:opacity-80'}`}
+            className={`px-4 py-1.5 rounded-control text-xs font-medium transition-all duration-200 relative capitalize whitespace-nowrap ${
+              activeTab === t 
+                ? 'bg-accent text-white shadow-sm' 
+                : 'opacity-40 hover:opacity-100 hover:bg-current/5'
+            }`}
           >
             {t === 'fluxo' ? 'Gestão de Caixa' : t}
           </button>

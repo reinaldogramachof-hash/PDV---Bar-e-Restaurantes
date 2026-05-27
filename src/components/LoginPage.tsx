@@ -20,8 +20,10 @@ export function LoginPage({ onSignIn }: LoginPageProps) {
     const err = await onSignIn(email, password)
     if (err) {
       setError(err === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : err)
-      setLoading(false)
     }
+    // Sempre reseta loading — se o login teve sucesso, AuthGate desmontará este componente;
+    // se loadProfile falhar, este componente será reexibido sem o spinner preso.
+    setLoading(false)
   }
 
   return (

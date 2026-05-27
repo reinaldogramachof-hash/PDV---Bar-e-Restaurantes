@@ -7,7 +7,9 @@ import {
   ensureEmpresaId,
   hasRolePermission,
   migrateLegacyCollection,
+  type ModuleId,
 } from '../domain/saas';
+import { useEmpresaModules } from '../hooks/useEmpresaModules';
 
 export interface AppBaseContextType {
   currentEmpresa: Empresa;
@@ -20,6 +22,8 @@ export interface AppBaseContextType {
   readGuides: string[];
   markGuideAsRead: (guideId: string) => void;
   toggleGuideRead: (guideId: string) => void;
+  hasExtraModule: (moduleId: ModuleId) => boolean;
+  refreshExtraModules: () => Promise<void>;
 }
 
 interface AppBaseProviderProps {
@@ -96,6 +100,7 @@ export const AppBaseProvider: React.FC<AppBaseProviderProps> = ({ children, auth
     const th = parseJSON(buildScopedStorageKey('theme', currentEmpresa.id), parseJSON('theme', 'dark'));
     return th === 'dark' || th === 'light' ? th : 'dark';
   });
+  const { hasExtraModule, refresh: refreshExtraModules } = useEmpresaModules(currentEmpresa.id);
 
   useEffect(() => {
     localStorage.setItem(buildScopedStorageKey('settings', currentEmpresa.id), JSON.stringify(settings));
@@ -131,6 +136,8 @@ export const AppBaseProvider: React.FC<AppBaseProviderProps> = ({ children, auth
       readGuides,
       markGuideAsRead,
       toggleGuideRead,
+      hasExtraModule,
+      refreshExtraModules,
     }}>
       {children}
     </AppBaseContext.Provider>

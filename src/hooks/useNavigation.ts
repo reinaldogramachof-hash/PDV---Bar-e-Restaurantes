@@ -13,6 +13,7 @@ export type View =
   | 'caixa'
   | 'relatorios'
   | 'configuracoes'
+  | 'diario'
   | 'manual'
   | 'clientes'
   | 'colaboradores'

@@ -25,6 +25,7 @@ const moduleNames: Record<ModuleId, string> = {
   colaboradores: 'Colaboradores',
   fornecedores: 'Fornecedores',
   relatorios: 'Financeiro',
+  diario: 'Diario',
   configuracoes: 'Configurações',
   seguranca: 'Segurança',
   suporte: 'Suporte',
@@ -86,3 +87,4 @@ export const PlanUpgradeBanner: React.FC<PlanUpgradeBannerProps> = ({ moduleId }
     </div>
   );
 };
+

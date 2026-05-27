@@ -27,6 +27,7 @@ const MenuDigital = lazy(() => import('./components/MenuDigital').then(module =>
 const SalesCenter = lazy(() => import('./components/SalesCenter').then(module => ({ default: module.SalesCenter })));
 const Customers = lazy(() => import('./components/Customers').then(module => ({ default: module.Customers })));
 const Collaborators = lazy(() => import('./components/Collaborators').then(module => ({ default: module.Collaborators })));
+const Diario = lazy(() => import('./components/Diario').then(module => ({ default: module.Diario })));
 const Suppliers = lazy(() => import('./components/Suppliers').then(module => ({ default: module.Suppliers })));
 const Products = lazy(() => import('./components/Products').then(module => ({ default: module.Products })));
 const Support = lazy(() => import('./components/Support').then(module => ({ default: module.Support })));
@@ -150,6 +151,7 @@ const AppContent = () => {
       case 'manual': return <UserManual />;
       case 'clientes': return <PlanGuard moduleId="clientes"><Customers /></PlanGuard>;
       case 'colaboradores': return <PlanGuard moduleId="colaboradores"><Collaborators /></PlanGuard>;
+      case 'diario': return <PlanGuard moduleId="diario"><Diario /></PlanGuard>;
       case 'fornecedores': return <PlanGuard moduleId="fornecedores"><Suppliers /></PlanGuard>;
       case 'produtos': return <PlanGuard moduleId="produtos"><Products /></PlanGuard>;
       case 'suporte': return <Support />;
@@ -185,10 +187,6 @@ const AuthGate: React.FC = () => {
     );
   }
 
-  if (!session || !user || !empresa) {
-    return <LoginPage onSignIn={signIn} />;
-  }
-
   if (error) {
     return (
       <div className="min-h-screen bg-[var(--color-app-base)] flex items-center justify-center p-4">
@@ -198,6 +196,10 @@ const AuthGate: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  if (!session || !user || !empresa) {
+    return <LoginPage onSignIn={signIn} />;
   }
 
   return (

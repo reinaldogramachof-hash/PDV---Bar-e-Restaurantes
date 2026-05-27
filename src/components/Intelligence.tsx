@@ -259,7 +259,7 @@ export const Intelligence: React.FC = () => {
     .join(' ');
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-5 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
         <div className="space-y-1">
           <h2 className="text-xl font-semibold flex items-center gap-2">

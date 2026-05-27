@@ -6,6 +6,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const ROLE_CODE_PREFIX = {
+  master: 'MST',
+  gerente: 'GER',
+  caixa: 'CXA',
+  garcom: 'GAR',
+  cozinha: 'COZ',
+  estoque: 'EST',
+  suporte: 'SUP',
+} as const;
+
 Deno.serve(async req => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -71,9 +81,19 @@ Deno.serve(async req => {
     });
     if (userError || !newUser) throw new Error(`Erro ao criar usuário: ${userError?.message}`);
 
+    const adminRole = 'gerente';
+    const { count: roleCount, error: countError } = await supabaseAdmin
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('empresa_id', empresaId)
+      .eq('role', adminRole);
+    if (countError) throw new Error(`Erro ao contar perfis para codigo interno: ${countError.message}`);
+
+    const codigoInterno = `${ROLE_CODE_PREFIX[adminRole]}-${String((roleCount ?? 0) + 1).padStart(3, '0')}`;
+
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
-      .insert({ id: newUser.id, empresa_id: empresaId, name: adminName, role: 'admin', active: true });
+      .insert({ id: newUser.id, empresa_id: empresaId, name: adminName, role: adminRole, active: true, codigo_interno: codigoInterno });
     if (profileError) throw new Error(`Erro ao criar perfil: ${profileError.message}`);
 
     return new Response(JSON.stringify(empresa), {

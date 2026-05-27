@@ -73,6 +73,7 @@ export const Settings: React.FC = () => {
     colaboradores: 'Colaboradores',
     fornecedores: 'Fornecedores',
     relatorios: 'Financeiro',
+    diario: 'Diario',
     configuracoes: 'Configuracoes',
     seguranca: 'Seguranca',
     suporte: 'Suporte',
@@ -512,4 +513,5 @@ export const Settings: React.FC = () => {
     </div>
   );
 };
+
 

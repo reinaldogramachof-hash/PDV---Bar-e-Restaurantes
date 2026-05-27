@@ -89,10 +89,11 @@ const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void 
   <button
     type="button"
     onClick={onChange}
-    className={`w-10 h-6 rounded-full relative transition-colors ${checked ? 'bg-success' : 'bg-current/15'}`}
+    className={`w-10 h-6 rounded-full relative transition-colors ${checked ? 'bg-success' : 'hover:opacity-80'}`}
+    style={!checked ? { backgroundColor: 'rgba(150, 150, 150, 0.4)' } : undefined}
     aria-label="Alternar status"
   >
-    <span className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${checked ? 'translate-x-5' : 'translate-x-1'}`} />
+    <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
   </button>
 );
 
@@ -251,20 +252,20 @@ export const SalesCenter: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-5 animate-in fade-in duration-500 pb-10">
+    <div className="space-y-5 animate-in fade-in duration-500 pb-10">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="text-xl font-semibold">Central de Vendas</h2>
           <p className="text-xs text-muted mt-1">Promocoes, combos, fidelidade e campanhas por horario.</p>
         </div>
-        <div className={`flex overflow-x-auto p-1 gap-1 rounded-panel border ${fieldClass}`}>
+        <div className={`flex w-full md:w-auto overflow-x-auto p-1 gap-1 rounded-panel border custom-scrollbar ${fieldClass}`}>
           {([
-            ['promocoes', 'Promocoes'],
+            ['promocoes', 'Promoções'],
             ['combos', 'Combos'],
             ['fidelidade', 'Fidelidade'],
             ['campanhas', 'Campanhas'],
           ] as Array<[Tab, string]>).map(([id, label]) => (
-            <button key={id} onClick={() => setActiveTab(id)} className={`px-3 py-2 rounded-control text-xs font-medium whitespace-nowrap ${activeTab === id ? 'bg-accent text-white' : 'text-muted hover:text-current'}`}>
+            <button key={id} onClick={() => setActiveTab(id)} className={`shrink-0 px-4 py-2 rounded-control text-xs font-medium whitespace-nowrap transition-colors ${activeTab === id ? 'bg-accent text-white shadow-sm' : 'text-muted hover:text-current hover:bg-current/5'}`}>
               {label}
             </button>
           ))}
@@ -285,8 +286,8 @@ export const SalesCenter: React.FC = () => {
               <Plus className="w-4 h-4" /> Nova Promocao
             </button>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-left min-w-[800px]">
               <thead className={`text-xs border-b ${isDark ? 'bg-elevated border-border text-muted' : 'bg-elevated-light border-border-light text-muted-light'}`}>
                 <tr>
                   <th className="px-4 py-3">Nome</th>
@@ -314,8 +315,8 @@ export const SalesCenter: React.FC = () => {
                       <td className="px-4 py-3">
                         <div className="flex justify-end gap-2">
                           <Toggle checked={promotion.active} onChange={() => updatePromotion(promotion.id, { active: !promotion.active })} />
-                          <button onClick={() => openPromotion(promotion)} className="p-2 rounded-control hover:bg-current/10"><Pencil className="w-4 h-4" /></button>
-                          <button onClick={() => setPendingDelete({ title: 'Excluir promocao', action: () => deletePromotion(promotion.id) })} className="p-2 rounded-control hover:bg-danger/10 text-danger"><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => openPromotion(promotion)} className="p-2 rounded-control text-muted hover:text-current hover:bg-current/10 active:scale-95 transition-all"><Pencil className="w-4 h-4" /></button>
+                          <button onClick={() => setPendingDelete({ title: 'Excluir promocao', action: () => deletePromotion(promotion.id) })} className="p-2 rounded-control text-muted hover:text-danger hover:bg-danger/10 active:scale-95 transition-all"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
                     </tr>
@@ -348,8 +349,9 @@ export const SalesCenter: React.FC = () => {
               const saving = Math.max(0, original - combo.comboPrice);
               return (
                 <article key={combo.id} className={`rounded-panel border overflow-hidden ${panelClass}`}>
-                  <div className="aspect-[16/9] bg-current/5 flex items-center justify-center">
-                    {combo.imageBase64 ? <img src={combo.imageBase64} alt={combo.name} className="w-full h-full object-cover" /> : <Package className="w-12 h-12 text-muted" />}
+                  <div className="aspect-[16/9] bg-current/5 flex items-center justify-center relative overflow-hidden group">
+                    {combo.imageBase64 ? <img src={combo.imageBase64} alt={combo.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <Package className="w-12 h-12 text-muted" />}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   </div>
                   <div className="p-4 space-y-3">
                     <div className="flex items-start justify-between gap-3">
@@ -375,8 +377,8 @@ export const SalesCenter: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
-                      <button onClick={() => openCombo(combo)} className="p-2 rounded-control hover:bg-current/10"><Pencil className="w-4 h-4" /></button>
-                      <button onClick={() => setPendingDelete({ title: 'Excluir combo', action: () => deleteCombo(combo.id) })} className="p-2 rounded-control hover:bg-danger/10 text-danger"><Trash2 className="w-4 h-4" /></button>
+                      <button onClick={() => openCombo(combo)} className="p-2 rounded-control text-muted hover:text-current hover:bg-current/10 active:scale-95 transition-all"><Pencil className="w-4 h-4" /></button>
+                      <button onClick={() => setPendingDelete({ title: 'Excluir combo', action: () => deleteCombo(combo.id) })} className="p-2 rounded-control text-muted hover:text-danger hover:bg-danger/10 active:scale-95 transition-all"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
                 </article>
@@ -400,19 +402,19 @@ export const SalesCenter: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mt-5">
               <label className="text-xs text-muted space-y-1">
                 Pontos por R$ 1
-                <input type="number" min="0" step="0.1" value={loyaltyConfig.pointsPerReal} onChange={event => updateLoyaltyConfig({ pointsPerReal: Number(event.target.value) })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+                <input type="number" min="0" step="0.1" value={loyaltyConfig.pointsPerReal} onChange={event => updateLoyaltyConfig({ pointsPerReal: Number(event.target.value) })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
               </label>
               <label className="text-xs text-muted space-y-1">
                 Pontos para resgate
-                <input type="number" min="1" value={loyaltyConfig.redeemThreshold} onChange={event => updateLoyaltyConfig({ redeemThreshold: Number(event.target.value) })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+                <input type="number" min="1" value={loyaltyConfig.redeemThreshold} onChange={event => updateLoyaltyConfig({ redeemThreshold: Number(event.target.value) })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
               </label>
               <label className="text-xs text-muted space-y-1">
                 Valor do resgate
-                <input type="number" min="0" value={loyaltyConfig.redeemValue} onChange={event => updateLoyaltyConfig({ redeemValue: Number(event.target.value) })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+                <input type="number" min="0" value={loyaltyConfig.redeemValue} onChange={event => updateLoyaltyConfig({ redeemValue: Number(event.target.value) })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
               </label>
               <label className="text-xs text-muted space-y-1">
                 Expira em dias
-                <input type="number" min="0" value={loyaltyConfig.expiresInDays || ''} onChange={event => updateLoyaltyConfig({ expiresInDays: event.target.value ? Number(event.target.value) : undefined })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+                <input type="number" min="0" value={loyaltyConfig.expiresInDays || ''} onChange={event => updateLoyaltyConfig({ expiresInDays: event.target.value ? Number(event.target.value) : undefined })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
               </label>
             </div>
           </div>
@@ -424,8 +426,8 @@ export const SalesCenter: React.FC = () => {
               <p className="text-xs text-muted mt-1">Quando ativo, o checkout credita pontos automaticamente.</p>
             </div>
           ) : (
-            <div className={`rounded-panel border overflow-hidden ${panelClass}`}>
-              <table className="w-full text-left">
+            <div className={`rounded-panel border overflow-x-auto custom-scrollbar ${panelClass}`}>
+              <table className="w-full text-left min-w-[600px]">
                 <thead className={`text-xs border-b ${isDark ? 'bg-elevated border-border text-muted' : 'bg-elevated-light border-border-light text-muted-light'}`}>
                   <tr>
                     <th className="px-4 py-3">Cliente</th>
@@ -480,18 +482,20 @@ export const SalesCenter: React.FC = () => {
                       <h4 className="font-semibold">{campaign.name}</h4>
                       <p className="text-xs text-muted mt-1">{linked?.name || 'Promocao removida'}</p>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${!campaign.active ? 'bg-warning/15 text-warning' : isActiveNow ? 'bg-success/15 text-success' : 'bg-current/10 text-muted'}`}>
-                      {!campaign.active ? 'Pausada' : isActiveNow ? 'Ativa agora' : 'Fora do horario'}
-                    </span>
+                    <div className="flex flex-col items-end gap-2">
+                      <Toggle checked={campaign.active} onChange={() => updateCampaign(campaign.id, { active: !campaign.active })} />
+                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${!campaign.active ? 'bg-warning/15 text-warning' : isActiveNow ? 'bg-success/15 text-success' : 'bg-current/10 text-muted'}`}>
+                        {!campaign.active ? 'Pausada' : isActiveNow ? 'Ativa agora' : 'Fora do horario'}
+                      </span>
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {dayLabels.map((label, idx) => <span key={label} className={`px-2 py-1 rounded-full text-[10px] font-semibold ${campaign.daysOfWeek.includes(idx) ? 'bg-accent/15 text-accent' : 'bg-current/10 text-muted'}`}>{label}</span>)}
                   </div>
                   <p className="text-xs text-muted">{String(campaign.startsHour).padStart(2, '0')}:00 as {String(campaign.endsHour).padStart(2, '0')}:00</p>
                   <div className="flex justify-end gap-2">
-                    <button onClick={() => updateCampaign(campaign.id, { active: !campaign.active })} className="h-9 px-3 rounded-control border text-xs">{campaign.active ? 'Pausar' : 'Ativar'}</button>
-                    <button onClick={() => openCampaign(campaign)} className="p-2 rounded-control hover:bg-current/10"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={() => setPendingDelete({ title: 'Excluir campanha', action: () => deleteCampaign(campaign.id) })} className="p-2 rounded-control hover:bg-danger/10 text-danger"><Trash2 className="w-4 h-4" /></button>
+                    <button onClick={() => openCampaign(campaign)} className="p-2 rounded-control text-muted hover:text-current hover:bg-current/10 active:scale-95 transition-all"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => setPendingDelete({ title: 'Excluir campanha', action: () => deleteCampaign(campaign.id) })} className="p-2 rounded-control text-muted hover:text-danger hover:bg-danger/10 active:scale-95 transition-all"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </article>
               );
@@ -505,13 +509,13 @@ export const SalesCenter: React.FC = () => {
         {promotionDraft && (
           <Modal title={editingPromotionId ? 'Editar Promocao' : 'Nova Promocao'} onClose={() => setPromotionDraft(null)} panelClass={panelClass}>
             <div className="space-y-4">
-              <input autoFocus value={promotionDraft.name} onChange={event => setPromotionDraft({ ...promotionDraft, name: event.target.value })} placeholder="Nome da promocao" className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+              <input autoFocus value={promotionDraft.name} onChange={event => setPromotionDraft({ ...promotionDraft, name: event.target.value })} placeholder="Nome da promocao" className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
               <div className="grid grid-cols-2 gap-3">
-                <select value={promotionDraft.type} onChange={event => setPromotionDraft({ ...promotionDraft, type: event.target.value as PromotionDraft['type'] })} className={`h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`}>
+                <select value={promotionDraft.type} onChange={event => setPromotionDraft({ ...promotionDraft, type: event.target.value as PromotionDraft['type'] })} className={`h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`}>
                   <option value="percent">Porcentagem (%)</option>
                   <option value="fixed">Valor fixo (R$)</option>
                 </select>
-                <input type="number" min="0" value={promotionDraft.value} onChange={event => setPromotionDraft({ ...promotionDraft, value: Number(event.target.value) })} className={`h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+                <input type="number" min="0" value={promotionDraft.value} onChange={event => setPromotionDraft({ ...promotionDraft, value: Number(event.target.value) })} className={`h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
               </div>
               <label className="flex items-center gap-2 text-xs text-muted">
                 <input type="checkbox" checked={promotionDraft.productIds.length === 0 && promotionDraft.categoryIds.length === 0} onChange={event => event.target.checked && setPromotionDraft({ ...promotionDraft, productIds: [], categoryIds: [] })} />
@@ -522,8 +526,8 @@ export const SalesCenter: React.FC = () => {
                 <CheckList title="Produtos" values={products.map(product => product.id)} labels={Object.fromEntries(products.map(product => [product.id, product.name]))} selected={promotionDraft.productIds} onToggle={value => setPromotionDraft({ ...promotionDraft, productIds: toggleValue(promotionDraft.productIds, value) })} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <input type="date" value={toDateValue(promotionDraft.startsAt)} onChange={event => setPromotionDraft({ ...promotionDraft, startsAt: fromDateValue(event.target.value) })} className={`h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
-                <input type="date" value={toDateValue(promotionDraft.endsAt)} onChange={event => setPromotionDraft({ ...promotionDraft, endsAt: fromDateValue(event.target.value, true) })} className={`h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+                <input type="date" value={toDateValue(promotionDraft.startsAt)} onChange={event => setPromotionDraft({ ...promotionDraft, startsAt: fromDateValue(event.target.value) })} className={`h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
+                <input type="date" value={toDateValue(promotionDraft.endsAt)} onChange={event => setPromotionDraft({ ...promotionDraft, endsAt: fromDateValue(event.target.value, true) })} className={`h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
               </div>
               <label className="flex items-center justify-between text-sm"><span>Ativar imediatamente</span><Toggle checked={promotionDraft.active} onChange={() => setPromotionDraft({ ...promotionDraft, active: !promotionDraft.active })} /></label>
               <ModalActions onCancel={() => setPromotionDraft(null)} onSave={savePromotion} />
@@ -534,16 +538,18 @@ export const SalesCenter: React.FC = () => {
         {comboDraft && (
           <Modal title={editingComboId ? 'Editar Combo' : 'Novo Combo'} onClose={() => setComboDraft(null)} panelClass={panelClass}>
             <div className="space-y-4">
-              <input autoFocus value={comboDraft.name} onChange={event => setComboDraft({ ...comboDraft, name: event.target.value })} placeholder="Nome do combo" className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+              <input autoFocus value={comboDraft.name} onChange={event => setComboDraft({ ...comboDraft, name: event.target.value })} placeholder="Nome do combo" className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
               <textarea value={comboDraft.description} onChange={event => setComboDraft({ ...comboDraft, description: event.target.value })} placeholder="Descricao" className={`w-full min-h-20 p-3 rounded-control border outline-none text-sm resize-none ${fieldClass}`} />
-              <label className={`h-20 rounded-control border border-dashed flex items-center justify-center gap-2 text-sm text-muted cursor-pointer ${fieldClass}`}>
-                <ImagePlus className="w-4 h-4" /> Upload de imagem
+              <label className={`h-24 rounded-control border-2 border-dashed flex flex-col items-center justify-center gap-2 text-sm text-muted cursor-pointer transition-colors hover:border-accent hover:text-accent hover:bg-accent/5 ${fieldClass}`}>
+                <ImagePlus className="w-6 h-6" />
+                <span className="font-medium">Upload de imagem</span>
+                <span className="text-[10px] opacity-70">JPG, PNG ou WEBP até 2MB</span>
                 <input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleComboImage} className="hidden" />
               </label>
               {imageError && <p className="text-xs text-danger">{imageError}</p>}
               <ComboItemsEditor draft={comboDraft} products={products} setDraft={setComboDraft} fieldClass={fieldClass} />
               <div className="grid grid-cols-2 gap-3">
-                <input type="number" min="0" value={comboDraft.comboPrice} onChange={event => setComboDraft({ ...comboDraft, comboPrice: Number(event.target.value) })} className={`h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} placeholder="Preco do combo" />
+                <input type="number" min="0" value={comboDraft.comboPrice} onChange={event => setComboDraft({ ...comboDraft, comboPrice: Number(event.target.value) })} className={`h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} placeholder="Preco do combo" />
                 <div className={`rounded-control border px-3 py-2 text-xs ${fieldClass}`}>
                   <span className="text-muted">Economia</span>
                   <p className="font-semibold text-success">{formatMoney(Math.max(0, calcComboOriginalPrice(comboDraft as Combo, products) - comboDraft.comboPrice))} ({calcComboSaving(comboDraft as Combo, products)}%)</p>
@@ -559,21 +565,21 @@ export const SalesCenter: React.FC = () => {
         {campaignDraft && (
           <Modal title={editingCampaignId ? 'Editar Campanha' : 'Nova Campanha'} onClose={() => setCampaignDraft(null)} panelClass={panelClass}>
             <div className="space-y-4">
-              <input autoFocus value={campaignDraft.name} onChange={event => setCampaignDraft({ ...campaignDraft, name: event.target.value })} placeholder="Nome da campanha" className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
-              <select value={campaignDraft.promotionId} onChange={event => setCampaignDraft({ ...campaignDraft, promotionId: event.target.value })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`}>
+              <input autoFocus value={campaignDraft.name} onChange={event => setCampaignDraft({ ...campaignDraft, name: event.target.value })} placeholder="Nome da campanha" className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
+              <select value={campaignDraft.promotionId} onChange={event => setCampaignDraft({ ...campaignDraft, promotionId: event.target.value })} className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`}>
                 <option value="">Selecione a promocao</option>
                 {promotions.map(promotion => <option key={promotion.id} value={promotion.id}>{promotion.name}</option>)}
               </select>
               <div className="flex flex-wrap gap-2">
                 {dayLabels.map((label, idx) => (
-                  <button key={label} type="button" onClick={() => setCampaignDraft({ ...campaignDraft, daysOfWeek: toggleNumber(campaignDraft.daysOfWeek, idx) })} className={`h-9 px-3 rounded-full text-xs font-semibold ${campaignDraft.daysOfWeek.includes(idx) ? 'bg-accent text-white' : 'bg-current/10 text-muted'}`}>
+                  <button key={label} type="button" onClick={() => setCampaignDraft({ ...campaignDraft, daysOfWeek: toggleNumber(campaignDraft.daysOfWeek, idx) })} className={`h-9 px-3 rounded-full text-xs font-semibold transition-colors ${campaignDraft.daysOfWeek.includes(idx) ? 'bg-accent text-white shadow-sm' : 'bg-current/10 text-muted hover:bg-current/15'}`}>
                     {label}
                   </button>
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <input type="time" value={`${String(campaignDraft.startsHour).padStart(2, '0')}:00`} onChange={event => setCampaignDraft({ ...campaignDraft, startsHour: Number(event.target.value.slice(0, 2)) })} className={`h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
-                <input type="time" value={`${String(campaignDraft.endsHour).padStart(2, '0')}:00`} onChange={event => setCampaignDraft({ ...campaignDraft, endsHour: Number(event.target.value.slice(0, 2)) })} className={`h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+                <input type="time" value={`${String(campaignDraft.startsHour).padStart(2, '0')}:00`} onChange={event => setCampaignDraft({ ...campaignDraft, startsHour: Number(event.target.value.slice(0, 2)) })} className={`h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
+                <input type="time" value={`${String(campaignDraft.endsHour).padStart(2, '0')}:00`} onChange={event => setCampaignDraft({ ...campaignDraft, endsHour: Number(event.target.value.slice(0, 2)) })} className={`h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
               </div>
               <label className="flex items-center justify-between text-sm"><span>Ativa</span><Toggle checked={campaignDraft.active} onChange={() => setCampaignDraft({ ...campaignDraft, active: !campaignDraft.active })} /></label>
               <ModalActions onCancel={() => setCampaignDraft(null)} onSave={saveCampaign} />
@@ -602,8 +608,8 @@ export const SalesCenter: React.FC = () => {
       {manualCustomerId && (
         <SimpleModal title="Movimentar Pontos" onClose={() => setManualCustomerId(null)} panelClass={panelClass}>
           <div className="space-y-3">
-            <input type="number" min="1" value={manualPoints} onChange={event => setManualPoints(event.target.value)} placeholder="Quantidade de pontos" className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
-            <input value={manualReason} onChange={event => setManualReason(event.target.value)} placeholder="Motivo" className={`w-full h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+            <input type="number" min="1" value={manualPoints} onChange={event => setManualPoints(event.target.value.replace(/[^0-9]/g, ''))} placeholder="Quantidade de pontos (número inteiro)" className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
+            <input value={manualReason} onChange={event => setManualReason(event.target.value)} placeholder="Motivo da movimentação" className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
             <div className="grid grid-cols-2 gap-2">
               <button onClick={() => addManualEntry(manualCustomerId, 'add')} className="h-10 rounded-control bg-success text-white text-xs font-medium">Adicionar</button>
               <button onClick={() => addManualEntry(manualCustomerId, 'redeem')} className="h-10 rounded-control bg-warning text-white text-xs font-medium">Resgatar</button>
@@ -707,10 +713,10 @@ const ComboItemsEditor = ({
       </div>
       {draft.items.map((item, index) => (
         <div key={index} className="grid grid-cols-[1fr_80px_36px] gap-2">
-          <select value={item.productId} onChange={event => updateLine(index, { productId: event.target.value })} className={`h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`}>
+          <select value={item.productId} onChange={event => updateLine(index, { productId: event.target.value })} className={`h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`}>
             {products.map(product => <option key={product.id} value={product.id}>{product.name}</option>)}
           </select>
-          <input type="number" min="1" value={item.qty} onChange={event => updateLine(index, { qty: Number(event.target.value) })} className={`h-10 px-3 rounded-control border outline-none text-sm ${fieldClass}`} />
+          <input type="number" min="1" value={item.qty} onChange={event => updateLine(index, { qty: Number(event.target.value) })} className={`h-10 px-3 rounded-control border outline-none text-sm focus:border-accent focus:ring-1 focus:ring-accent transition-all ${fieldClass}`} />
           <button type="button" onClick={() => removeLine(index)} className="h-10 rounded-control text-danger hover:bg-danger/10 flex items-center justify-center"><Trash2 className="w-4 h-4" /></button>
         </div>
       ))}

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Product, Table, Order, Waiter, Expense, CashierSession, PaymentItem, Customer, Collaborator, StockMovement, StockItem, Supplier, AppSettings, Empresa, Usuario, Permission, DeliveryOrder, Entregador, MenuConfig, MenuDigitalConfig, Promotion, Combo, LoyaltyConfig, LoyaltyEntry, Campaign, OnlineOrder, OnlineOrderStatus, KitchenItemStatus } from '../types';
 import { mockWaiters, mockCustomers, mockCollaborators, mockStockItems, mockSuppliers } from './mock';
-import { buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId } from '../domain/saas';
+import { buildScopedStorageKey, ensureEmpresaId, getSessionScopedExpenses, migrateLegacyCollection, normalizeImportedCollection, scopedCollections, validateImportEmpresaId, type ModuleId } from '../domain/saas';
 import { buildOnlineOrderStockAdjustments, getDeliveredOnlineOrdersInWindow, getOnlineSalesTotal } from '../services/onlineOrdersService';
 import { useOrders } from '../hooks/useOrders';
 import { useTables } from '../hooks/useTables';
@@ -60,6 +60,8 @@ interface AppState {
 }
 
 interface AppContextType extends AppState {
+  hasExtraModule: (moduleId: ModuleId) => boolean;
+  refreshExtraModules: () => Promise<void>;
   hasPermission: (permission: Permission) => boolean;
   setTheme: (theme: 'dark' | 'light') => void;
   updateProduct: (product: Product) => void;
@@ -203,6 +205,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     updateSettings,
     readGuides,
     toggleGuideRead,
+    hasExtraModule,
+    refreshExtraModules,
   } = useBase();
   const ordersHook = useOrders();
   const tablesHook = useTables();
@@ -841,6 +845,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       addCampaign, updateCampaign, deleteCampaign,
       addOnlineOrder, updateOnlineOrderStatus, cancelOnlineOrder, updateOrderItemKitchenStatus, applyOnlineOrderStockDeduction, registerOnlineSale,
       updateSettings, toggleGuideRead, importData, exportData, resetToMocks,
+      hasExtraModule,
+      refreshExtraModules,
       refreshOrders: ordersHook.refresh,
       refreshTables: tablesHook.refresh,
       refreshDelivery: deliveryHook.refresh,

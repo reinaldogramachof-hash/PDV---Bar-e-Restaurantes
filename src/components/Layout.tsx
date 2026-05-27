@@ -2,37 +2,38 @@ import React, { useEffect, useState } from 'react';
 import { View } from '../hooks/useNavigation';
 import { useApp } from '../store/AppContext';
 import {
-  BookOpen,
-  BadgePercent,
+  BarChart2,
   BrainCircuit,
   Bike,
+  BookMarked,
   ChefHat,
   ChevronLeft,
-  Crown,
-  Headset,
-  LineChart,
+  HeadphonesIcon,
   LayoutDashboard,
+  LayoutGrid,
   LogOut,
   Menu,
   Monitor,
-  MonitorPlay,
   Moon,
+  NotebookPen,
   Package,
-  QrCode,
   Settings,
-  Shield,
-  ShoppingBag,
+  ShieldCheck,
+  ShoppingCart,
+  Smartphone,
   Sun,
-  Table2,
+  TrendingUp,
   Truck,
-  UserCheck,
+  UserCog,
   Users,
   Utensils,
+  UtensilsCrossed,
   Wallet,
+  Warehouse,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { AnimatePresence, motion } from 'motion/react';
-import { APP_NAME, canAccessModule, ModuleId } from '../domain/saas';
+import { APP_NAME, canAccessModule, canAccessViaPackOrAddon, ModuleId } from '../domain/saas';
 import { LicenseCheckResult } from '../services/licenseService';
 import { fetchFeed } from '../services/notificationService';
 import { LicenseBanner } from './LicenseBanner';
@@ -64,44 +65,37 @@ const DateTimeDisplay = () => {
   );
 };
 
-const navGroups = [
-  {
-    title: 'Operacional',
-    items: [
-      { id: 'pdv', icon: MonitorPlay, label: 'PDV (Balcão)' },
-      { id: 'mesas', icon: Table2, label: 'Mesas' },
-      { id: 'delivery', icon: Bike, label: 'Delivery' },
-      { id: 'pedidos-online', icon: ShoppingBag, label: 'Pedidos Online' },
-      { id: 'cozinha', icon: ChefHat, label: 'Cozinha' },
-      { id: 'caixa', icon: Wallet, label: 'Caixa' },
-    ],
-  },
-  {
-    title: 'Gestão',
-    items: [
-      { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-      { id: 'intelligence', icon: BrainCircuit, label: 'Inteligência' },
-      { id: 'cardapio-digital', icon: QrCode, label: 'Cardápio Digital' },
-      { id: 'vendas', icon: BadgePercent, label: 'Vendas' },
-      { id: 'clientes', icon: Users, label: 'Clientes' },
-      { id: 'colaboradores', icon: UserCheck, label: 'Colaboradores' },
-      { id: 'fornecedores', icon: Truck, label: 'Fornecedores' },
-      { id: 'produtos', icon: BookOpen, label: 'Cardápio' },
-      { id: 'relatorios', icon: LineChart, label: 'Financeiro' },
-      { id: 'estoque', icon: Package, label: 'Estoque' },
-    ],
-  },
-  {
-    title: 'Sistema',
-    items: [
-      { id: 'manual', icon: BookOpen, label: 'Manual de Uso' },
-      { id: 'seguranca', icon: Shield, label: 'Segurança' },
-      { id: 'configuracoes', icon: Settings, label: 'Configurações' },
-      { id: 'suporte', icon: Headset, label: 'Suporte' },
-      { id: 'master', icon: Crown, label: 'Painel Master' },
-    ],
-  },
-] as const;
+const moduleMeta: Record<ModuleId, { icon: React.ComponentType<{ className?: string }>; label: string }> = {
+  pdv: { icon: ShoppingCart, label: 'PDV (Balcao)' },
+  mesas: { icon: LayoutGrid, label: 'Mesas' },
+  cozinha: { icon: ChefHat, label: 'Cozinha' },
+  delivery: { icon: Bike, label: 'Delivery' },
+  'pedidos-online': { icon: Smartphone, label: 'Pedidos Online' },
+  'cardapio-digital': { icon: UtensilsCrossed, label: 'Cardapio Digital' },
+  clientes: { icon: Users, label: 'Clientes' },
+  vendas: { icon: TrendingUp, label: 'Vendas' },
+  produtos: { icon: Package, label: 'Produtos' },
+  estoque: { icon: Warehouse, label: 'Estoque' },
+  fornecedores: { icon: Truck, label: 'Fornecedores' },
+  colaboradores: { icon: UserCog, label: 'Colaboradores' },
+  caixa: { icon: Wallet, label: 'Caixa' },
+  relatorios: { icon: BarChart2, label: 'Financeiro' },
+  dashboard: { icon: LayoutDashboard, label: 'Dashboard' },
+  intelligence: { icon: BrainCircuit, label: 'Inteligencia' },
+  diario: { icon: NotebookPen, label: 'Diario' },
+  configuracoes: { icon: Settings, label: 'Configuracoes' },
+  seguranca: { icon: ShieldCheck, label: 'Seguranca' },
+  suporte: { icon: HeadphonesIcon, label: 'Suporte' },
+  manual: { icon: BookMarked, label: 'Manual de Uso' },
+};
+
+const SIDEBAR_GROUPS = [
+  { label: 'Operacional', modules: ['pdv', 'mesas', 'cozinha', 'delivery', 'pedidos-online'] },
+  { label: 'Comercial', modules: ['cardapio-digital', 'clientes', 'vendas'] },
+  { label: 'Administrativo', modules: ['produtos', 'estoque', 'fornecedores', 'colaboradores', 'caixa', 'relatorios'] },
+  { label: 'Gestao', modules: ['dashboard', 'intelligence', 'diario'] },
+  { label: 'Sistema', modules: ['configuracoes', 'seguranca', 'suporte', 'manual'] },
+] as const;;
 
 const viewLabels: Record<View, string> = {
   master: 'Painel Master',
@@ -117,6 +111,7 @@ const viewLabels: Record<View, string> = {
   estoque: 'Estoque',
   caixa: 'Caixa',
   relatorios: 'Financeiro',
+  diario: 'Diario',
   configuracoes: 'Configurações',
   manual: 'Manual de Uso',
   clientes: 'Clientes',
@@ -135,14 +130,20 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
 
   const isDark = theme === 'dark';
 
-  const visibleNavGroups = navGroups
+  const enabledExtraModules = ((currentEmpresa as unknown as { extraModules?: string[] }).extraModules ?? []);
+  const visibleNavGroups = SIDEBAR_GROUPS
     .map(group => ({
       ...group,
-      items: group.items.filter(item => {
-        const alwaysVisible: string[] = ['master', 'configuracoes', 'manual', 'suporte', 'pedidos-online'];
-        if (alwaysVisible.includes(item.id)) return true;
-        return canAccessModule(currentEmpresa.plano, currentUser.role, item.id as ModuleId);
-      }),
+      items: group.modules
+        .filter(moduleId =>
+          canAccessModule(currentEmpresa.plano, currentUser.role, moduleId) ||
+          canAccessViaPackOrAddon(enabledExtraModules, currentUser.role, moduleId)
+        )
+        .map(moduleId => ({
+          id: moduleId,
+          icon: moduleMeta[moduleId].icon,
+          label: moduleMeta[moduleId].label,
+        })),
     }))
     .filter(group => group.items.length > 0);
 
@@ -216,10 +217,42 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
           </div>
 
           <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 scrollbar-none">
-            {visibleNavGroups.map((group) => {
+            {currentUser.role === 'master' && (
+              <div className="space-y-1 pb-1">
+                {!isCollapsed && (
+                  <div className="px-3 pt-2 pb-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">
+                      Master
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={() => setCurrentView('master')}
+                  title={isCollapsed ? 'Painel Master' : ''}
+                  className={`w-full flex items-center gap-3 px-3 py-2 transition-all rounded-control group ${
+                    currentView === 'master'
+                      ? 'bg-accent text-white'
+                      : isDark
+                        ? 'text-muted hover:bg-elevated hover:text-text'
+                        : 'text-muted-light hover:bg-elevated-light hover:text-text-light'
+                  } ${isCollapsed ? 'justify-center' : ''}`}
+                >
+                  <ShieldCheck className="w-4.5 h-4.5 flex-shrink-0 opacity-70 group-hover:opacity-100" />
+                  {!isCollapsed && <span className="font-medium text-sm">Painel Master</span>}
+                </button>
+                {!isCollapsed && <hr className="border-[var(--color-border)] mx-3 my-1" />}
+              </div>
+            )}
+            {visibleNavGroups.map((group, index) => {
               return (
-                <div key={group.title} className="space-y-1">
-                  {!isCollapsed && <h3 className="px-3 text-xs font-medium text-muted">{group.title}</h3>}
+                <div key={group.label} className="space-y-1">
+                  {!isCollapsed && (
+                    <div className="px-3 pt-4 pb-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">
+                        {group.label}
+                      </span>
+                    </div>
+                  )}
                   <div className="space-y-1">
                     {group.items.map((item) => {
                       const active = currentView === item.id;
@@ -247,6 +280,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
                       );
                     })}
                   </div>
+                  {!isCollapsed && index < visibleNavGroups.length - 1 && <hr className="border-[var(--color-border)] mx-3 my-1" />}
                 </div>
               );
             })}
@@ -363,3 +397,5 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
     </div>
   );
 };
+
+
