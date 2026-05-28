@@ -1,4 +1,4 @@
-﻿import { Expense, Permission, Plano, UserRole } from '../types';
+import { Empresa, Expense, Permission, Plano, UserRole } from '../types';
 
 const viteEnv = (import.meta as unknown as { env?: Record<string, string> }).env || {};
 
@@ -52,14 +52,14 @@ export const packLabels: Record<PackId, string> = {
   delivery: 'Pack Delivery',
   lanchonete: 'Pack Lanchonete',
   bar: 'Pack Bar & Mesas',
-  autonomo: 'Pack AutÃ´nomo',
+  autonomo: 'Pack Autônomo',
 };
 
 export const packDescriptions: Record<PackId, string> = {
-  delivery: 'PDV, CardÃ¡pio Digital, Pedidos Online, Delivery e Dashboard',
-  lanchonete: 'PDV, KDS Cozinha, CardÃ¡pio e Financeiro',
-  bar: 'Mesas, PDV, Clientes e PromoÃ§Ãµes',
-  autonomo: 'PDV solo, Caixa e CardÃ¡pio bÃ¡sico',
+  delivery: 'PDV, Cardápio Digital, Pedidos Online, Delivery e Dashboard',
+  lanchonete: 'PDV, KDS Cozinha, Cardápio e Financeiro',
+  bar: 'Mesas, PDV, Clientes e Promoções',
+  autonomo: 'PDV solo, Caixa e Cardápio básico',
 };
 
 export type AddonModuleId = 'cardapio-digital' | 'delivery' | 'intelligence' | 'dashboard' | 'estoque';
@@ -73,9 +73,9 @@ export const planPricing: Record<Plano, number> = {
 };
 
 export const planDescriptions: Record<Plano, string> = {
-  essencial: 'ComeÃ§a a organizar sua operaÃ§Ã£o hoje',
-  profissional: 'Controle total da operaÃ§Ã£o',
-  gestao: 'InteligÃªncia para escalar',
+  essencial: 'Começa a organizar sua operação hoje',
+  profissional: 'Controle total da operação',
+  gestao: 'Inteligência para escalar',
 };
 
 export const packPricing: Record<PackId, number> = {
@@ -94,12 +94,27 @@ export const addonPricing: Record<AddonModuleId, number> = {
 };
 
 export const addonLabels: Record<AddonModuleId, string> = {
-  'cardapio-digital': 'CardÃ¡pio Digital QR',
+  'cardapio-digital': 'Cardápio Digital QR',
   delivery: 'Delivery + Motoboys',
-  intelligence: 'InteligÃªncia IA',
+  intelligence: 'Inteligência IA',
   dashboard: 'Dashboard Analytics',
-  estoque: 'Estoque AvanÃ§ado',
+  estoque: 'Estoque Avançado',
 };
+
+export const calcMrrEmpresa = (empresa: Empresa): number => {
+  const base = planPricing[empresa.plano] ?? 0;
+  const pack = empresa.packId ? (packPricing[empresa.packId as PackId] ?? 0) : 0;
+  const addons = (empresa.addons ?? []).reduce(
+    (sum, addonId) => sum + (addonPricing[addonId as AddonModuleId] ?? 0),
+    0,
+  );
+  return base + pack + addons;
+};
+
+export const calcMrrTotal = (empresas: Empresa[]): number =>
+  empresas
+    .filter(empresa => empresa.active !== false && empresa.licenseStatus !== 'suspended')
+    .reduce((sum, empresa) => sum + calcMrrEmpresa(empresa), 0);
 
 export const rolePermissions: Record<UserRole, Permission[]> = {
   master: [
@@ -272,4 +287,5 @@ export const ROLE_CODE_PREFIX: Record<UserRole, string> = {
 
 export const generateCodigoInterno = (role: UserRole, sequence: number): string =>
   `${ROLE_CODE_PREFIX[role]}-${String(sequence).padStart(3, '0')}`;
+
 

@@ -19,6 +19,9 @@ interface EmpresaRow {
   contract_type: string | null;
   contract_status: string | null;
   plano: string;
+  pack_id: string | null;
+  addons: string[] | null;
+  active: boolean | null;
   license_status: string;
   created_at: string;
   updated_at: string;
@@ -56,6 +59,9 @@ const toEmpresa = (row: EmpresaRow): Empresa => ({
   name: row.name,
   document: row.document ?? '',
   plano: row.plano as Plano,
+  packId: row.pack_id ?? undefined,
+  addons: row.addons ?? [],
+  active: row.active ?? true,
   licenseStatus: row.license_status as LicenseStatus,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
@@ -177,6 +183,33 @@ export async function updateEmpresaLicense(
 
   if (!data) {
     throw new Error('Empresa nao encontrada para atualizacao de licenca.');
+  }
+
+  return toEmpresa(data);
+}
+
+export async function updateEmpresaStatus(
+  id: string,
+  payload: { licenseStatus?: 'active' | 'trial' | 'suspended'; active?: boolean }
+): Promise<Empresa> {
+  const patch: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (payload.licenseStatus !== undefined) patch.license_status = payload.licenseStatus;
+  if (payload.active !== undefined) patch.active = payload.active;
+
+  const { data, error } = await supabase
+    .from('empresas')
+    .update(patch)
+    .eq('id', id)
+    .select('*')
+    .maybeSingle<EmpresaRow>();
+
+  throwSupabaseError('Erro ao atualizar status da empresa', error);
+
+  if (!data) {
+    throw new Error('Empresa nao encontrada para atualizacao de status.');
   }
 
   return toEmpresa(data);

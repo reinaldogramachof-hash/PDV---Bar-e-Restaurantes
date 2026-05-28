@@ -6,6 +6,7 @@ import {
   listAllEmpresas,
   updateEmpresaLicense,
   updateEmpresaPlano,
+  updateEmpresaStatus,
 } from '../services/masterService';
 
 export interface UseMasterReturn {
@@ -14,6 +15,7 @@ export interface UseMasterReturn {
   error: string | null;
   updateLicense: (id: string, status: 'active' | 'trial' | 'suspended') => Promise<void>;
   updatePlano: (id: string, plano: 'essencial' | 'profissional' | 'gestao') => Promise<void>;
+  updateStatus: (id: string, payload: { licenseStatus?: 'active' | 'trial' | 'suspended'; active?: boolean }) => Promise<void>;
   createEmpresa: (input: CreateEmpresaInput) => Promise<void>;
   refresh: () => Promise<void>;
 }
@@ -53,6 +55,15 @@ export function useMaster(): UseMasterReturn {
     setEmpresas(prev => prev.map(item => (item.id === id ? updated : item)));
   }, []);
 
+  const updateStatus = useCallback(async (
+    id: string,
+    payload: { licenseStatus?: 'active' | 'trial' | 'suspended'; active?: boolean },
+  ) => {
+    setError(null);
+    const updated = await updateEmpresaStatus(id, payload);
+    setEmpresas(prev => prev.map(item => (item.id === id ? updated : item)));
+  }, []);
+
   const createEmpresa = useCallback(async (input: CreateEmpresaInput) => {
     setError(null);
     const created = await createEmpresaForTrial(input);
@@ -65,8 +76,8 @@ export function useMaster(): UseMasterReturn {
     error,
     updateLicense,
     updatePlano,
+    updateStatus,
     createEmpresa,
     refresh,
   };
 }
-

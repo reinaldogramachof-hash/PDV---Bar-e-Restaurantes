@@ -35,7 +35,7 @@ import type {
 import { usePlenaProspects } from '../hooks/usePlenaProspects';
 import { createActivity, listActivities, type PlenaActivity, type PlenaProspect } from '../services/plenaProspectsService';
 import { listEmpresaModules, removeEmpresaModule, upsertEmpresaModule, type EmpresaModule } from '../services/empresaModulesService';
-import { addonLabels, addonModules, addonPricing, packDescriptions, packLabels, packModules, packPricing, planDescriptions, planModules, planPricing, type AddonModuleId, type ModuleId, type PackId } from '../domain/saas';
+import { addonLabels, addonModules, addonPricing, calcMrrEmpresa, calcMrrTotal, packDescriptions, packLabels, packModules, packPricing, planDescriptions, planModules, planPricing, type AddonModuleId, type ModuleId, type PackId } from '../domain/saas';
 import { addMessage, listAllTickets, listMessages, updateTicketStatus, type SupportMessage, type SupportTicket } from '../services/supportService';
 import { supabase } from '../lib/supabase';
 import { createNotification, deleteNotification, duplicateNotification, listNotifications, publishNotification, type MasterNotification } from '../services/masterNotificationsService';
@@ -85,6 +85,26 @@ const NOTIF_ICON: Record<AppNotification['type'], React.ComponentType<{ classNam
 
 const fmtBRL = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+
+const MRR_HISTORY_STORAGE_KEY = 'gestao-gastro:plena:mrr-history';
+
+type MrrHistoryPoint = { month: string; mrr: number };
+
+const getMonthKey = () => new Date().toISOString().slice(0, 7);
+
+const readMasterMrrHistory = (): MrrHistoryPoint[] => {
+  try {
+    const raw = localStorage.getItem(MRR_HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as MrrHistoryPoint[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(entry => typeof entry?.month === 'string' && typeof entry?.mrr === 'number')
+      .sort((a, b) => a.month.localeCompare(b.month));
+  } catch {
+    return [];
+  }
+};
 
 const relativeTime = (iso: string) => {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -1115,6 +1135,7 @@ interface TabOverviewProps {
   elevatedClass: string;
   empresas: Empresa[];
   onNavigate: (tab: Tab, filter?: string) => void;
+  onReactivateEmpresa: (id: string) => Promise<void>;
 }
 
 const TabOverview: React.FC<TabOverviewProps> = ({
@@ -1123,19 +1144,122 @@ const TabOverview: React.FC<TabOverviewProps> = ({
   elevatedClass,
   empresas,
   onNavigate,
+  onReactivateEmpresa,
 }) => {
+  const [mrrHistory, setMrrHistory] = useState<MrrHistoryPoint[]>(() => readMasterMrrHistory());
+  const [reactivationLoadingId, setReactivationLoadingId] = useState<string | null>(null);
+
   const totalEmpresas = empresas.length;
-  const empresasAtivas = empresas.filter(e => e.licenseStatus === 'active').length;
-  const empresasTrial = empresas.filter(e => e.licenseStatus === 'trial').length;
-  const empresasSuspensas = empresas.filter(e => e.licenseStatus === 'suspended').length;
-  const mrrReal = empresas
-    .filter(e => e.licenseStatus === 'active')
-    .reduce((acc, e) => acc + (planPricing[e.plano] ?? 0), 0);
+
+  const empresasAtivasList = useMemo(
+    () => empresas.filter(empresa => empresa.active !== false && empresa.licenseStatus === 'active'),
+    [empresas],
+  );
+  const empresasAtivas = empresasAtivasList.length;
+
+  const empresasTrial = useMemo(
+    () => empresas.filter(empresa => empresa.licenseStatus === 'trial').length,
+    [empresas],
+  );
+
+  const empresasSuspensas = useMemo(
+    () => empresas.filter(empresa => empresa.licenseStatus === 'suspended' || empresa.active === false).length,
+    [empresas],
+  );
+
+  const mrrTotal = useMemo(() => calcMrrTotal(empresas), [empresas]);
+  const mrrMedio = useMemo(() => (empresasAtivas > 0 ? mrrTotal / empresasAtivas : 0), [mrrTotal, empresasAtivas]);
   const licencasVencer = empresasTrial;
-  const trialEmpresas = empresas.filter(e => e.licenseStatus === 'trial').slice(0, 5);
+
+  const trialEmpresas = useMemo(
+    () => empresas.filter(empresa => empresa.licenseStatus === 'trial').slice(0, 5),
+    [empresas],
+  );
+
+  useEffect(() => {
+    const month = getMonthKey();
+    const history = readMasterMrrHistory();
+    const existingIndex = history.findIndex(item => item.month === month);
+    const nextEntry = { month, mrr: mrrTotal };
+    const nextHistory = existingIndex >= 0
+      ? history.map((item, index) => (index === existingIndex ? nextEntry : item))
+      : [...history, nextEntry];
+
+    localStorage.setItem(MRR_HISTORY_STORAGE_KEY, JSON.stringify(nextHistory));
+    setMrrHistory(nextHistory);
+  }, [mrrTotal]);
+
+  const last6History = useMemo(() => {
+    const history = [...mrrHistory].sort((a, b) => a.month.localeCompare(b.month)).slice(-6);
+    const maxValue = Math.max(...history.map(item => item.mrr), 1);
+    return history.map(item => ({
+      ...item,
+      heightPct: Math.max(8, Math.round((item.mrr / maxValue) * 100)),
+      label: new Date(`${item.month}-01`).toLocaleDateString('pt-BR', { month: 'short' }),
+    }));
+  }, [mrrHistory]);
+
+  const mrrTrend = useMemo(() => {
+    if (last6History.length < 2) return null;
+    const previous = last6History[last6History.length - 2].mrr;
+    const current = last6History[last6History.length - 1].mrr;
+    if (previous <= 0) return null;
+    return Number((((current - previous) / previous) * 100).toFixed(1));
+  }, [last6History]);
+
+  const planoRows = useMemo(() => {
+    const planos: Empresa['plano'][] = ['essencial', 'profissional', 'gestao'];
+    return planos.map(plano => {
+      const empresasDoPlano = empresasAtivasList.filter(empresa => empresa.plano === plano);
+      const mrrParcial = empresasDoPlano.reduce((sum, empresa) => sum + calcMrrEmpresa(empresa), 0);
+      return { plano, empresasDoPlano, mrrParcial };
+    });
+  }, [empresasAtivasList]);
+
+  const inadimplentes = useMemo(
+    () => empresas.filter(empresa => empresa.active === false || empresa.licenseStatus === 'suspended'),
+    [empresas],
+  );
+
+  const exportFinancialCSV = () => {
+    const header = ['Nome', 'CNPJ', 'Plano', 'Pack', 'Add-ons', 'MRR mensal', 'Status'];
+    const rows = empresasAtivasList.map(empresa => {
+      const addons = (empresa.addons ?? []).map(addon => addonLabels[addon as AddonModuleId] ?? addon).join(' | ') || '-';
+      const pack = empresa.packId ? (packLabels[empresa.packId as PackId] ?? empresa.packId) : '-';
+      return [
+        empresa.name,
+        empresa.document || '-',
+        PLANO_LABELS[empresa.plano] ?? empresa.plano,
+        pack,
+        addons,
+        String(calcMrrEmpresa(empresa)),
+        empresa.licenseStatus,
+      ];
+    });
+
+    const csv = [header, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(';'))
+      .join('\n');
+    const blob = new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `financeiro-plena-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleReactivateEmpresa = async (empresaId: string) => {
+    setReactivationLoadingId(empresaId);
+    try {
+      await onReactivateEmpresa(empresaId);
+    } finally {
+      setReactivationLoadingId(null);
+    }
+  };
 
   const kpis = [
-    { label: 'MRR Ativo', value: fmtBRL(mrrReal), detail: `${totalEmpresas} empresas`, icon: ReceiptText, tone: 'text-success', bg: 'bg-success/10', onClick: () => onNavigate('companies', 'active') },
+    { label: 'MRR Ativo', value: fmtBRL(mrrTotal), detail: `${totalEmpresas} empresas`, icon: ReceiptText, tone: 'text-success', bg: 'bg-success/10', onClick: () => onNavigate('companies', 'active') },
     { label: 'Empresas Ativas', value: String(empresasAtivas), detail: `${totalEmpresas} no total`, icon: Building2, tone: 'text-success', bg: 'bg-success/10', onClick: () => onNavigate('companies', 'active') },
     { label: 'Em Trial', value: String(empresasTrial), detail: `${licencasVencer} requerem atenção`, icon: CalendarDays, tone: 'text-warning', bg: 'bg-warning/10', onClick: () => onNavigate('companies', 'trial') },
     { label: 'Suspensas', value: String(empresasSuspensas), detail: 'Licenças bloqueadas', icon: AlertTriangle, tone: 'text-danger', bg: 'bg-danger/10', onClick: () => onNavigate('companies', 'suspended') },
@@ -1164,6 +1288,102 @@ const TabOverview: React.FC<TabOverviewProps> = ({
           </motion.section>
         ))}
       </div>
+      <section className={`p-5 rounded-section border space-y-5 ${panelClass}`}>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold">Financeiro Plena</h3>
+            <p className="text-xs text-muted mt-1">MRR real por plano, pack e add-ons ativos.</p>
+          </div>
+          <button
+            onClick={exportFinancialCSV}
+            className={`h-9 px-4 rounded-control border text-xs font-medium ${elevatedClass}`}
+          >
+            Exportar CSV
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className={`p-4 rounded-panel border ${elevatedClass}`}>
+            <p className="text-xs text-muted">MRR Total</p>
+            <p className="text-xl font-semibold text-success mt-1">{fmtBRL(mrrTotal)}</p>
+          </div>
+          <div className={`p-4 rounded-panel border ${elevatedClass}`}>
+            <p className="text-xs text-muted">MRR Médio por Empresa</p>
+            <p className="text-xl font-semibold mt-1">{fmtBRL(mrrMedio)}</p>
+          </div>
+          <div className={`p-4 rounded-panel border ${elevatedClass}`}>
+            <p className="text-xs text-muted">Crescimento estimado</p>
+            <p className="text-xl font-semibold mt-1">
+              {mrrTrend === null ? '—' : `${mrrTrend >= 0 ? '+' : ''}${mrrTrend}%`}
+            </p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[520px] text-sm">
+            <thead>
+              <tr className={`border-b text-xs text-muted ${isDark ? 'border-border' : 'border-border-light'}`}>
+                <th className="py-2 text-left">Plano</th>
+                <th className="py-2 text-left">Qtd empresas</th>
+                <th className="py-2 text-right">MRR parcial</th>
+              </tr>
+            </thead>
+            <tbody className={`divide-y ${isDark ? 'divide-border' : 'divide-border-light'}`}>
+              {planoRows.map(row => (
+                <tr key={row.plano}>
+                  <td className="py-2">{`${PLANO_LABELS[row.plano]} R$${planPricing[row.plano]}`}</td>
+                  <td className="py-2">{row.empresasDoPlano.length}</td>
+                  <td className="py-2 text-right font-medium">{fmtBRL(row.mrrParcial)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Alertas de inadimplência</h4>
+          {inadimplentes.length === 0 ? (
+            <p className="text-xs text-muted">Nenhuma empresa suspensa no momento.</p>
+          ) : (
+            <div className="space-y-2">
+              {inadimplentes.map(empresa => (
+                <div key={empresa.id} className={`p-3 rounded-panel border flex items-center justify-between gap-3 ${elevatedClass}`}>
+                  <div className="text-xs">
+                    <span className="font-medium">{empresa.name}</span>
+                    <span className="ml-2 px-2 py-0.5 rounded-full bg-danger/10 text-danger border border-danger/30">Suspenso</span>
+                  </div>
+                  <button
+                    onClick={() => void handleReactivateEmpresa(empresa.id)}
+                    disabled={reactivationLoadingId === empresa.id}
+                    className="h-8 px-3 rounded-control bg-accent text-white text-xs font-medium disabled:opacity-40"
+                  >
+                    {reactivationLoadingId === empresa.id ? 'Reativando...' : 'Reativar'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <h4 className="text-xs font-semibold uppercase tracking-wide text-muted mb-2">Histórico MRR (últimos 6 meses)</h4>
+          {last6History.length === 0 ? (
+            <div className={`h-28 rounded-panel border border-dashed flex items-center justify-center text-xs text-muted ${elevatedClass}`}>
+              Nenhum registro de MRR disponível.
+            </div>
+          ) : (
+            <div className="flex items-end gap-3 h-36">
+              {last6History.map(point => (
+                <div key={point.month} className="flex-1 flex flex-col items-center gap-1">
+                  <div className="text-[10px] text-muted">{fmtBRL(point.mrr)}</div>
+                  <div className="w-full rounded-t-control bg-accent/80" style={{ height: `${point.heightPct}%` }} />
+                  <div className="text-[10px] text-muted uppercase">{point.label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
       <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-5">
         <section className={`p-5 rounded-section border ${panelClass}`}>
           <div className="flex items-center justify-between mb-6">
@@ -1247,12 +1467,19 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
     if (initialFilter) setFilterStatus(initialFilter);
   }, [initialFilter]);
 
-  const filteredEmpresas = empresas.filter(e => {
+  const filteredEmpresas = useMemo(() => empresas.filter(e => {
     const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) ||
       (e.document ?? '').includes(search);
     const matchStatus = filterStatus === 'all' || e.licenseStatus === filterStatus;
     return matchSearch && matchStatus;
-  });
+  }), [empresas, filterStatus, search]);
+
+  const filteredMrrTotal = useMemo(
+    () => filteredEmpresas.reduce((acc, empresa) => (
+      empresa.licenseStatus === 'active' && empresa.active !== false ? acc + calcMrrEmpresa(empresa) : acc
+    ), 0),
+    [filteredEmpresas],
+  );
 
   const exportEmpresas = () => {
     const payload = JSON.stringify(empresas, null, 2);
@@ -1413,7 +1640,7 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
                   </td>
                   <td className="px-4 py-3 font-medium tabular-nums">
                     {empresa.licenseStatus === 'active'
-                      ? fmtBRL(planPricing[empresa.plano] ?? 0)
+                      ? fmtBRL(calcMrrEmpresa(empresa))
                       : <span className="text-muted text-xs">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -1434,9 +1661,7 @@ const TabCompanies: React.FC<TabCompaniesProps> = ({ isDark, panelClass, elevate
                 <td className="px-4 py-3" colSpan={2} />
                 <td className="px-4 py-3" />
                 <td className="px-4 py-3 tabular-nums text-success">
-                  {fmtBRL(filteredEmpresas.reduce((acc, e) =>
-                    acc + (e.licenseStatus === 'active' ? (planPricing[e.plano] ?? 0) : 0), 0
-                  ))}
+                  {fmtBRL(filteredMrrTotal)}
                 </td>
                 <td className="px-4 py-3" />
               </tr>
@@ -2292,6 +2517,10 @@ export const MasterDashboard: React.FC = () => {
     setOpenTicketsCount(prev => Math.max(0, prev - 1));
   }, []);
 
+  const handleReactivateEmpresa = useCallback(async (empresaId: string) => {
+    await master.updateStatus(empresaId, { licenseStatus: 'active', active: true });
+  }, [master.updateStatus]);
+
   useEffect(() => {
     const run = async () => {
       try {
@@ -2321,7 +2550,7 @@ export const MasterDashboard: React.FC = () => {
           <p className="text-sm text-muted">Visão cross-empresa para operação comercial da Plena</p>
         </div>
         <div className="grid grid-cols-2 md:flex md:items-center gap-3">
-          <FilterControl icon={CalendarDays} label="Periodo" value="Mes" className={elevatedClass} />
+          <FilterControl icon={CalendarDays} label="Período" value="Mês" className={elevatedClass} />
           <FilterControl icon={Building2} label="Empresa" value="Todas" className={elevatedClass} />
           <FilterControl icon={TrendingUp} label="Plano" value="Todos" className={elevatedClass} />
           <button className="h-10 px-4 rounded-control bg-accent text-white text-xs font-medium hover:bg-accent-hover">
@@ -2374,6 +2603,7 @@ export const MasterDashboard: React.FC = () => {
               elevatedClass={elevatedClass}
               empresas={master.empresas}
               onNavigate={handleOverviewNavigate}
+              onReactivateEmpresa={handleReactivateEmpresa}
             />
           )}
           {activeTab === 'companies' && (
