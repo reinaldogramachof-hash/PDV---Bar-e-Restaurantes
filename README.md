@@ -1,27 +1,41 @@
-# Gestão Gastro
+# Plena Gastro Manager
+
+**Empresa:** Plena Informática — CNPJ 59.779.242/0001-78  
+**Contato técnico:** tecnologia@plenainformatica.com.br | (12) 99219-1018  
+**Versão:** 1.0.0
 
 Plataforma SaaS de gestão operacional para bares, restaurantes e operações de delivery.
 
-Cobre a jornada completa: do pedido do garçom ao fechamento do caixa, com mesas, cozinha, estoque, delivery, inteligência gerencial e gestão comercial em um único lugar. Arquitetura multiempresa preparada para migração a backend centralizado (Fase 3).
+Cobre a jornada completa: do pedido do garçom ao fechamento do caixa, com mesas, cozinha, estoque, delivery, inteligência gerencial e gestão comercial em um único lugar. Arquitetura multiempresa com backend centralizado em Supabase (PostgreSQL + Auth JWT).
+
+---
 
 ## Stack
 
-- React 18 + TypeScript 5.3
-- Vite 6 + `@tailwindcss/vite` (Tailwind v4)
-- `motion/react` para animações
-- `qrcode` para geração de QR do cardápio digital
-- PWA via `vite-plugin-pwa`
-- Persistência local segmentada por empresa (`buildScopedStorageKey`)
+| Camada | Tecnologia | Versão |
+|--------|-----------|--------|
+| Frontend | React | 18.x |
+| Linguagem | TypeScript | 5.3+ |
+| Build | Vite | 6.x |
+| Estilização | Tailwind CSS (via `@tailwindcss/vite`) | v4 |
+| Animações | `motion/react` | — |
+| Backend / Auth | Supabase (PostgreSQL + Auth JWT) | 2.x |
+| PWA | `vite-plugin-pwa` | — |
+| QR Code | `qrcode` | — |
+
+---
 
 ## Scripts
 
 ```bash
 npm install
 npm run dev
-npm run lint        # tsc --noEmit (TypeScript strict)
+npm run lint        # TypeScript strict — tsc --noEmit
 npm run test
 npm run build
 ```
+
+---
 
 ## Módulos
 
@@ -30,9 +44,11 @@ npm run build
 |--------|-----------|--------------|
 | PDV | Lançamento de pedidos, combos, descontos | Essencial |
 | Mesas | Gestão de mesas e comandas | Essencial |
-| Cozinha | Fila de produção em tempo real | Profissional |
+| Cozinha | Fila de produção em tempo real (KDS) | Essencial |
 | Caixa | Abertura, fechamento e sangrias | Essencial |
-| Delivery | Canal próprio: fila, entregadores, financeiro | Profissional |
+| Delivery | Canal próprio + integração iFood/Rappi: fila, entregadores, financeiro | Profissional |
+| Pedidos Online | Recebimento de pedidos externos integrados | Profissional |
+| Cardápio Digital | Menu público via QR code com configuração visual | Essencial |
 
 ### Gestão
 | Módulo | Descrição | Plano mínimo |
@@ -40,9 +56,9 @@ npm run build
 | Dashboard | Visão do dia com ranking de atendentes | Gestão |
 | Relatórios | Fluxo de caixa, vendas, produtos, atendentes | Essencial |
 | Inteligência | BI gerencial com motor de regras e recomendações | Gestão |
-| Estoque | Controle de itens e movimentações | Profissional |
+| Estoque | Controle de itens, movimentações e CMV real | Profissional |
+| Ficha Técnica | Custo por receita, CMV por produto, baixa automática | Profissional |
 | Produtos | Cardápio interno com categorias e preços | Essencial |
-| Cardápio Digital | Menu público via QR code com configuração visual | Profissional |
 | Vendas | Promoções, combos, fidelidade e campanhas | Profissional |
 | Clientes | Cadastro e histórico | Profissional |
 | Fornecedores | Cadastro e contratos | Profissional |
@@ -51,92 +67,134 @@ npm run build
 ### Sistema
 | Módulo | Descrição | Plano mínimo |
 |--------|-----------|--------------|
+| Diário Operacional | Registro de ocorrências com auditoria e anexos | Gestão |
 | Segurança | Audit trail com filtros e export CSV | Gestão |
 | Configurações | Empresa, backup manual/restore, plano atual | Gestão |
-| Notificações | Feed de comunicados da Plena (atualizações, ofertas) | Todos |
 | Suporte | Central de atendimento | Todos |
 | Manual | Documentação in-app | Todos |
 
-### Plena (operador do sistema)
+### Plena (operador do sistema — interno)
 | Módulo | Descrição | Acesso |
 |--------|-----------|--------|
-| Painel Master | Métricas cross-empresa, gestão de licenças | `role=master` |
-| PlenaHub | CRM pipeline de prospectos, MRR, upsell | `role=master` |
-| Composer | Envio de notificações segmentadas por plano | `role=master` |
+| Painel Master | Métricas cross-empresa, gestão de licenças | `role=master` + empresa Plena |
+| PlenaHub | CRM pipeline de prospectos, MRR, upsell | `role=master` + empresa Plena |
+| Composer | Envio de notificações segmentadas por plano | `role=master` + empresa Plena |
+
+---
+
+## Integração iFood
+
+O sistema integra com a **API de Pedidos do iFood** (Merchant API v1.0) via app do tipo **Centralizado**.
+
+### Credenciais de Teste
+
+| Campo | Valor |
+|-------|-------|
+| Merchant ID | 3860495 |
+| Merchant UUID | e00e450a-3b69-4db5-892b-d598fbf60fcf |
+| App Type | Centralizado |
+
+### Endpoints Consumidos
+
+| Módulo | Endpoint | Descrição |
+|--------|----------|-----------|
+| Authentication | `POST /authentication/v1.0/oauth/token` | OAuth2 client credentials |
+| Order | `GET /order/v1.0/events/poll` | Polling a cada 60s |
+| Order | `GET /order/v1.0/orders/{orderId}` | Detalhes do pedido |
+| Order | `POST /order/v1.0/orders/{orderId}/confirm` | Confirmar pedido |
+| Order | `POST /order/v1.0/orders/{orderId}/requestCancellation` | Rejeitar pedido |
+| Order | `POST /order/v1.0/orders/{orderId}/dispatch` | Despachar pedido |
+| Order | `POST /order/v1.0/events/acknowledgment` | Confirmar recebimento |
+
+### Fluxo Operacional
+
+```
+Novo pedido iFood
+  → Polling /events/poll (60s)
+  → Mapeamento IFoodOrder → DeliveryOrder interno
+  → Exibição no módulo Delivery com countdown 8min
+  → Operador: Confirmar / Rejeitar
+  → Preparo → Despachar
+  → Entregador notificado
+```
+
+Documentação técnica completa: [`docs/ifood-homologacao/`](docs/ifood-homologacao/)
+
+---
 
 ## Estrutura Principal
 
 ```
 src/
-├── components/       # Todos os módulos da UI
-├── services/         # Lógica de negócio (deliveryService, intelligenceService, salesService...)
+├── components/           # Todos os módulos da UI
+├── services/
+│   ├── integrations/
+│   │   └── ifoodService.ts   # Adapter iFood API
+│   └── ...                   # deliveryService, intelligenceService, salesService...
 ├── store/
-│   └── AppContext.tsx # Estado global + persistência multiempresa
+│   └── AppContext.tsx         # Estado global + persistência multiempresa
 ├── domain/
-│   └── saas.ts       # Planos, permissões, módulos — source of truth
-├── hooks/            # useAudit, useNavigation, etc.
-└── types.ts          # Contratos de domínio
+│   └── saas.ts               # Planos, permissões, módulos — source of truth
+├── hooks/
+│   ├── useIFoodOrders.ts      # Polling iFood + injeção no fluxo de delivery
+│   └── ...
+└── types.ts                   # Contratos de domínio
+
+supabase/
+├── migrations/               # Schema versionado
+└── functions/                # Edge Functions (create-empresa, etc.)
 
 docs/
-├── security/         # Auditoria de segurança Fase 2 + backlog Fase 3
-└── designs/          # Referências visuais
+├── ifood-homologacao/        # Documentação técnica para homologação iFood
+└── designs/                  # Referências visuais
 ```
+
+---
 
 ## Configuração
 
 Copie `.env.example` para `.env`:
 
 ```bash
-VITE_APP_NAME="Gestão Gastro"
-VITE_LICENSE_STATUS_URL=""         # vazio = uso local liberado
+VITE_APP_NAME="Plena Gastro Manager"
+VITE_LICENSE_STATUS_URL=""              # vazio = uso local liberado
 VITE_DEFAULT_EMPRESA_ID="demo-empresa"
-VITE_NOTIFICATIONS_URL=""          # URL do feed JSON de notificações da Plena
+VITE_PLENA_EMPRESA_ID="demo-empresa"    # ID da empresa operadora Plena
+VITE_NOTIFICATIONS_URL=""               # URL do feed JSON de notificações
+VITE_IFOOD_MERCHANT_ID=""               # Merchant ID iFood (após homologação)
+VITE_IFOOD_MERCHANT_UUID=""             # Merchant UUID iFood
 ```
 
-Quando `VITE_LICENSE_STATUS_URL` estiver preenchido, a URL deve retornar `BLOQUEADO` para suspender o acesso do cliente.
-
-Quando `VITE_NOTIFICATIONS_URL` estiver preenchido, o app busca o feed de notificações ao abrir (cache de 1h). Sem a variável, o sino permanece silencioso.
-
-## Cardápio Digital
-
-Cada empresa tem uma rota pública de cardápio acessível sem login:
-
-```
-/cardapio/:empresaId
-```
-
-Configure em **Cardápio Digital → QR Code** para gerar e baixar o QR code para impressão.
-
-Na Fase 3 (Supabase), este endereço será publicado como subdomínio:
-`cantina-brasil.plena.com.br`
+---
 
 ## Planos
 
-| Módulo | Essencial | Profissional | Gestão |
+| Módulo | Essencial R$89 | Profissional R$189 | Gestão R$329 |
 |--------|:---------:|:------------:|:------:|
-| PDV, Mesas, Caixa, Produtos, Relatórios | ✔ | ✔ | ✔ |
-| Cozinha, Estoque, Clientes, Fornecedores, Delivery, Cardápio Digital, Vendas | ❌ | ✔ | ✔ |
-| Dashboard, Colaboradores, Segurança, Configurações, Inteligência | ❌ | ❌ | ✔ |
+| PDV, Mesas, Caixa, Produtos, Relatórios, Cozinha, Cardápio Digital | ✔ | ✔ | ✔ |
+| Estoque, Ficha Técnica, Clientes, Fornecedores, Delivery, Vendas, Pedidos Online, Colaboradores | ❌ | ✔ | ✔ |
+| Dashboard, Inteligência, Diário Operacional, Segurança, Configurações | ❌ | ❌ | ✔ |
+
+---
 
 ## Segurança
 
-Modelo **Local-First** com defesa em profundidade (3 camadas):
-1. Sidebar — item não renderizado sem permissão
-2. PlanGuard — view não montada no DOM
-3. Validação interna por `hasPermission`
+Modelo **Supabase + RLS** com defesa em profundidade:
 
-Riscos conhecidos e plano de mitigação para Fase 3 em `docs/security/`.
+1. **Auth JWT** — Supabase Auth com sessão segura (HttpOnly cookies)
+2. **Row Level Security** — PostgreSQL RLS em todas as tabelas sensíveis
+3. **Sidebar** — item não renderizado sem permissão de plano + role
+4. **PlanGuard** — view não montada no DOM sem acesso
+5. **empresaId** — todas as entidades carregam `empresaId` e são filtradas por ele
 
-## Direção de Evolução — Fase 3 (Supabase)
+---
 
-```
-Sprint 1: Auth JWT + HttpOnly cookies (resolve localStorage plaintext)
-Sprint 2: Migrar collections → PostgreSQL multi-tenant
-Sprint 3: Supabase Storage → imagens de produtos + cardápio
-Sprint 4: Cardápio digital público (subdomínio por cliente)
-Sprint 5: Realtime → pedidos online para cozinha em <1s
-```
+## Supabase
 
-Toda a arquitetura atual (`empresaId`, `buildScopedStorageKey`, multiempresa) foi desenhada para essa migração — sem refactoring estrutural necessário.
+**Project ref:** `fnzwbauyjhbznqynaupv`  
+**Edge Functions deployadas:** `create-empresa`  
+**Tabelas principais:** `empresas`, `profiles`, `integration_platforms`, `audit_log`
 
-Ver decisão completa em `EVOLUTION.md`.
+---
+
+*Plena Informática — tecnologia@plenainformatica.com.br — (12) 99219-1018*
