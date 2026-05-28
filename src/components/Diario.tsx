@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Plus, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { BookOpen, Plus, AlertTriangle, CheckCircle2, Paperclip, Download, X } from 'lucide-react';
 import { useApp } from '../store/AppContext';
 import type { DiarioEntry } from '../types';
-import { createEntry, escalateEntry, listEntries, resolveEntry, logAction, uploadAttachment } from '../services/diarioService';
+import { createEntryWithAttachments, escalateEntry, getAttachmentUrl, listEntries, resolveEntry, logAction } from '../services/diarioService';
 
 const statusOptions: Array<{ id: 'all' | DiarioEntry['status']; label: string }> = [
   { id: 'all', label: 'Todas' },
@@ -28,6 +28,8 @@ export const Diario: React.FC = () => {
   const [resolveTargetId, setResolveTargetId] = useState<string | null>(null);
   const [resolucao, setResolucao] = useState('');
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [attachmentUrls, setAttachmentUrls] = useState<Record<string, string>>({});
+  const [lightbox, setLightbox] = useState<{ path: string; url: string } | null>(null);
 
   const isDark = theme === 'dark';
 
@@ -49,25 +51,54 @@ export const Diario: React.FC = () => {
   }, [currentEmpresa.id, statusFilter, categoryFilter]);
 
   const canManage = useMemo(() => currentUser.role === 'master' || currentUser.role === 'gerente', [currentUser.role]);
+  const attachmentPaths = useMemo(
+    () => Array.from(new Set(entries.flatMap(entry => entry.attachments ?? []))),
+    [entries],
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    const hydrateAttachmentUrls = async () => {
+      const missingPaths = attachmentPaths.filter(path => !attachmentUrls[path]);
+      if (missingPaths.length === 0) return;
+
+      const next: Record<string, string> = {};
+      await Promise.all(
+        missingPaths.map(async path => {
+          try {
+            next[path] = await getAttachmentUrl(path);
+          } catch {
+            // ignora anexos indisponíveis
+          }
+        }),
+      );
+
+      if (!active || Object.keys(next).length === 0) return;
+      setAttachmentUrls(prev => ({ ...prev, ...next }));
+    };
+
+    void hydrateAttachmentUrls();
+
+    return () => {
+      active = false;
+    };
+  }, [attachmentPaths, attachmentUrls]);
+
+  const isImageAttachment = (path: string) => /\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(path);
 
   const publish = async () => {
-    const uploadedUrls: string[] = [];
-    for (const file of attachmentFiles) {
-      const url = await uploadAttachment('temp', file);
-      uploadedUrls.push(url);
-    }
-
-    const created = await createEntry({
+    const created = await createEntryWithAttachments({
       empresaId: currentEmpresa.id,
       authorId: currentUser.id,
       categoria,
       titulo,
       corpo,
-      attachments: uploadedUrls,
+      attachments: [],
       expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365 * 2).toISOString(),
       authorCodigo: currentUser.codigoInterno ?? undefined,
       updatedBy: currentUser.id,
-    });
+    }, attachmentFiles);
     await logAction({
       empresaId: currentEmpresa.id,
       entryId: created.id,
@@ -82,6 +113,22 @@ export const Diario: React.FC = () => {
     setCorpo('');
     setAttachmentFiles([]);
     await loadEntries();
+  };
+
+  const openAttachment = async (path: string) => {
+    try {
+      const cached = attachmentUrls[path];
+      if (cached) {
+        setLightbox({ path, url: cached });
+        return;
+      }
+
+      const signedUrl = await getAttachmentUrl(path);
+      setAttachmentUrls(prev => ({ ...prev, [path]: signedUrl }));
+      setLightbox({ path, url: signedUrl });
+    } catch {
+      // ignora anexo indisponível
+    }
   };
 
   const handleEscalate = async (entryId: string) => {
@@ -139,7 +186,7 @@ export const Diario: React.FC = () => {
       </aside>
       <main className={`rounded-panel border p-4 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200'}`}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2"><BookOpen className="w-4 h-4" /> Diario Operacional</h2>
+          <h2 className="text-lg font-semibold flex items-center gap-2"><BookOpen className="w-4 h-4" /> Diário Operacional</h2>
           {canManage && (
             <button onClick={() => setShowModal(true)} className="px-3 py-2 rounded-control bg-[var(--color-accent)] text-white text-sm flex items-center gap-2">
               <Plus className="w-4 h-4" /> Nova Entrada
@@ -157,6 +204,44 @@ export const Diario: React.FC = () => {
               </div>
               <h3 className="font-semibold">{entry.titulo}</h3>
               <p className="text-sm opacity-80">{entry.corpo}</p>
+              {entry.attachments.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {entry.attachments.map(path => {
+                    const imageAttachment = isImageAttachment(path);
+                    const signedUrl = attachmentUrls[path];
+
+                    if (imageAttachment) {
+                      return (
+                        <button
+                          key={path}
+                          type="button"
+                          onClick={() => void openAttachment(path)}
+                          className="h-12 w-12 rounded-control overflow-hidden border"
+                          title="Abrir anexo"
+                        >
+                          {signedUrl ? (
+                            <img src={signedUrl} alt="Anexo do diário" className="h-12 w-12 object-cover" />
+                          ) : (
+                            <div className="h-full w-full flex items-center justify-center text-[10px] opacity-60">...</div>
+                          )}
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <button
+                        key={path}
+                        type="button"
+                        onClick={() => void openAttachment(path)}
+                        className="h-12 px-3 rounded-control border text-xs flex items-center gap-2"
+                      >
+                        <Paperclip className="w-3.5 h-3.5" />
+                        <span>Baixar anexo</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <div className="flex gap-2">
                 {canManage && entry.status === 'aberto' && (
                   <button onClick={() => { void handleEscalate(entry.id); }} className="px-2 py-1 rounded bg-amber-500/20 text-amber-600 text-xs flex items-center gap-1">
@@ -196,10 +281,10 @@ export const Diario: React.FC = () => {
             <input value={titulo} onChange={e => setTitulo(e.target.value)} className="w-full p-2 rounded-control border bg-transparent" placeholder="Titulo" />
             <textarea value={corpo} onChange={e => setCorpo(e.target.value)} className="w-full p-2 rounded-control border bg-transparent min-h-[120px]" placeholder="Corpo" />
             <div>
-              <label className="text-xs text-[var(--color-muted)] mb-1 block">Imagens (max. 5)</label>
+              <label className="text-xs text-[var(--color-muted)] mb-1 block">Arquivos (max. 5)</label>
               <input
                 type="file"
-                accept="image/*"
+                accept="image/*,.pdf"
                 multiple
                 onChange={e => {
                   const files = Array.from(e.target.files ?? []).slice(0, 5);
@@ -214,6 +299,38 @@ export const Diario: React.FC = () => {
             <div className="flex justify-end gap-2">
               <button onClick={() => setShowModal(false)} className="px-3 py-2 rounded-control border">Cancelar</button>
               <button onClick={publish} className="px-3 py-2 rounded-control bg-[var(--color-accent)] text-white">Publicar</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {lightbox && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            onClick={() => setLightbox(null)}
+            className="absolute top-4 right-4 h-10 w-10 rounded-full bg-black/40 text-white flex items-center justify-center"
+            aria-label="Fechar"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <div className="max-w-2xl w-full">
+            {isImageAttachment(lightbox.path) ? (
+              <img src={lightbox.url} alt="Anexo ampliado" className="w-full max-h-[80vh] object-contain rounded-control" />
+            ) : (
+              <div className="rounded-control bg-white p-5 text-center text-sm">
+                Pré-visualização não disponível para este arquivo.
+              </div>
+            )}
+            <div className="mt-4 flex justify-center">
+              <a
+                href={lightbox.url}
+                target="_blank"
+                rel="noreferrer"
+                className="h-10 px-4 rounded-control bg-accent text-white text-sm font-medium inline-flex items-center gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </a>
             </div>
           </div>
         </div>

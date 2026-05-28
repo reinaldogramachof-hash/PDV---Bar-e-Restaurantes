@@ -125,7 +125,7 @@ export async function getEntry(id: string): Promise<DiarioEntry> {
   return toEntry(data);
 }
 
-type CreateInput = Omit<DiarioEntry, 'id' | 'createdAt' | 'updatedAt' | 'ocorrencias' | 'status'>;
+export type CreateInput = Omit<DiarioEntry, 'id' | 'createdAt' | 'updatedAt' | 'ocorrencias' | 'status'>;
 
 export async function createEntry(input: CreateInput): Promise<DiarioEntry> {
   const { data: existing, error: existingError } = await supabase
@@ -238,6 +238,45 @@ export async function uploadAttachment(entryId: string, file: File): Promise<str
   const { error } = await supabase.storage.from(ATTACHMENTS_BUCKET).upload(path, file, { upsert: false });
   if (error) throw new Error(`Erro ao enviar anexo do diario: ${error.message}`);
   return path;
+}
+
+export async function cleanupTempAttachments(): Promise<void> {
+  await ensureBucket();
+
+  const { data, error } = await supabase.storage.from(ATTACHMENTS_BUCKET).list('temp');
+  if (error || !data?.length) return;
+
+  const tempPaths = data
+    .map(item => item.name)
+    .filter((name): name is string => Boolean(name))
+    .map(name => `temp/${name}`);
+
+  if (!tempPaths.length) return;
+  await supabase.storage.from(ATTACHMENTS_BUCKET).remove(tempPaths);
+}
+
+export async function createEntryWithAttachments(input: CreateInput, files: File[] = []): Promise<DiarioEntry> {
+  let created = await createEntry({ ...input, attachments: [] });
+
+  if (!files.length) return created;
+
+  try {
+    await cleanupTempAttachments();
+  } catch {
+    // limpeza best-effort
+  }
+
+  const attachmentPaths: string[] = [];
+  for (const file of files) {
+    const path = await uploadAttachment(created.id, file);
+    attachmentPaths.push(path);
+  }
+
+  created = await updateEntry(created.id, {
+    attachments: attachmentPaths,
+    updatedBy: input.updatedBy,
+  });
+  return created;
 }
 
 export async function getAttachmentUrl(path: string): Promise<string> {
