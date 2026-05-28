@@ -115,6 +115,7 @@ export interface OrderItem {
   product: Product;
   quantity: number;
   price: number;
+  observation?: string;
   originalPrice?: number;
   discount?: number;
   promotionName?: string;
@@ -200,6 +201,7 @@ export interface PartialPaymentItem {
 
 export interface Order extends BaseEntity {
   mode: OrderMode;
+  origin?: 'pdv' | 'comanda_mobile' | 'online';
   tableNumber?: number;
   customerName?: string;
   customerCount?: number;

@@ -128,8 +128,11 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
   const [showInstallBtn, setShowInstallBtn] = useState(false);
 
   const isDark = theme === 'dark';
+  const sidebarTitleMain = APP_NAME.replace(/\s*Manager$/i, '').trim();
+  const sidebarTitleSuffix = /Manager$/i.test(APP_NAME) ? 'Manager' : '';
 
   const enabledExtraModules = ((currentEmpresa as unknown as { extraModules?: string[] }).extraModules ?? []);
+  const canOpenComandaMobile = currentUser.role === 'garcom' || currentUser.role === 'gerente';
   const visibleNavGroups = SIDEBAR_GROUPS
     .map(group => ({
       ...group,
@@ -193,13 +196,16 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
             <div className={`flex items-center gap-3 overflow-hidden ${isCollapsed ? 'justify-center' : ''}`}>
               <img src="/favicon.png" alt="PGM" className="w-8 h-8 rounded-lg flex-shrink-0 object-cover" />
               {!isCollapsed && (
-                <motion.span
+                <motion.div
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className="font-semibold text-base whitespace-nowrap"
+                  className="leading-tight"
                 >
-                  {APP_NAME}
-                </motion.span>
+                  <span className="block font-semibold text-base whitespace-nowrap">{sidebarTitleMain}</span>
+                  {sidebarTitleSuffix && (
+                    <span className="block text-[11px] font-semibold text-orange-500 tracking-wide">{sidebarTitleSuffix}</span>
+                  )}
+                </motion.div>
               )}
             </div>
             {!isCollapsed && (
@@ -214,6 +220,32 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
           </div>
 
           <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 scrollbar-none">
+            {canOpenComandaMobile && (
+              <div className="space-y-1">
+                {!isCollapsed && (
+                  <div className="px-3 pt-2 pb-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">
+                      Mobile
+                    </span>
+                  </div>
+                )}
+                <a
+                  href="/comanda"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={isCollapsed ? 'Comanda Mobile' : ''}
+                  className={`w-full flex items-center gap-3 px-3 py-2 transition-all rounded-control group ${
+                    isDark
+                      ? 'text-muted hover:bg-elevated hover:text-text'
+                      : 'text-muted-light hover:bg-elevated-light hover:text-text-light'
+                  } ${isCollapsed ? 'justify-center' : ''}`}
+                >
+                  <Smartphone className="w-4.5 h-4.5 flex-shrink-0 opacity-70 group-hover:opacity-100" />
+                  {!isCollapsed && <span className="font-medium text-sm">Comanda Mobile</span>}
+                </a>
+                {!isCollapsed && <hr className="border-[var(--color-border)] mx-3 my-1" />}
+              </div>
+            )}
             {currentUser.role === 'master' && currentEmpresa.id === PLENA_EMPRESA_ID && (
               <div className="space-y-1 pb-1">
                 {!isCollapsed && (

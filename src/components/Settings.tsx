@@ -3,12 +3,13 @@ import { useApp } from '../store/AppContext';
 import { 
   Settings as SettingsIcon, Store, Printer, Database, Save, 
   Download, Upload, RefreshCw, Check, AlertTriangle, ShieldCheck, 
-  Globe, Phone, MapPin, FileText, Layout, Crown, ChefHat
+  Globe, Phone, MapPin, FileText, Layout, Crown, ChefHat, QrCode, Copy
 } from 'lucide-react';
 import { addonLabels, addonModules, addonPricing, getPlanModules, ModuleId, planDescriptions, planPricing, PLENA_WHATSAPP } from '../domain/saas';
 import { useAudit } from '../hooks/useAudit';
 import { motion } from 'motion/react';
 import { AppSettings } from '../types';
+import QRCode from 'qrcode';
 
 export const Settings: React.FC = () => {
   const { settings, updateSettings, exportData, importData, resetToMocks, theme, currentEmpresa } = useApp();
@@ -17,7 +18,16 @@ export const Settings: React.FC = () => {
   const [formData, setFormData] = useState<AppSettings>(settings);
   const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'kitchen' | 'data' | 'plan'>('store');
   const [isSaving, setIsSaving] = useState(false);
+  const [waiterAppQr, setWaiterAppQr] = useState('');
+  const [copiedWaiterUrl, setCopiedWaiterUrl] = useState(false);
   const { log } = useAudit();
+  const waiterAppUrl = `${window.location.origin}/comanda`;
+
+  React.useEffect(() => {
+    void QRCode.toDataURL(waiterAppUrl, { width: 180, margin: 1 })
+      .then(setWaiterAppQr)
+      .catch(() => setWaiterAppQr(''));
+  }, [waiterAppUrl]);
 
   const handleSave = () => {
     setIsSaving(true);
@@ -58,33 +68,39 @@ export const Settings: React.FC = () => {
 
   const moduleNames: Record<ModuleId, string> = {
     dashboard: 'Dashboard',
-    intelligence: 'Inteligencia',
+    intelligence: 'Inteligência',
     pdv: 'PDV',
     mesas: 'Mesas',
     delivery: 'Delivery',
     'pedidos-online': 'Pedidos Online',
-    'cardapio-digital': 'Cardapio Digital',
+    'cardapio-digital': 'Cardápio Digital',
     vendas: 'Vendas',
     cozinha: 'Cozinha',
     estoque: 'Estoque',
     caixa: 'Caixa',
-    produtos: 'Cardapio',
+    produtos: 'Cardápio',
     clientes: 'Clientes',
     colaboradores: 'Colaboradores',
     fornecedores: 'Fornecedores',
     relatorios: 'Financeiro',
-    diario: 'Diario',
-    configuracoes: 'Configuracoes',
-    seguranca: 'Seguranca',
+    diario: 'Diário',
+    configuracoes: 'Configurações',
+    seguranca: 'Segurança',
     suporte: 'Suporte',
     manual: 'Manual',
+  };
+
+  const copyWaiterUrl = async () => {
+    await navigator.clipboard.writeText(waiterAppUrl);
+    setCopiedWaiterUrl(true);
+    setTimeout(() => setCopiedWaiterUrl(false), 1600);
   };
 
   const planLabel = currentEmpresa.plano === 'essencial'
     ? 'Essencial'
     : currentEmpresa.plano === 'profissional'
       ? 'Profissional'
-      : 'Gestao';
+      : 'Gestão';
 
   const licenseBadge = currentEmpresa.licenseStatus === 'active'
     ? { label: 'Ativa', className: 'bg-[var(--color-success)]/15 text-[var(--color-success)]' }
@@ -150,6 +166,50 @@ export const Settings: React.FC = () => {
             <p className="text-xs text-muted">Falar com especialista</p>
           </div>
         )}
+      </section>
+
+      <section className={`p-5 rounded-panel border space-y-4 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/10'}`}>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-control bg-accent/10 flex items-center justify-center">
+            <QrCode className="w-4 h-4 text-accent" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold">App do Garçom</h3>
+            <p className="text-xs text-muted">Acesso rápido à Comanda Mobile via smartphone.</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <div className={`p-3 rounded-control border ${isDark ? 'border-[var(--color-border)] bg-white/5' : 'border-gray-200 bg-gray-50'}`}>
+            {waiterAppQr ? (
+              <img src={waiterAppQr} alt="QR Code Comanda Mobile" className="w-32 h-32" />
+            ) : (
+              <div className="w-32 h-32 flex items-center justify-center text-muted">
+                <QrCode className="w-8 h-8" />
+              </div>
+            )}
+          </div>
+          <div className="space-y-2 min-w-0">
+            <p className="text-xs text-muted break-all">{waiterAppUrl}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={copyWaiterUrl}
+                className="h-9 px-3 rounded-control border border-[var(--color-border)] text-xs font-medium inline-flex items-center gap-2"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                {copiedWaiterUrl ? 'Copiado' : 'Copiar URL'}
+              </button>
+              <a
+                href={waiterAppUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-9 px-3 rounded-control bg-accent text-white text-xs font-medium inline-flex items-center"
+              >
+                Abrir Comanda
+              </a>
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Header */}

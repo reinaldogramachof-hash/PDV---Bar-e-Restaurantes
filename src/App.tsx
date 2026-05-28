@@ -35,6 +35,7 @@ const Kitchen = lazy(() => import('./components/Kitchen').then(module => ({ defa
 const Settings = lazy(() => import('./components/Settings').then(module => ({ default: module.Settings })));
 const Security = lazy(() => import('./components/Security').then(module => ({ default: module.Security })));
 const OnlineOrders = lazy(() => import('./components/OnlineOrders').then(module => ({ default: module.OnlineOrders })));
+const ComandaMobile = lazy(() => import('./components/ComandaMobile').then(module => ({ default: module.ComandaMobile })));
 
 const LoadingSpinner = () => (
   <div className="h-full w-full min-h-[400px] flex items-center justify-center">
@@ -90,6 +91,26 @@ const AppContent = () => {
 
   const isKiosk = typeof window !== 'undefined' && window.location.pathname.startsWith('/kiosk/');
   const kioskModule = isKiosk ? window.location.pathname.split('/')[2] : null;
+  const isComandaMobileRoute = typeof window !== 'undefined' && window.location.pathname === '/comanda';
+
+  if (isComandaMobileRoute) {
+    if (currentUser.role !== 'garcom' && currentUser.role !== 'gerente') {
+      return (
+        <div className="h-screen w-full bg-[var(--color-app-base)] text-[var(--color-text)] flex items-center justify-center p-4">
+          <div className="max-w-sm text-center space-y-2">
+            <h2 className="text-lg font-semibold">Acesso restrito</h2>
+            <p className="text-sm opacity-70">A Comanda Mobile está disponível apenas para gerente e garçom.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <ComandaMobile />
+      </Suspense>
+    );
+  }
 
   if (isKiosk) {
     const KioskWrapper = ({ children }: { children: React.ReactNode }) => {

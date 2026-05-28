@@ -12,6 +12,11 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['favicon.png', 'pwa-512x512.png', 'robots.txt'],
+        workbox: {
+          additionalManifestEntries: [
+            { url: '/comanda', revision: '1' },
+          ],
+        },
         manifest: {
           name: 'Plena Gastro Manager',
           short_name: 'PGM',
