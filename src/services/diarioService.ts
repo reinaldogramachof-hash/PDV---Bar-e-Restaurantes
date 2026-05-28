@@ -234,7 +234,7 @@ export async function deleteEntry(id: string): Promise<void> {
 export async function uploadAttachment(entryId: string, file: File): Promise<string> {
   await ensureBucket();
   const ext = file.name.includes('.') ? file.name.split('.').pop() : 'bin';
-  const path = `${entryId}/${crypto.randomUUID()}.${ext}`;
+  const path = `diario/${entryId}/${crypto.randomUUID()}.${ext}`;
   const { error } = await supabase.storage.from(ATTACHMENTS_BUCKET).upload(path, file, { upsert: false });
   if (error) throw new Error(`Erro ao enviar anexo do diario: ${error.message}`);
   return path;
