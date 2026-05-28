@@ -9,16 +9,19 @@
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit",
-    "test": "tsx src/domain/saas.test.ts"
+    "type-check": "tsc --noEmit",
+    "test": "tsx src/domain/saas.test.ts && tsx src/services/deliveryService.test.ts && tsx src/services/intelligenceService.test.ts && tsx src/services/notificationService.test.ts && tsx src/services/menuDigitalService.test.ts && tsx src/services/salesService.test.ts && tsx src/services/onlineOrdersService.test.ts && tsx src/services/kitchenBoard.test.ts && vitest run src/services/productsSupabaseService.test.ts src/services/cashierSupabaseService.test.ts src/services/ordersSupabaseService.test.ts src/services/tablesSupabaseService.test.ts src/services/deliverySupabaseService.test.ts src/services/onlineOrdersSupabaseService.test.ts src/services/kitchenSupabaseService.test.ts"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
+    "@supabase/supabase-js": "^2.106.1",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.2.3",
     "express": "^4.21.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
+    "qrcode": "^1.5.4",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "vite": "^6.2.3"
@@ -26,6 +29,7 @@
   "devDependencies": {
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
+    "@types/qrcode": "^1.5.6",
     "@vitest/coverage-v8": "^4.1.7",
     "autoprefixer": "^10.4.21",
     "jsdom": "^29.1.1",

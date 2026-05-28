@@ -9,9 +9,11 @@ interface PlanGuardProps {
 }
 
 export const PlanGuard: React.FC<PlanGuardProps> = ({ moduleId, children }) => {
-  const { currentEmpresa, currentUser } = useApp();
+  const { currentEmpresa, currentUser, hasExtraModule } = useApp();
 
-  const isAuthorized = canAccessModule(currentEmpresa.plano, currentUser.role, moduleId);
+  const isAuthorized =
+    canAccessModule(currentEmpresa.plano, currentUser.role, moduleId) ||
+    hasExtraModule(moduleId);
 
   if (!isAuthorized) {
     return <PlanUpgradeBanner moduleId={moduleId} />;

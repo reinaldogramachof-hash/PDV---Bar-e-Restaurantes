@@ -1,17 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { Product, Order } from '../types';
 import { MenuList } from './MenuList';
-import { ArrowRight, Minus, Package, Plus, Search, ShoppingBag, Trash2, User } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, Minus, Package, Plus, Search, ShoppingBag, Tag, Trash2, User, X } from 'lucide-react';
 import { CheckoutModal } from './CheckoutModal';
 import { AnimatePresence, motion } from 'motion/react';
 import { useAudit } from '../hooks/useAudit';
+import { allocateComboItems, calcComboOriginalPrice, getProductDiscount } from '../services/salesService';
 
 export const PDV: React.FC = () => {
-  const { currentEmpresa, waiters, theme } = useApp();
+  const { collaborators, currentEmpresa, waiters, theme, promotions, campaigns, combos, products, customers, draftOrder, setDraftOrder, clearDraftOrder } = useApp();
   const isDark = theme === 'dark';
+  const activeOperators = collaborators.filter(c => c.status === 'active');
+  const initialOperatorId = activeOperators[0]?.id ?? waiters[0]?.id ?? '';
+  const [selectedOperatorId, setSelectedOperatorId] = useState<string>(
+    () => draftOrder?.waiterId ?? initialOperatorId
+  );
+  const [waiterMenuOpen, setWaiterMenuOpen] = useState(false);
+  const [comboMenuOpen, setComboMenuOpen] = useState(false);
+  const [manualModalOpen, setManualModalOpen] = useState(false);
+  const [manualName, setManualName] = useState('');
+  const [manualPrice, setManualPrice] = useState('');
 
-  const createOrder = (): Order => ({
+  const createOrder = (waiterId = selectedOperatorId): Order => ({
     id: Date.now().toString(),
     empresaId: currentEmpresa.id,
     mode: 'balcao',
@@ -21,23 +32,42 @@ export const PDV: React.FC = () => {
     total: 0,
     payments: [],
     status: 'open',
-    waiterId: waiters[0]?.id || 'w1',
+    waiterId: waiterId || initialOperatorId,
     timestamp: new Date().toISOString(),
   });
 
-  const [activeOrder, setActiveOrder] = useState<Order>(createOrder);
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('Todos');
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const { log } = useAudit();
 
+  useEffect(() => {
+    if (!draftOrder) {
+      setDraftOrder(createOrder(selectedOperatorId));
+    }
+  }, [draftOrder, selectedOperatorId, setDraftOrder]);
+
   const categories = ['Todos', 'Drinks', 'Petiscos', 'Pratos', 'Sobremesas'];
+  const activeOrder = draftOrder ?? createOrder(selectedOperatorId);
+  const selectedCustomerId = activeOrder.customerId ?? '';
   const totalItems = activeOrder.items.reduce((acc, item) => acc + item.quantity, 0);
   const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
   const fieldClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
+  const selectedOperatorName =
+    activeOperators.find(c => c.id === selectedOperatorId)?.name ?? 'Operador';
+
+  const updateActiveOrder = (updater: (order: Order) => Order) => {
+    setDraftOrder(previous => updater(previous ?? createOrder(selectedOperatorId)));
+  };
 
   const addItemToOrder = (product: Product) => {
-    const existingIdx = activeOrder.items.findIndex(item => item.product.id === product.id);
+    const discountInfo = getProductDiscount(product, promotions, campaigns);
+    const itemPrice = Math.max(0, product.price - (discountInfo?.discount || 0));
+    const existingIdx = activeOrder.items.findIndex(item =>
+      item.product.id === product.id &&
+      !item.comboId &&
+      item.promotionName === discountInfo?.promotionName
+    );
     let updatedItems = [...activeOrder.items];
 
     if (existingIdx !== -1) {
@@ -50,12 +80,16 @@ export const PDV: React.FC = () => {
         id: Date.now().toString() + Math.random(),
         product,
         quantity: 1,
-        price: product.price,
+        price: itemPrice,
+        originalPrice: discountInfo ? product.price : undefined,
+        discount: discountInfo?.discount,
+        promotionName: discountInfo?.promotionName,
+        addedAt: new Date().toISOString(),
       });
     }
 
     const subtotal = updatedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    setActiveOrder({ ...activeOrder, items: updatedItems, subtotal, total: subtotal });
+    updateActiveOrder(order => ({ ...order, items: updatedItems, subtotal, total: subtotal }));
   };
 
   const changeItemQty = (itemId: string, delta: number) => {
@@ -63,22 +97,78 @@ export const PDV: React.FC = () => {
       .map(item => item.id === itemId ? { ...item, quantity: item.quantity + delta } : item)
       .filter(item => item.quantity > 0);
     const subtotal = updatedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    setActiveOrder({ ...activeOrder, items: updatedItems, subtotal, total: subtotal });
+    updateActiveOrder(order => ({ ...order, items: updatedItems, subtotal, total: subtotal }));
+  };
+
+  const addComboToOrder = (comboId: string) => {
+    const combo = combos.find(item => item.id === comboId);
+    if (!combo) return;
+    const comboItems = allocateComboItems(combo, products).map(item => ({
+      id: Date.now().toString() + Math.random(),
+      product: item.product,
+      quantity: item.quantity,
+      price: item.unitPrice,
+      originalPrice: item.originalPrice,
+      discount: item.discount,
+      promotionName: item.promotionName,
+      comboId: item.comboId,
+      addedAt: new Date().toISOString(),
+    }));
+
+    if (comboItems.length === 0) return;
+    const updatedItems = [...activeOrder.items, ...comboItems];
+    const subtotal = updatedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    updateActiveOrder(order => ({ ...order, items: updatedItems, subtotal, total: subtotal }));
+    setComboMenuOpen(false);
+  };
+
+  const handleSelectOperator = (id: string) => {
+    setSelectedOperatorId(id);
+    setWaiterMenuOpen(false);
+    updateActiveOrder(order => ({ ...order, waiterId: id }));
+  };
+
+  const handleSelectCustomer = (id: string) => {
+    const customer = customers.find(item => item.id === id);
+    updateActiveOrder(order => ({ ...order, customerId: id || undefined, customerName: customer?.name }));
+  };
+
+  const addManualItem = () => {
+    const price = parseFloat(manualPrice.replace(',', '.'));
+    if (!manualName.trim() || isNaN(price) || price <= 0) return;
+
+    const manualProduct: Product = {
+      id: 'manual-' + Date.now(),
+      empresaId: currentEmpresa.id,
+      name: manualName,
+      description: 'Item avulso',
+      price,
+      category: 'Avulso',
+    };
+
+    addItemToOrder(manualProduct);
+    log('product_add', `Venda avulsa: ${manualName} - R$${price.toFixed(2)}`);
+    setManualModalOpen(false);
+    setManualName('');
+    setManualPrice('');
   };
 
   const handleSuccess = () => {
     setCheckoutOpen(false);
-    setActiveOrder(createOrder());
+    clearDraftOrder();
   };
 
   const handleCancelOrder = () => {
+    if (activeOrder.items.length > 0 && !window.confirm('Deseja cancelar o pedido? Todos os itens serão removidos.')) {
+      return;
+    }
     if (activeOrder.items.length > 0) {
       log('order_cancel', 'Pedido/Carrinho foi cancelado no balcão', { 
         subtotal: activeOrder.subtotal,
         itemsCount: activeOrder.items.length
       });
     }
-    setActiveOrder(createOrder());
+    clearDraftOrder();
   };
 
   return (
@@ -90,14 +180,30 @@ export const PDV: React.FC = () => {
             <p className="text-sm text-muted">Atendimento direto no balcão</p>
           </div>
 
-          <div className={`flex items-center px-3 h-10 rounded-control border w-full md:w-80 transition-all focus-within:ring-2 focus-within:ring-accent/20 ${fieldClass}`}>
-            <Search className="w-4 h-4 mr-3 text-muted" />
-            <input
-              value={searchTerm}
-              onChange={event => setSearchTerm(event.target.value)}
-              placeholder="Pesquisar produto..."
-              className="bg-transparent border-none outline-none w-full text-sm font-medium placeholder:text-muted"
-            />
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <button
+              onClick={() => setComboMenuOpen(true)}
+              className={`shrink-0 flex items-center gap-2 px-4 h-10 rounded-control border font-medium text-sm text-accent transition-all hover:bg-accent/10 ${fieldClass}`}
+            >
+              <Package className="w-4 h-4" />
+              Combos
+            </button>
+            <button
+              onClick={() => setManualModalOpen(true)}
+              className={`shrink-0 flex items-center gap-2 px-4 h-10 rounded-control border border-dashed font-medium text-sm text-accent transition-all hover:bg-accent/10 ${fieldClass}`}
+            >
+              <Plus className="w-4 h-4" />
+              Avulso
+            </button>
+            <div className={`flex items-center px-3 h-10 rounded-control border w-full md:w-80 transition-all focus-within:ring-2 focus-within:ring-accent/20 ${fieldClass}`}>
+              <Search className="w-4 h-4 mr-3 text-muted" />
+              <input
+                value={searchTerm}
+                onChange={event => setSearchTerm(event.target.value)}
+                placeholder="Pesquisar produto..."
+                className="bg-transparent border-none outline-none w-full text-sm font-medium placeholder:text-muted"
+              />
+            </div>
           </div>
         </div>
 
@@ -133,7 +239,7 @@ export const PDV: React.FC = () => {
               <div className="flex items-center gap-2 text-xs text-muted">
                 <span>{totalItems} itens</span>
                 <span>•</span>
-                <span className="flex items-center gap-1"><User className="w-3 h-3" /> Balcão</span>
+                <span className="flex items-center gap-1"><User className="w-3 h-3" /> {selectedOperatorName}</span>
               </div>
             </div>
           </div>
@@ -144,6 +250,61 @@ export const PDV: React.FC = () => {
           >
             <Trash2 className="w-4 h-4" />
           </button>
+        </div>
+
+        <div className={`px-5 py-3 border-b ${isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light'}`}>
+          <div className="grid grid-cols-1 gap-2">
+          <div className="relative">
+            <button
+              onClick={() => setWaiterMenuOpen(open => !open)}
+              className={`w-full h-10 px-3 rounded-control border flex items-center justify-between text-sm font-medium transition-all ${fieldClass}`}
+            >
+              <span className="flex items-center gap-2 min-w-0">
+                <User className="w-4 h-4 text-muted shrink-0" />
+                <span className="truncate">{selectedOperatorName}</span>
+              </span>
+              <ChevronDown className={`w-4 h-4 text-muted transition-transform ${waiterMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <AnimatePresence>
+              {waiterMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setWaiterMenuOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className={`absolute left-0 right-0 top-full mt-2 rounded-panel border shadow-2xl overflow-hidden z-20 ${panelClass}`}
+                  >
+                    {activeOperators.map(operator => (
+                      <button
+                        key={operator.id}
+                        onClick={() => handleSelectOperator(operator.id)}
+                        className={`w-full flex items-center justify-between px-3 py-3 text-sm font-medium transition-colors ${
+                          selectedOperatorId === operator.id
+                            ? 'bg-accent text-white'
+                            : isDark ? 'hover:bg-elevated' : 'hover:bg-elevated-light'
+                        }`}
+                      >
+                        {operator.name}
+                        {selectedOperatorId === operator.id && <Check className="w-4 h-4" />}
+                      </button>
+                    ))}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+          <select
+            value={selectedCustomerId}
+            onChange={event => handleSelectCustomer(event.target.value)}
+            className={`w-full h-10 px-3 rounded-control border text-sm font-medium outline-none ${fieldClass}`}
+          >
+            <option value="">Cliente nao identificado</option>
+            {customers.map(customer => (
+              <option key={customer.id} value={customer.id}>{customer.name}</option>
+            ))}
+          </select>
+          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[300px]">
@@ -170,7 +331,17 @@ export const PDV: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{item.product.name}</p>
-                  <p className="text-xs text-muted">R$ {item.price.toFixed(2)}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {item.originalPrice && item.originalPrice > item.price && (
+                      <span className="text-xs text-muted line-through">R$ {item.originalPrice.toFixed(2)}</span>
+                    )}
+                    <span className="text-xs text-muted">R$ {item.price.toFixed(2)}</span>
+                  </div>
+                  {item.promotionName && item.discount && item.discount > 0 && (
+                    <p className="mt-1 w-fit px-2 py-0.5 rounded-full bg-success/15 text-success text-[10px] font-semibold">
+                      Promocao: -R$ {item.discount.toFixed(2)} ({item.promotionName})
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button
@@ -219,6 +390,135 @@ export const PDV: React.FC = () => {
 
       {checkoutOpen && (
         <CheckoutModal order={activeOrder} onClose={() => setCheckoutOpen(false)} onSuccess={handleSuccess} />
+      )}
+
+      {comboMenuOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`w-full max-w-2xl rounded-panel border shadow-2xl overflow-hidden ${panelClass}`}
+          >
+            <div className={`px-5 py-4 flex items-center justify-between border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-panel bg-accent text-white flex items-center justify-center">
+                  <Package className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-base">Combos disponiveis</h3>
+                  <p className="text-xs text-muted">Lance todos os itens do combo pelo preco promocional.</p>
+                </div>
+              </div>
+              <button onClick={() => setComboMenuOpen(false)} className="p-2 rounded-control hover:bg-current/10 text-muted" aria-label="Fechar combos">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[70vh] overflow-y-auto">
+              {combos.filter(combo => combo.active).map(combo => {
+                const original = calcComboOriginalPrice(combo, products);
+                return (
+                  <button
+                    key={combo.id}
+                    onClick={() => addComboToOrder(combo.id)}
+                    className={`text-left rounded-panel border overflow-hidden transition-all hover:border-accent ${fieldClass}`}
+                  >
+                    {combo.imageBase64 ? (
+                      <img src={combo.imageBase64} alt={combo.name} className="w-full h-28 object-cover" />
+                    ) : (
+                      <div className="h-28 flex items-center justify-center bg-current/5"><Package className="w-8 h-8 text-muted" /></div>
+                    )}
+                    <div className="p-3 space-y-2">
+                      <div>
+                        <p className="text-sm font-semibold">{combo.name}</p>
+                        <p className="text-xs text-muted">{combo.description || 'Combo promocional'}</p>
+                      </div>
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <p className="text-xs text-muted line-through">R$ {original.toFixed(2)}</p>
+                          <p className="text-base font-semibold text-accent">R$ {combo.comboPrice.toFixed(2)}</p>
+                        </div>
+                        <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-success/15 text-success">
+                          Add combo
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+              {combos.filter(combo => combo.active).length === 0 && (
+                <div className="col-span-full py-10 text-center text-sm text-muted">Nenhum combo ativo no momento.</div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {manualModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`w-full max-w-md rounded-panel border shadow-2xl overflow-hidden ${panelClass}`}
+          >
+            <div className={`px-5 py-4 flex items-center justify-between border-b ${isDark ? 'border-border' : 'border-border-light'}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-panel bg-accent text-white flex items-center justify-center">
+                  <Tag className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-base">Venda Avulsa</h3>
+                  <p className="text-xs text-muted">Adicionar item manual ao carrinho</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setManualModalOpen(false)}
+                className="p-2 rounded-control transition-all hover:bg-danger/10 hover:text-danger text-muted"
+                aria-label="Fechar venda avulsa"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-5 space-y-4">
+              <label className="space-y-1 block">
+                <span className="text-xs text-muted">Descrição</span>
+                <input
+                  autoFocus
+                  value={manualName}
+                  onChange={event => setManualName(event.target.value)}
+                  placeholder="Ex: item avulso"
+                  className={`w-full h-10 px-3 rounded-control border bg-transparent outline-none text-sm font-medium placeholder:text-muted ${fieldClass}`}
+                />
+              </label>
+              <label className="space-y-1 block">
+                <span className="text-xs text-muted">Valor</span>
+                <div className={`relative h-10 rounded-control border ${fieldClass}`}>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted">R$</span>
+                  <input
+                    value={manualPrice}
+                    onChange={event => setManualPrice(event.target.value)}
+                    onKeyDown={event => event.key === 'Enter' && addManualItem()}
+                    placeholder="0,00"
+                    className="w-full h-full bg-transparent outline-none text-sm font-medium pl-10 pr-3 placeholder:text-muted"
+                  />
+                </div>
+              </label>
+            </div>
+            <div className={`p-5 border-t flex justify-end gap-3 ${isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light'}`}>
+              <button
+                onClick={() => setManualModalOpen(false)}
+                className={`h-10 px-4 rounded-control text-xs font-medium border transition-colors ${fieldClass}`}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={addManualItem}
+                className="h-10 px-4 rounded-control bg-accent text-white text-xs font-medium hover:bg-accent-hover"
+              >
+                Adicionar
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );

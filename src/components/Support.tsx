@@ -1,124 +1,141 @@
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, MessageCircle, Plus } from 'lucide-react';
 import { useApp } from '../store/AppContext';
-import { 
-  LifeBuoy, 
-  MessageCircle, 
-  Mail, 
-  Phone, 
-  ExternalLink, 
-  Globe,
-  Instagram,
-  Facebook
-} from 'lucide-react';
-import { motion } from 'motion/react';
-import { APP_NAME } from '../domain/saas';
+import { addMessage, createTicket, listMessages, listMyTickets, type SupportMessage, type SupportTicket } from '../services/supportService';
+
+const statusColor: Record<SupportTicket['status'], string> = {
+  open: 'text-warning',
+  in_progress: 'text-accent',
+  resolved: 'text-success',
+  closed: 'text-muted',
+};
 
 export const Support: React.FC = () => {
-  const { theme } = useApp();
+  const { theme, currentEmpresa, currentUser } = useApp();
   const isDark = theme === 'dark';
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [selected, setSelected] = useState<SupportTicket | null>(null);
+  const [messages, setMessages] = useState<SupportMessage[]>([]);
+  const [showCreate, setShowCreate] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [priority, setPriority] = useState<SupportTicket['priority']>('normal');
+  const [reply, setReply] = useState('');
 
-  const contactMethods = [
-    {
-      title: 'WhatsApp',
-      value: '(12) 99219-1018',
-      sub: 'Atendimento via chat',
-      icon: MessageCircle,
-      color: 'text-emerald-500',
-      bg: 'bg-emerald-500/10',
-      link: 'https://wa.me/5512992191018'
-    },
-    {
-      title: 'E-mail',
-      value: 'tecnologia@plenainformatica.com.br',
-      sub: 'Suporte técnico oficial',
-      icon: Mail,
-      color: 'text-blue-500',
-      bg: 'bg-blue-500/10',
-      link: 'mailto:tecnologia@plenainformatica.com.br'
-    },
-    {
-      title: 'Horário',
-      value: 'Seg a Sex',
-      sub: 'Das 09h às 17h',
-      icon: Phone,
-      color: 'text-purple-500',
-      bg: 'bg-purple-500/10',
-      link: '#'
-    }
-  ];
+  const refresh = async () => {
+    const next = await listMyTickets(currentEmpresa.id);
+    setTickets(next);
+  };
+
+  useEffect(() => {
+    void refresh();
+  }, [currentEmpresa.id]);
+
+  const openMoreThan24h = useMemo(() => {
+    const now = Date.now();
+    return tickets.some(item => item.status === 'open' && now - new Date(item.createdAt).getTime() > 24 * 60 * 60 * 1000);
+  }, [tickets]);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-700">
-      {/* Header section */}
-      <div className="text-center space-y-4">
-        <div className="inline-flex p-4 rounded-3xl bg-[var(--color-accent)]/10 text-[var(--color-accent)] mb-4">
-          <LifeBuoy className="w-10 h-10" />
-        </div>
-        <h1 className="text-xl font-semibold">Central de Suporte</h1>
-        <p className="text-sm font-medium opacity-60 max-w-lg mx-auto">
-          Estamos aqui para ajudar você a tirar o máximo proveito do {APP_NAME}.
-        </p>
+    <div className="space-y-5">
+      <div className={`p-4 rounded-panel border flex items-start gap-3 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
+        <AlertTriangle className="w-4 h-4 text-warning mt-0.5" />
+        <p className="text-xs">Antes de abrir um chamado, consulte o Manual de Uso (m�dulo Manual).</p>
       </div>
 
-      {/* Contact Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {contactMethods.map((method, i) => (
-          <motion.a
-            key={i}
-            href={method.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className={`group p-8 rounded-panel border transition-all hover:scale-[1.02] active:scale-95
-              ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] hover:border-[var(--color-accent)]/40' : 'bg-white border-gray-100 shadow-xl shadow-gray-200/20 hover:border-[var(--color-accent)]/40'}`}
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">Meus chamados</h2>
+        <button onClick={() => setShowCreate(true)} className="h-9 px-4 rounded-control bg-accent text-white text-xs inline-flex items-center gap-2">
+          <Plus className="w-3.5 h-3.5" /> Abrir chamado
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        {tickets.map(ticket => (
+          <button
+            key={ticket.id}
+            onClick={async () => { setSelected(ticket); setMessages(await listMessages(ticket.id)); }}
+            className={`w-full p-3 rounded-panel border text-left ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}
           >
-            <div className={`w-14 h-14 rounded-2xl ${method.bg} ${method.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-              <method.icon className="w-7 h-7" />
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold">{ticket.title}</span>
+              <span className={`text-xs ${statusColor[ticket.status]}`}>{ticket.status}</span>
             </div>
-            <h3 className="text-sm font-medium opacity-40 mb-1">{method.title}</h3>
-            <p className={`${method.title === 'E-mail' ? 'text-sm' : 'text-xl'} font-semibold mb-2 break-all`}>{method.value}</p>
-            <p className="text-[10px] font-medium opacity-50">{method.sub}</p>
-          </motion.a>
+            <p className="text-xs text-muted mt-1">{ticket.description}</p>
+          </button>
         ))}
       </div>
 
-      {/* Website Card */}
-      <div className={`p-10 rounded-section border overflow-hidden relative
-        ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100 shadow-2xl shadow-gray-200/30'}`}>
-        
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-accent)]/5 blur-[100px] -mr-32 -mt-32" />
-        
-        <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
-          <div className="space-y-6 flex-1 text-center md:text-left">
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Suporte Plena Informática</h2>
-              <p className="text-sm font-medium opacity-70 leading-relaxed max-w-md">
-                Acesse nosso site e conheça outras soluções.
-              </p>
+      {selected && (
+        <section className={`p-4 rounded-panel border space-y-3 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
+          <h3 className="text-sm font-semibold">{selected.title}</h3>
+          <div className="space-y-2 max-h-56 overflow-y-auto">
+            {messages.map(message => (
+              <div key={message.id} className={`p-3 rounded-control border text-xs ${message.isMaster ? 'border-accent/40' : ''}`}>
+                <p className="font-medium">{message.authorName}</p>
+                <p className="text-muted mt-1">{message.body}</p>
+              </div>
+            ))}
+          </div>
+          <textarea value={reply} onChange={e => setReply(e.target.value)} rows={3} className="w-full rounded-control border px-3 py-2 text-xs" />
+          <button
+            onClick={async () => {
+              if (!reply.trim()) return;
+              await addMessage(selected.id, currentUser.name, reply, false);
+              setReply('');
+              setMessages(await listMessages(selected.id));
+              await refresh();
+            }}
+            className="h-9 px-4 rounded-control bg-accent text-white text-xs"
+          >
+            Responder
+          </button>
+        </section>
+      )}
+
+      {openMoreThan24h && (
+        <a href="https://wa.me/5512992191018" target="_blank" rel="noopener noreferrer" className="h-10 px-4 rounded-control bg-emerald-500 text-white text-xs inline-flex items-center gap-2">
+          <MessageCircle className="w-3.5 h-3.5" /> WhatsApp (chamado aberto +24h)
+        </a>
+      )}
+
+      {showCreate && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className={`w-full max-w-lg rounded-section border p-4 space-y-3 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-100'}`}>
+            <h3 className="text-sm font-semibold">Abrir chamado</h3>
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="T�tulo" className="h-10 w-full rounded-control border px-3 text-xs" />
+            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={4} placeholder="Descreva seu problema" className="w-full rounded-control border px-3 py-2 text-xs" />
+            <select value={priority} onChange={e => setPriority(e.target.value as SupportTicket['priority'])} className="h-10 w-full rounded-control border px-3 text-xs">
+              <option value="low">low</option>
+              <option value="normal">normal</option>
+              <option value="high">high</option>
+              <option value="urgent">urgent</option>
+            </select>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setShowCreate(false)} className="h-9 px-4 rounded-control border text-xs">Cancelar</button>
+              <button
+                onClick={async () => {
+                  if (!title.trim() || !description.trim()) return;
+                  await createTicket(currentEmpresa.id, {
+                    title,
+                    description,
+                    priority,
+                    createdBy: currentUser.id,
+                  });
+                  setShowCreate(false);
+                  setTitle('');
+                  setDescription('');
+                  setPriority('normal');
+                  await refresh();
+                }}
+                className="h-9 px-4 rounded-control bg-accent text-white text-xs"
+              >
+                Criar chamado
+              </button>
             </div>
           </div>
-
-          <div className="flex-shrink-0">
-            <a 
-              href="https://www.plenainformatica.com.br" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 px-10 py-6 bg-[var(--color-accent)] text-white rounded-section font-medium text-[11px] shadow-2xl shadow-[var(--color-accent)]/40 hover:scale-105 active:scale-95 transition-all"
-            >
-              Visitar Nosso Site
-              <ExternalLink className="w-5 h-5" />
-            </a>
-          </div>
         </div>
-      </div>
-
-      {/* Footer Text */}
-      <div className="text-center opacity-30 py-8">
-        <p className="text-[10px] font-medium">{APP_NAME} - Versão 1.0.0</p>
-        <p className="text-[8px] font-medium mt-2">© 2026 Plena Informática. Todos os direitos reservados.</p>
-      </div>
+      )}
     </div>
   );
-}
+};

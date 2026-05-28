@@ -1,4 +1,4 @@
-﻿import tailwindcss from '@tailwindcss/vite';
+import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
@@ -40,9 +40,18 @@ export default defineConfig(() => {
       port: 3000,
       strictPort: true,
       host: '0.0.0.0',
-      hmr: {
-        protocol: 'wss',
-        clientPort: 443,
+    },
+    build: {
+      chunkSizeWarningLimit: 300,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-supabase': ['@supabase/supabase-js'],
+            'vendor-motion': ['motion'],
+            'vendor-genai': ['@google/genai'],
+          },
+        },
       },
     },
   };

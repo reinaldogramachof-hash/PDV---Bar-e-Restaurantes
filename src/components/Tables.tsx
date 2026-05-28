@@ -4,6 +4,21 @@ import { OrderModal } from './OrderModal';
 import { CalendarCheck, Check, CheckCircle2, Clock, Search, Users, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 
+interface StatCardProps {
+  label: string;
+  value: string;
+  subValue: string;
+  icon: React.ElementType;
+  tone: string;
+  panelClass: string;
+}
+
+const TABLE_STATUS_FILTERS = ['todos', 'livre', 'ocupada', 'aguardando', 'reservada'] as const;
+type TableStatusFilter = typeof TABLE_STATUS_FILTERS[number];
+
+const formatCurrency = (value: number) =>
+  `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 const TableTimer: React.FC<{ timestamp: string; status: string }> = ({ timestamp, status }) => {
   const [now, setNow] = useState(Date.now());
 
@@ -31,7 +46,8 @@ export const Tables: React.FC = () => {
   const isDark = theme === 'dark';
   const [selectedTable, setSelectedTable] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<'todos' | 'livre' | 'ocupada' | 'aguardando' | 'reservada'>('todos');
+  const [filter, setFilter] = useState<TableStatusFilter>('todos');
+  const [sectorFilter, setSectorFilter] = useState('Todos');
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectedForReservation, setSelectedForReservation] = useState<number[]>([]);
   const [reservationReason, setReservationReason] = useState('');
@@ -43,11 +59,13 @@ export const Tables: React.FC = () => {
   const reservedCount = tables.filter(table => table.status === 'reservada').length;
   const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
   const fieldClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
+  const sectors = Array.from(new Set(tables.map(table => table.sector).filter((sector): sector is string => Boolean(sector?.trim()))));
 
   const filteredTables = tables.filter(table => {
     const matchesSearch = table.number.toString().includes(searchTerm);
     const matchesFilter = filter === 'todos' || table.status === filter;
-    return matchesSearch && matchesFilter;
+    const matchesSector = sectorFilter === 'Todos' || table.sector === sectorFilter;
+    return matchesSearch && matchesFilter && matchesSector;
   });
 
   const handleTableClick = (number: number) => {
@@ -87,10 +105,10 @@ export const Tables: React.FC = () => {
 
         <div className="flex flex-col lg:flex-row justify-between items-center gap-4 pt-5 border-t border-current/5">
           <div className={`flex p-1 gap-1 rounded-panel border w-full lg:w-fit overflow-x-auto scrollbar-none ${fieldClass}`}>
-            {['todos', 'livre', 'ocupada', 'aguardando', 'reservada'].map(item => (
+            {TABLE_STATUS_FILTERS.map(item => (
               <button
                 key={item}
-                onClick={() => setFilter(item as any)}
+                onClick={() => setFilter(item)}
                 className={`flex-1 lg:flex-none px-4 py-2 rounded-control text-sm font-medium transition-all ${filter === item ? 'bg-accent text-white' : isDark ? 'text-muted hover:bg-surface hover:text-text' : 'text-muted-light hover:bg-surface-light hover:text-text-light'}`}
               >
                 {item}
@@ -119,6 +137,25 @@ export const Tables: React.FC = () => {
             </button>
           </div>
         </div>
+
+        {sectors.length > 0 && (
+          <div className={`flex p-1 gap-1 rounded-panel border w-full overflow-x-auto scrollbar-none ${fieldClass}`}>
+            {['Todos', ...sectors].map(sector => (
+              <button
+                key={sector}
+                onClick={() => setSectorFilter(sector)}
+                className={`shrink-0 px-4 py-2 rounded-control text-sm font-medium transition-all ${
+                  sectorFilter === sector
+                    ? 'bg-accent text-white'
+                    : isDark ? 'text-muted hover:bg-surface hover:text-text' : 'text-muted-light hover:bg-surface-light hover:text-text-light'
+                }`}
+              >
+                {sector}
+              </button>
+            ))}
+          </div>
+        )}
+
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -155,6 +192,11 @@ export const Tables: React.FC = () => {
                 >
                   <span className="text-4xl font-semibold tracking-tight">{table.number.toString().padStart(2, '0')}</span>
                   {order && (isOcupada || isAguardando) && <TableTimer timestamp={order.timestamp} status={table.status} />}
+                  {order && (isOcupada || isAguardando) && (
+                    <span className="absolute bottom-3 text-[10px] text-muted">
+                      {formatCurrency(order.subtotal)}
+                    </span>
+                  )}
                   {isReservada && (
                     <div className="flex flex-col items-center text-accent max-w-[80%] text-center mt-1">
                       <CalendarCheck className="w-4 h-4 mb-1" />
@@ -202,18 +244,19 @@ export const Tables: React.FC = () => {
   );
 };
 
-const StatCard = ({ label, value, subValue, icon: Icon, tone, panelClass }: any) => {
-  const tones = {
+const StatCard = ({ label, value, subValue, icon: Icon, tone, panelClass }: StatCardProps) => {
+  const tones: Record<string, string> = {
     success: 'text-success bg-success/10 border-success/20',
     warning: 'text-warning bg-warning/10 border-warning/20',
     accent: 'text-accent bg-accent/10 border-accent/20',
     purple: 'text-accent bg-accent/10 border-purple-500/20',
-  }[tone as 'success' | 'warning' | 'accent' | 'purple'];
+  };
+  const toneClass = tones[tone] ?? tones.accent;
 
   return (
     <div className={`p-4 rounded-panel border ${panelClass}`}>
       <div className="flex justify-between items-start mb-3">
-        <div className={`p-2 rounded-panel border ${tones}`}><Icon className="w-4 h-4" /></div>
+        <div className={`p-2 rounded-panel border ${toneClass}`}><Icon className="w-4 h-4" /></div>
         <div className="text-right">
           <p className="text-xs text-muted mb-1">{label}</p>
           <p className="text-xl font-semibold">{value}</p>

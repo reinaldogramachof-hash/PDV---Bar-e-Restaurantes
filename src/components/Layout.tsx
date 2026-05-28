@@ -2,32 +2,42 @@ import React, { useEffect, useState } from 'react';
 import { View } from '../hooks/useNavigation';
 import { useApp } from '../store/AppContext';
 import {
-  BookOpen,
+  BarChart2,
+  BrainCircuit,
+  Bike,
+  BookMarked,
   ChefHat,
   ChevronLeft,
-  Crown,
-  LifeBuoy,
-  LineChart,
+  HeadphonesIcon,
   LayoutDashboard,
+  LayoutGrid,
+  LogOut,
   Menu,
   Monitor,
-  MonitorPlay,
   Moon,
+  NotebookPen,
   Package,
   Settings,
-  Shield,
+  ShieldCheck,
+  ShoppingCart,
+  Smartphone,
   Sun,
-  Table2,
+  TrendingUp,
   Truck,
-  UserCheck,
+  UserCog,
   Users,
   Utensils,
+  UtensilsCrossed,
   Wallet,
+  Warehouse,
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { AnimatePresence, motion } from 'motion/react';
-import { APP_NAME, canAccessModule, ModuleId } from '../domain/saas';
+import { APP_NAME, canAccessModule, canAccessViaPackOrAddon, ModuleId } from '../domain/saas';
 import { LicenseCheckResult } from '../services/licenseService';
+import { fetchFeed } from '../services/notificationService';
 import { LicenseBanner } from './LicenseBanner';
+import { NotificationPanel } from './NotificationPanel';
 
 interface LayoutProps {
   currentView: View;
@@ -55,54 +65,53 @@ const DateTimeDisplay = () => {
   );
 };
 
-const navGroups = [
-  {
-    title: 'Plena',
-    items: [
-      { id: 'master', icon: Crown, label: 'Painel Master' },
-    ],
-  },
-  {
-    title: 'Operacional',
-    items: [
-      { id: 'pdv', icon: MonitorPlay, label: 'PDV (Balcão)' },
-      { id: 'mesas', icon: Table2, label: 'Mesas' },
-      { id: 'cozinha', icon: ChefHat, label: 'Cozinha' },
-      { id: 'caixa', icon: Wallet, label: 'Caixa' },
-    ],
-  },
-  {
-    title: 'Gestão',
-    items: [
-      { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-      { id: 'clientes', icon: Users, label: 'Clientes' },
-      { id: 'colaboradores', icon: UserCheck, label: 'Colaboradores' },
-      { id: 'fornecedores', icon: Truck, label: 'Fornecedores' },
-      { id: 'produtos', icon: BookOpen, label: 'Cardápio' },
-      { id: 'relatorios', icon: LineChart, label: 'Financeiro' },
-      { id: 'estoque', icon: Package, label: 'Estoque' },
-    ],
-  },
-  {
-    title: 'Sistema',
-    items: [
-      { id: 'manual', icon: BookOpen, label: 'Manual de Uso' },
-      { id: 'seguranca', icon: Shield, label: 'Segurança' },
-      { id: 'configuracoes', icon: Settings, label: 'Configurações' },
-      { id: 'suporte', icon: LifeBuoy, label: 'Suporte' },
-    ],
-  },
-] as const;
+const moduleMeta: Record<ModuleId, { icon: React.ComponentType<{ className?: string }>; label: string }> = {
+  pdv: { icon: ShoppingCart, label: 'PDV (Balcao)' },
+  mesas: { icon: LayoutGrid, label: 'Mesas' },
+  cozinha: { icon: ChefHat, label: 'Cozinha' },
+  delivery: { icon: Bike, label: 'Delivery' },
+  'pedidos-online': { icon: Smartphone, label: 'Pedidos Online' },
+  'cardapio-digital': { icon: UtensilsCrossed, label: 'Cardapio Digital' },
+  clientes: { icon: Users, label: 'Clientes' },
+  vendas: { icon: TrendingUp, label: 'Vendas' },
+  produtos: { icon: Package, label: 'Produtos' },
+  estoque: { icon: Warehouse, label: 'Estoque' },
+  fornecedores: { icon: Truck, label: 'Fornecedores' },
+  colaboradores: { icon: UserCog, label: 'Colaboradores' },
+  caixa: { icon: Wallet, label: 'Caixa' },
+  relatorios: { icon: BarChart2, label: 'Financeiro' },
+  dashboard: { icon: LayoutDashboard, label: 'Dashboard' },
+  intelligence: { icon: BrainCircuit, label: 'Inteligencia' },
+  diario: { icon: NotebookPen, label: 'Diario' },
+  configuracoes: { icon: Settings, label: 'Configuracoes' },
+  seguranca: { icon: ShieldCheck, label: 'Seguranca' },
+  suporte: { icon: HeadphonesIcon, label: 'Suporte' },
+  manual: { icon: BookMarked, label: 'Manual de Uso' },
+};
+
+const SIDEBAR_GROUPS = [
+  { label: 'Operacional', modules: ['pdv', 'mesas', 'cozinha', 'delivery', 'pedidos-online'] },
+  { label: 'Comercial', modules: ['cardapio-digital', 'clientes', 'vendas'] },
+  { label: 'Administrativo', modules: ['produtos', 'estoque', 'fornecedores', 'colaboradores', 'caixa', 'relatorios'] },
+  { label: 'Gestao', modules: ['dashboard', 'intelligence', 'diario'] },
+  { label: 'Sistema', modules: ['configuracoes', 'seguranca', 'suporte', 'manual'] },
+] as const;;
 
 const viewLabels: Record<View, string> = {
   master: 'Painel Master',
   dashboard: 'Dashboard',
+  intelligence: 'Inteligência',
   pdv: 'PDV Balcão',
   mesas: 'Mesas',
+  delivery: 'Delivery',
+  'pedidos-online': 'Pedidos Online',
+  'cardapio-digital': 'Cardápio Digital',
+  vendas: 'Vendas',
   cozinha: 'Cozinha',
   estoque: 'Estoque',
   caixa: 'Caixa',
   relatorios: 'Financeiro',
+  diario: 'Diario',
   configuracoes: 'Configurações',
   manual: 'Manual de Uso',
   clientes: 'Clientes',
@@ -121,10 +130,22 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
 
   const isDark = theme === 'dark';
 
-  // Filtrar navGroups para ocultar "Plena" se role !== 'master'
-  const visibleNavGroups = navGroups.filter(group =>
-    group.title !== 'Plena' || currentUser.role === 'master'
-  );
+  const enabledExtraModules = ((currentEmpresa as unknown as { extraModules?: string[] }).extraModules ?? []);
+  const visibleNavGroups = SIDEBAR_GROUPS
+    .map(group => ({
+      ...group,
+      items: group.modules
+        .filter(moduleId =>
+          canAccessModule(currentEmpresa.plano, currentUser.role, moduleId) ||
+          canAccessViaPackOrAddon(enabledExtraModules, currentUser.role, moduleId)
+        )
+        .map(moduleId => ({
+          id: moduleId,
+          icon: moduleMeta[moduleId].icon,
+          label: moduleMeta[moduleId].label,
+        })),
+    }))
+    .filter(group => group.items.length > 0);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: any) => {
@@ -145,6 +166,10 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
+  }, []);
+
+  useEffect(() => {
+    fetchFeed();
   }, []);
 
   const handleInstallClick = async () => {
@@ -192,19 +217,44 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
           </div>
 
           <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 scrollbar-none">
-            {visibleNavGroups.map((group) => {
-              const filteredItems = group.items.filter(item => {
-                if (item.id === 'master') return true;
-                return canAccessModule(currentEmpresa.plano, currentUser.role, item.id as ModuleId);
-              });
-
-              if (filteredItems.length === 0) return null;
-
+            {currentUser.role === 'master' && (
+              <div className="space-y-1 pb-1">
+                {!isCollapsed && (
+                  <div className="px-3 pt-2 pb-1">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">
+                      Master
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={() => setCurrentView('master')}
+                  title={isCollapsed ? 'Painel Master' : ''}
+                  className={`w-full flex items-center gap-3 px-3 py-2 transition-all rounded-control group ${
+                    currentView === 'master'
+                      ? 'bg-accent text-white'
+                      : isDark
+                        ? 'text-muted hover:bg-elevated hover:text-text'
+                        : 'text-muted-light hover:bg-elevated-light hover:text-text-light'
+                  } ${isCollapsed ? 'justify-center' : ''}`}
+                >
+                  <ShieldCheck className="w-4.5 h-4.5 flex-shrink-0 opacity-70 group-hover:opacity-100" />
+                  {!isCollapsed && <span className="font-medium text-sm">Painel Master</span>}
+                </button>
+                {!isCollapsed && <hr className="border-[var(--color-border)] mx-3 my-1" />}
+              </div>
+            )}
+            {visibleNavGroups.map((group, index) => {
               return (
-                <div key={group.title} className="space-y-1">
-                  {!isCollapsed && <h3 className="px-3 text-xs font-medium text-muted">{group.title}</h3>}
+                <div key={group.label} className="space-y-1">
+                  {!isCollapsed && (
+                    <div className="px-3 pt-4 pb-1">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-muted)]">
+                        {group.label}
+                      </span>
+                    </div>
+                  )}
                   <div className="space-y-1">
-                    {filteredItems.map((item) => {
+                    {group.items.map((item) => {
                       const active = currentView === item.id;
                       const Icon = item.icon;
                       return (
@@ -230,6 +280,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
                       );
                     })}
                   </div>
+                  {!isCollapsed && index < visibleNavGroups.length - 1 && <hr className="border-[var(--color-border)] mx-3 my-1" />}
                 </div>
               );
             })}
@@ -301,6 +352,8 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
                 </button>
               )}
 
+              <NotificationPanel />
+
               <button
                 onClick={() => setTheme(isDark ? 'light' : 'dark')}
                 className={`p-2.5 rounded-control transition-all active:scale-95 ${isDark ? 'bg-elevated text-warning hover:bg-white/10' : 'bg-elevated-light text-gray-600 hover:bg-gray-200'}`}
@@ -319,12 +372,21 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
                 </AnimatePresence>
               </button>
 
-              <div className={`hidden md:flex items-center gap-3 px-3 py-2 rounded-panel border ${isDark ? 'bg-surface border-border' : 'bg-elevated-light border-border-light'}`}>
-                <div className="w-8 h-8 rounded-panel bg-accent flex items-center justify-center text-white font-semibold text-xs">GG</div>
-                <div className="leading-none">
-                  <p className="text-xs font-semibold">Admin Demo</p>
-                  <p className="text-[10px] font-medium text-muted mt-0.5">Administrador</p>
+              <div className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-panel border ${isDark ? 'bg-surface border-border' : 'bg-elevated-light border-border-light'}`}>
+                <div className="w-8 h-8 rounded-panel bg-accent flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
+                  {currentUser.name.slice(0, 2).toUpperCase()}
                 </div>
+                <div className="leading-none">
+                  <p className="text-xs font-semibold truncate max-w-[120px]">{currentUser.name}</p>
+                  <p className="text-[10px] font-medium text-muted mt-0.5 capitalize">{currentUser.role}</p>
+                </div>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  title="Sair"
+                  className={`ml-1 p-1.5 rounded-control transition-colors ${isDark ? 'hover:bg-elevated text-muted hover:text-danger' : 'hover:bg-gray-200 text-muted-light hover:text-danger'}`}
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
               </div>
             </div>
           </header>
@@ -335,3 +397,5 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
     </div>
   );
 };
+
+

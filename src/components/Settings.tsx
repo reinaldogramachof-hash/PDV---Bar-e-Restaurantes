@@ -3,9 +3,9 @@ import { useApp } from '../store/AppContext';
 import { 
   Settings as SettingsIcon, Store, Printer, Database, Save, 
   Download, Upload, RefreshCw, Check, AlertTriangle, ShieldCheck, 
-  Globe, Phone, MapPin, FileText, Layout, Crown 
+  Globe, Phone, MapPin, FileText, Layout, Crown, ChefHat
 } from 'lucide-react';
-import { getPlanModules } from '../domain/saas';
+import { addonLabels, addonModules, addonPricing, getPlanModules, ModuleId, planDescriptions, planPricing, PLENA_WHATSAPP } from '../domain/saas';
 import { useAudit } from '../hooks/useAudit';
 import { motion } from 'motion/react';
 import { AppSettings } from '../types';
@@ -15,7 +15,7 @@ export const Settings: React.FC = () => {
   const isDark = theme === 'dark';
 
   const [formData, setFormData] = useState<AppSettings>(settings);
-  const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'data' | 'plan'>('store');
+  const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'kitchen' | 'data' | 'plan'>('store');
   const [isSaving, setIsSaving] = useState(false);
   const { log } = useAudit();
 
@@ -51,12 +51,107 @@ export const Settings: React.FC = () => {
   const tabs = [
     { id: 'store', label: 'Estabelecimento', icon: Store },
     { id: 'printer', label: 'Impressão', icon: Printer },
+    { id: 'kitchen', label: 'Cozinha', icon: ChefHat },
     { id: 'data', label: 'Dados & Backup', icon: Database },
     { id: 'plan', label: 'Plano Atual', icon: Crown },
   ];
 
+  const moduleNames: Record<ModuleId, string> = {
+    dashboard: 'Dashboard',
+    intelligence: 'Inteligencia',
+    pdv: 'PDV',
+    mesas: 'Mesas',
+    delivery: 'Delivery',
+    'pedidos-online': 'Pedidos Online',
+    'cardapio-digital': 'Cardapio Digital',
+    vendas: 'Vendas',
+    cozinha: 'Cozinha',
+    estoque: 'Estoque',
+    caixa: 'Caixa',
+    produtos: 'Cardapio',
+    clientes: 'Clientes',
+    colaboradores: 'Colaboradores',
+    fornecedores: 'Fornecedores',
+    relatorios: 'Financeiro',
+    diario: 'Diario',
+    configuracoes: 'Configuracoes',
+    seguranca: 'Seguranca',
+    suporte: 'Suporte',
+    manual: 'Manual',
+  };
+
+  const planLabel = currentEmpresa.plano === 'essencial'
+    ? 'Essencial'
+    : currentEmpresa.plano === 'profissional'
+      ? 'Profissional'
+      : 'Gestao';
+
+  const licenseBadge = currentEmpresa.licenseStatus === 'active'
+    ? { label: 'Ativa', className: 'bg-[var(--color-success)]/15 text-[var(--color-success)]' }
+    : currentEmpresa.licenseStatus === 'trial'
+      ? { label: 'Trial', className: 'bg-[var(--color-warning)]/15 text-[var(--color-warning)]' }
+      : { label: 'Suspensa', className: 'bg-[var(--color-danger)]/15 text-[var(--color-danger)]' };
+  const extraModules = ((currentEmpresa as unknown as { extraModules?: string[] }).extraModules ?? []);
+  const availableAddons = addonModules.filter(moduleId =>
+    !getPlanModules(currentEmpresa.plano).includes(moduleId) && !extraModules.includes(moduleId)
+  );
+
   return (
     <div className="space-y-5 animate-in fade-in duration-700 pb-8">
+      <section className="p-5 rounded-panel border border-[var(--color-border)] bg-[var(--color-elevated)] space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-control bg-accent/10 flex items-center justify-center">
+              <Crown className="w-4 h-4 text-accent" />
+            </div>
+            <h3 className="text-sm font-semibold">Plano {planLabel}</h3>
+          </div>
+          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${licenseBadge.className}`}>{licenseBadge.label}</span>
+        </div>
+        <p className="text-xs text-muted">{planDescriptions[currentEmpresa.plano]}</p>
+        <div className="flex items-center justify-between">
+          <p className="text-lg font-semibold">R$ {planPricing[currentEmpresa.plano]}/mês</p>
+          <p className="text-xs text-muted">Renovação: {currentEmpresa.licenseStatus}</p>
+        </div>
+        <div className="border-t border-[var(--color-border)] pt-4 space-y-2">
+          <p className="text-xs text-muted">Módulos incluídos</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+            {getPlanModules(currentEmpresa.plano).map(moduleId => (
+              <div key={moduleId} className="px-2.5 py-1.5 text-[11px] rounded-control border border-[var(--color-border)] flex items-center gap-2">
+                <Check className="w-3 h-3 text-success" />
+                <span>{moduleNames[moduleId]}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        {availableAddons.length > 0 && (
+          <div className="border-t border-[var(--color-border)] pt-4 space-y-2">
+            <p className="text-xs text-muted">Add-ons disponíveis</p>
+            <div className="space-y-2">
+              {availableAddons.map(moduleId => (
+                <div key={moduleId} className="p-2.5 rounded-control border border-[var(--color-border)] flex items-center justify-between gap-2">
+                  <span className="text-xs">{addonLabels[moduleId]} +R$ {addonPricing[moduleId]}/mês</span>
+                  <button className="h-7 px-3 rounded-control border border-[var(--color-border)] text-xs font-medium">Adicionar</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {currentEmpresa.plano !== 'gestao' && (
+          <div className="border-t border-[var(--color-border)] pt-4 space-y-2">
+            <a
+              href={`https://wa.me/${PLENA_WHATSAPP}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 px-4 rounded-control bg-accent text-white text-xs font-medium items-center justify-center hover:bg-[var(--color-accent-hover)]"
+            >
+              Fazer upgrade
+            </a>
+            <p className="text-xs text-muted">Falar com especialista</p>
+          </div>
+        )}
+      </section>
+
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
@@ -85,7 +180,7 @@ export const Settings: React.FC = () => {
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-panel transition-all text-xs font-medium
                 ${activeTab === tab.id
                   ? 'bg-[var(--color-accent)] text-white'
@@ -244,6 +339,55 @@ export const Settings: React.FC = () => {
             </div>
           )}
 
+          {activeTab === 'kitchen' && (
+            <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="flex items-center gap-3 border-b border-dashed border-current/10 pb-4">
+                <div className="w-9 h-9 rounded-control bg-[var(--color-accent)]/10 flex items-center justify-center">
+                  <ChefHat className="w-4 h-4 text-[var(--color-accent)]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold">Configuração da Cozinha</h3>
+                  <p className="text-xs text-muted">Defina como o KDS opera no salão e na produção.</p>
+                </div>
+              </div>
+
+              <div className={`p-5 rounded-panel border space-y-4 ${isDark ? 'bg-white/5 border-white/5' : 'bg-gray-50 border-gray-100'}`}>
+                <div className="space-y-1.5">
+                  <h4 className="text-sm font-semibold">Modo do KDS</h4>
+                  <p className="text-xs text-muted">
+                    O modo visualização mantém o painel passivo. O modo interativo libera avanço de status por item diretamente na cozinha.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setFormData({ ...formData, kitchenMode: 'display' })}
+                    className={`text-left rounded-panel border p-4 transition-all ${
+                      (formData.kitchenMode ?? 'display') === 'display'
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                        : isDark ? 'border-[var(--color-border)] bg-[var(--color-app-base)]' : 'border-gray-200 bg-white'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold">Modo Visualização</p>
+                    <p className="text-xs text-muted mt-1">Painel passivo, sem botões de interação nos cards.</p>
+                  </button>
+
+                  <button
+                    onClick={() => setFormData({ ...formData, kitchenMode: 'interactive' })}
+                    className={`text-left rounded-panel border p-4 transition-all ${
+                      formData.kitchenMode === 'interactive'
+                        ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10'
+                        : isDark ? 'border-[var(--color-border)] bg-[var(--color-app-base)]' : 'border-gray-200 bg-white'
+                    }`}
+                  >
+                    <p className="text-sm font-semibold">Modo Interativo</p>
+                    <p className="text-xs text-muted mt-1">Cozinheiro altera o status dos itens direto no KDS.</p>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {activeTab === 'data' && (
             <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex items-center gap-3 border-b border-dashed border-current/10 pb-4">
@@ -369,3 +513,5 @@ export const Settings: React.FC = () => {
     </div>
   );
 };
+
+

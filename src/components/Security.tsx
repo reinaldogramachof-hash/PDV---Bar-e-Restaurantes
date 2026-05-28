@@ -82,7 +82,7 @@ export const Security: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-8">
+    <div className="space-y-5 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-10">
       {/* Hero Header */}
       <div className="flex items-center gap-4 border-b border-dashed border-current/10 pb-5">
         <div className="w-10 h-10 rounded-panel bg-blue-500/10 flex items-center justify-center shrink-0">
@@ -100,7 +100,7 @@ export const Security: React.FC = () => {
           <div
             key={idx}
             className={`p-5 rounded-panel border space-y-4 transition-all
-              ${isDark ? 'bg-surface-light border-[var(--color-border)]' : 'bg-surface border-gray-100 shadow-xl shadow-gray-200/20'}`}
+              ${isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light shadow-xl shadow-gray-200/20'}`}
           >
             <div className={`w-9 h-9 rounded-control bg-current/10 ${section.color} flex items-center justify-center`}>
               <section.icon className="w-4 h-4" />
@@ -115,7 +115,7 @@ export const Security: React.FC = () => {
 
       {/* Terms and Details */}
       <div className={`rounded-panel border p-5
-        ${isDark ? 'bg-surface-light border-[var(--color-border)]' : 'bg-surface border-gray-100 shadow-xl shadow-gray-200/30'}`}>
+        ${isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light shadow-xl shadow-gray-200/30'}`}>
 
         <div className="flex flex-col md:flex-row gap-6">
           <div className="flex-1 space-y-4">
@@ -138,7 +138,7 @@ export const Security: React.FC = () => {
           </div>
 
           <div className={`md:w-64 p-5 rounded-panel space-y-4 border border-dashed flex flex-col justify-between
-            ${isDark ? 'bg-elevated-light border-white/10' : 'bg-elevated border-gray-200'}`}>
+            ${isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light'}`}>
             <div className="space-y-3 text-center">
               <div className="inline-flex p-2.5 rounded-control bg-amber-500/10 text-amber-500">
                 <AlertCircle className="w-5 h-5" />
@@ -160,7 +160,7 @@ export const Security: React.FC = () => {
 
 
       {/* Audit Logs Section */}
-      <div className={`rounded-panel border p-5 ${isDark ? 'bg-surface-light border-[var(--color-border)]' : 'bg-surface border-gray-100 shadow-xl shadow-gray-200/20'}`}>
+      <div className={`rounded-panel border p-5 ${isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light shadow-xl shadow-gray-200/20'}`}>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h2 className="text-lg font-semibold flex items-center gap-2"><Database className="w-5 h-5 text-[var(--color-accent)]" /> Log de Auditoria</h2>
@@ -170,7 +170,7 @@ export const Security: React.FC = () => {
             <select 
               value={filterType} 
               onChange={e => { setFilterType(e.target.value); setPage(1); }}
-              className={`h-10 px-3 rounded-control text-sm font-medium border outline-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+              className={`h-10 px-3 rounded-control text-sm font-medium border outline-none ${isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light'}`}
             >
               <option value="">Todos os Eventos</option>
               <option value="login">Logins</option>
