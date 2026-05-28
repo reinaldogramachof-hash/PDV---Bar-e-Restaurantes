@@ -162,6 +162,7 @@ export const Delivery: React.FC = () => {
     confirm: confirmIFood,
     reject: rejectIFood,
     dispatch: dispatchIFood,
+    confirmPickup: confirmIFoodPickup,
     refresh: refreshIFood,
   } = useIFoodOrders();
   const isDark = theme === 'dark';
@@ -178,6 +179,9 @@ export const Delivery: React.FC = () => {
   const [entregadorModalOpen, setEntregadorModalOpen] = useState(false);
   const [editingEntregador, setEditingEntregador] = useState<Entregador>(() => emptyEntregador(currentEmpresa.id));
   const [showOnlyIFoodTests, setShowOnlyIFoodTests] = useState(false);
+  const [pickupValidationOrderId, setPickupValidationOrderId] = useState<string | null>(null);
+  const [pickupValidationInput, setPickupValidationInput] = useState('');
+  const [pickupValidationError, setPickupValidationError] = useState<string | null>(null);
 
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -391,6 +395,32 @@ export const Delivery: React.FC = () => {
     setItems(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, ...patch } : item));
   };
 
+  const openPickupValidation = (orderId: string) => {
+    setPickupValidationOrderId(orderId);
+    setPickupValidationInput('');
+    setPickupValidationError(null);
+  };
+
+  const closePickupValidation = () => {
+    setPickupValidationOrderId(null);
+    setPickupValidationInput('');
+    setPickupValidationError(null);
+  };
+
+  const submitPickupValidation = async () => {
+    if (!pickupValidationOrderId) return;
+    const targetOrder = mergedDeliveryOrders.find(order => order.id === pickupValidationOrderId);
+    if (!targetOrder || !targetOrder.pickupCode) return;
+
+    if (pickupValidationInput.trim() !== targetOrder.pickupCode.trim()) {
+      setPickupValidationError('Código incorreto. Verifique com o cliente.');
+      return;
+    }
+
+    await confirmIFoodPickup(targetOrder.id);
+    closePickupValidation();
+  };
+
   const exportFinancialCSV = () => {
     const rows = filteredDeliveredOrders.map(order => {
       const entregador = entregadores.find(item => item.id === order.entregadorId);
@@ -533,6 +563,7 @@ export const Delivery: React.FC = () => {
                       .filter((item, index, array) => array.findIndex(current => current.id === item.id) === index);
                     const delayed = isOrderDelayed(order, nowMs);
                     const isIFood = order.sourcePlatform === 'ifood';
+                    const isIFoodTakeout = isIFood && Boolean(order.pickupCode);
                     const ifoodCountdown = isIFood && order.status === 'recebido'
                       ? getIFoodCountdownLabel(order.createdAt, nowMs)
                       : null;
@@ -549,6 +580,11 @@ export const Delivery: React.FC = () => {
                             {isIFood && (
                               <span className="px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/30 text-[10px] font-semibold">
                                 iFood
+                              </span>
+                            )}
+                            {isIFoodTakeout && (
+                              <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/30 text-[10px] font-semibold">
+                                Retirada
                               </span>
                             )}
                             {delayed && (
@@ -570,6 +606,9 @@ export const Delivery: React.FC = () => {
                         <div className="space-y-1.5 text-xs text-muted">
                           <p className="flex gap-2"><MapPin className="w-3.5 h-3.5 shrink-0" /> <span>{order.address}</span></p>
                           <p className="flex gap-2"><Timer className="w-3.5 h-3.5 shrink-0" /> {getElapsedLabel(order.createdAt, nowMs)}</p>
+                          {isIFoodTakeout && (
+                            <p className="text-xl font-bold text-accent">Código: {order.pickupCode}</p>
+                          )}
                           {order.status === 'cancelado' && order.cancelReason && (
                             <p className="text-danger">Motivo: {order.cancelReason}</p>
                           )}
@@ -604,11 +643,17 @@ export const Delivery: React.FC = () => {
                                   Rejeitar
                                 </button>
                                 <button
-                                  onClick={() => void dispatchIFood(order.id)}
+                                  onClick={() => {
+                                    if (isIFoodTakeout) {
+                                      openPickupValidation(order.id);
+                                      return;
+                                    }
+                                    void dispatchIFood(order.id);
+                                  }}
                                   disabled={!canMutateOrder || (order.status !== 'preparo' && order.status !== 'recebido')}
                                   className="flex-1 h-9 rounded-control bg-accent text-white text-xs font-medium disabled:opacity-40"
                                 >
-                                  Despachar
+                                  {isIFoodTakeout ? 'Confirmar Retirada' : 'Despachar'}
                                 </button>
                               </>
                             ) : (
@@ -874,6 +919,45 @@ export const Delivery: React.FC = () => {
           </div>
         </section>
       )}
+
+      <AnimatePresence>
+        {pickupValidationOrderId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={closePickupValidation} className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.96 }}
+              className={`relative w-full max-w-md rounded-panel border shadow-2xl ${panelClass}`}
+            >
+              <div className="px-5 py-4 border-b border-current/10">
+                <h3 className="text-base font-semibold">Confirmar retirada</h3>
+                <p className="text-xs text-muted mt-1">Digite o código do cliente para concluir a entrega no balcão.</p>
+              </div>
+              <div className="p-5 space-y-3">
+                <label className="space-y-1.5 block">
+                  <span className="text-xs text-muted">Digite o código do cliente</span>
+                  <input
+                    value={pickupValidationInput}
+                    onChange={event => {
+                      setPickupValidationInput(event.target.value);
+                      if (pickupValidationError) setPickupValidationError(null);
+                    }}
+                    className={`w-full h-10 px-3 rounded-control border bg-transparent text-sm ${isDark ? 'border-border' : 'border-border-light'}`}
+                  />
+                </label>
+                {pickupValidationError && <p className="text-xs text-danger">{pickupValidationError}</p>}
+              </div>
+              <div className="flex gap-3 px-5 pb-5">
+                <button type="button" onClick={closePickupValidation} className="flex-1 h-10 rounded-control text-xs font-medium text-muted">Cancelar</button>
+                <button type="button" onClick={() => void submitPickupValidation()} className="flex-[2] h-10 rounded-control bg-accent text-white text-xs font-medium">
+                  Confirmar Retirada
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <SecurityGate
         isOpen={cancelSecurityOpen}

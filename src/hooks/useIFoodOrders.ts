@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useBase } from '../store/AppBaseContext';
 import type { DeliveryOrder } from '../types';
 import {
+  confirmIFoodPickup,
   confirmIFoodOrder,
   dispatchIFoodOrder,
   fetchIFoodOrders,
@@ -43,6 +44,7 @@ interface UseIFoodOrdersResult {
   confirm: (orderId: string) => Promise<void>;
   reject: (orderId: string, reason: string) => Promise<void>;
   dispatch: (orderId: string) => Promise<void>;
+  confirmPickup: (orderId: string) => Promise<void>;
   refresh: () => Promise<void>;
 }
 
@@ -177,6 +179,11 @@ export function useIFoodOrders(): UseIFoodOrdersResult {
     updateLocalOrder(orderId, order => ({ ...order, status: 'rota', dispatchedAt: new Date().toISOString() }));
   }, [updateLocalOrder]);
 
+  const confirmPickup = useCallback(async (orderId: string) => {
+    await confirmIFoodPickup(orderId);
+    updateLocalOrder(orderId, order => ({ ...order, status: 'entregue', deliveredAt: new Date().toISOString() }));
+  }, [updateLocalOrder]);
+
   return useMemo(() => ({
     orders,
     loading,
@@ -185,6 +192,7 @@ export function useIFoodOrders(): UseIFoodOrdersResult {
     confirm,
     reject,
     dispatch,
+    confirmPickup,
     refresh,
-  }), [orders, loading, error, config, confirm, reject, dispatch, refresh]);
+  }), [orders, loading, error, config, confirm, reject, dispatch, confirmPickup, refresh]);
 }

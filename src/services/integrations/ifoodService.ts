@@ -38,6 +38,9 @@ export interface IFoodOrder {
       complement?: string;
     };
   };
+  takeout?: {
+    pickupCode?: string;
+  };
   total: {
     subTotal: number;
     deliveryFee: number;
@@ -111,6 +114,7 @@ export function mapIFoodToDeliveryOrder(order: IFoodOrder, empresaId: string): D
     externalId: order.id,
     externalReference: order.reference,
     isTest: order.isTest ?? false,
+    pickupCode: order.type === 'TAKEOUT' ? order.takeout?.pickupCode : undefined,
   };
 }
 
@@ -158,6 +162,7 @@ export async function fetchMockIFoodOrders(): Promise<IFoodOrder[]> {
         { id: 'i-4', name: 'Suco Natural', quantity: 2, unitPrice: 9.5, totalPrice: 19 },
       ],
       payments: [{ name: 'Cartao de Credito', code: 'CREDIT', value: 51, prepaid: true }],
+      takeout: { pickupCode: '4521' },
       total: { subTotal: 51, deliveryFee: 0, benefits: 0, orderAmount: 51 },
       isTest: true,
     },
@@ -207,5 +212,10 @@ export async function rejectIFoodOrder(_orderId: string, _reason: string): Promi
 }
 
 export async function dispatchIFoodOrder(_orderId: string): Promise<void> {
+  return Promise.resolve();
+}
+
+export async function confirmIFoodPickup(_orderId: string): Promise<void> {
+  // Endpoint real: POST /orders/{orderId}/pickup (após homologação)
   return Promise.resolve();
 }

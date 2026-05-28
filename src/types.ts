@@ -35,6 +35,9 @@ export interface Empresa extends BaseEntity {
   document: string;
   plano: Plano;
   licenseStatus: LicenseStatus;
+  packId?: string;
+  addons?: string[];
+  active?: boolean;
 }
 
 export interface Usuario extends BaseEntity {
@@ -387,6 +390,7 @@ export interface DeliveryOrder {
   externalId?: string;
   externalReference?: string;
   isTest?: boolean;
+  pickupCode?: string;
 }
 
 export interface Insight {
