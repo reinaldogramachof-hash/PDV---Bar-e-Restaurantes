@@ -4,6 +4,8 @@ import { Order, PartialPaymentItem, PaymentItem, PaymentMethod } from '../types'
 import { X } from 'lucide-react';
 import { ReceiptModal } from './ReceiptModal';
 import { calcEarnedPoints, getCustomerPoints } from '../services/salesService';
+import { useNFCe } from '../hooks/useNFCe';
+import type { NfceConfig } from '../types';
 
 interface CheckoutModalProps {
   order: Order;
@@ -38,6 +40,14 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
   const [amountInput, setAmountInput] = useState('');
   const [receiptOrder, setReceiptOrder] = useState<Order | null>(null);
   const [redeemLoyalty, setRedeemLoyalty] = useState(() => hasPartialPayments ? (order.loyaltyDiscount ?? 0) > 0 : false);
+
+  const { emitirNFCe, fetchConfig, isEmitting } = useNFCe();
+  const [nfceConfig, setNfceConfig] = useState<NfceConfig | null>(null);
+  const [nfceError, setNfceError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchConfig().then(setNfceConfig);
+  }, []);
 
   const serviceCharge = includeService && isMesa ? order.subtotal * 0.1 : 0;
   const customer = customers.find(item => item.id === order.customerId);
@@ -144,6 +154,26 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
       ],
       partialPayments
     );
+  };
+
+  const handleEmitNFCeAndFinish = async () => {
+    if (!nfceConfig?.enabled) return;
+    
+    const finalPayments = [
+      ...partialPayments.map(payment => ({ method: payment.method, amount: payment.amount })),
+      ...payments,
+    ];
+    
+    const orderSnapshot = buildOrderSnapshot(partialPayments);
+    orderSnapshot.payments = finalPayments; // para que a NF-e pegue os pagamentos corretos
+
+    setNfceError(null);
+    try {
+      await emitirNFCe(orderSnapshot, nfceConfig);
+      finalizeOrder(finalPayments, partialPayments);
+    } catch (err) {
+      setNfceError(err instanceof Error ? err.message : 'Erro ao emitir NFC-e.');
+    }
   };
 
   if (receiptOrder) {
@@ -426,13 +456,31 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({ order, onClose, on
               Confirmar Parcial
             </button>
           ) : (
-            <button
-              onClick={handleFinish}
-              disabled={amountPaid < totalAmount - 0.01}
-              className="h-10 px-4 rounded-control bg-success text-white text-xs font-medium shadow-lg shadow-[var(--color-success)]/20 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Confirmar Pagamento
-            </button>
+            <>
+              {nfceConfig?.enabled && (
+                <div className="flex flex-col gap-1 w-full">
+                  {nfceError && (
+                    <div className="rounded-control border border-danger/40 bg-danger/10 p-2 text-xs text-danger">
+                      {nfceError}
+                    </div>
+                  )}
+                  <button
+                    onClick={handleEmitNFCeAndFinish}
+                    disabled={amountPaid < totalAmount - 0.01 || isEmitting}
+                    className="h-10 px-4 rounded-control bg-purple-600 text-white text-xs font-medium hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isEmitting ? 'Emitindo...' : 'Emitir NFC-e'}
+                  </button>
+                </div>
+              )}
+              <button
+                onClick={handleFinish}
+                disabled={amountPaid < totalAmount - 0.01 || isEmitting}
+                className="h-10 px-4 rounded-control bg-success text-white text-xs font-medium shadow-lg shadow-[var(--color-success)]/20 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Confirmar Pagamento
+              </button>
+            </>
           )}
         </div>
       </div>

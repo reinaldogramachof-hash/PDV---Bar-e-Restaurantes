@@ -3,12 +3,13 @@ import { useApp } from '../store/AppContext';
 import { 
   Settings as SettingsIcon, Store, Printer, Database, Save, 
   Download, Upload, RefreshCw, Check, AlertTriangle, ShieldCheck, 
-  Globe, Phone, MapPin, FileText, Layout, Crown, ChefHat, QrCode, Copy
+  Globe, Phone, MapPin, FileText, Layout, Crown, ChefHat, QrCode, Copy, Receipt
 } from 'lucide-react';
 import { addonLabels, addonModules, addonPricing, getPlanModules, ModuleId, planDescriptions, planPricing, PLENA_WHATSAPP } from '../domain/saas';
 import { useAudit } from '../hooks/useAudit';
 import { motion } from 'motion/react';
-import { AppSettings } from '../types';
+import { AppSettings, NfceConfig } from '../types';
+import { useNFCe } from '../hooks/useNFCe';
 import QRCode from 'qrcode';
 
 export const Settings: React.FC = () => {
@@ -16,8 +17,25 @@ export const Settings: React.FC = () => {
   const isDark = theme === 'dark';
 
   const [formData, setFormData] = useState<AppSettings>(settings);
-  const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'kitchen' | 'data' | 'plan'>('store');
+  const [activeTab, setActiveTab] = useState<'store' | 'printer' | 'kitchen' | 'data' | 'plan' | 'nfce'>('store');
   const [isSaving, setIsSaving] = useState(false);
+
+  const { fetchConfig, saveConfig } = useNFCe();
+  const [nfceConfig, setNfceConfig] = useState<Partial<NfceConfig>>({
+    enabled: false,
+    cnpj: '',
+    tokenHomologacao: '',
+    tokenProducao: '',
+    cscId: '',
+    cscToken: '',
+    ambiente: 'homologacao'
+  });
+
+  React.useEffect(() => {
+    fetchConfig().then(config => {
+      if (config) setNfceConfig(config);
+    });
+  }, []);
   const [waiterAppQr, setWaiterAppQr] = useState('');
   const [copiedWaiterUrl, setCopiedWaiterUrl] = useState(false);
   const { log } = useAudit();
@@ -29,9 +47,10 @@ export const Settings: React.FC = () => {
       .catch(() => setWaiterAppQr(''));
   }, [waiterAppUrl]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
     updateSettings(formData);
+    await saveConfig(nfceConfig);
     setTimeout(() => setIsSaving(false), 800);
   };
 
@@ -62,6 +81,7 @@ export const Settings: React.FC = () => {
     { id: 'store', label: 'Estabelecimento', icon: Store },
     { id: 'printer', label: 'Impressão', icon: Printer },
     { id: 'kitchen', label: 'Cozinha', icon: ChefHat },
+    { id: 'nfce', label: 'Emissor Fiscal', icon: Receipt },
     { id: 'data', label: 'Dados & Backup', icon: Database },
     { id: 'plan', label: 'Plano Atual', icon: Crown },
   ];
@@ -103,10 +123,10 @@ export const Settings: React.FC = () => {
       : 'Gestão';
 
   const licenseBadge = currentEmpresa.licenseStatus === 'active'
-    ? { label: 'Ativa', className: 'bg-[var(--color-success)]/15 text-[var(--color-success)]' }
+    ? { label: 'Ativa', className: 'bg-success/15 text-success' }
     : currentEmpresa.licenseStatus === 'trial'
-      ? { label: 'Trial', className: 'bg-[var(--color-warning)]/15 text-[var(--color-warning)]' }
-      : { label: 'Suspensa', className: 'bg-[var(--color-danger)]/15 text-[var(--color-danger)]' };
+      ? { label: 'Trial', className: 'bg-warning/15 text-warning' }
+      : { label: 'Suspensa', className: 'bg-danger/15 text-danger' };
   const extraModules = ((currentEmpresa as unknown as { extraModules?: string[] }).extraModules ?? []);
   const availableAddons = addonModules.filter(moduleId =>
     !getPlanModules(currentEmpresa.plano).includes(moduleId) && !extraModules.includes(moduleId)
@@ -114,7 +134,11 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="space-y-5 animate-in fade-in duration-700 pb-8">
-      <section className="p-5 rounded-panel border border-[var(--color-border)] bg-[var(--color-elevated)] space-y-4">
+      <section className={`p-5 rounded-panel border space-y-4 ${
+        isDark 
+          ? 'bg-elevated border-border text-text' 
+          : 'bg-white border-border-light text-text-light shadow-xl shadow-gray-200/10'
+      }`}>
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-control bg-accent/10 flex items-center justify-center">
@@ -124,16 +148,20 @@ export const Settings: React.FC = () => {
           </div>
           <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${licenseBadge.className}`}>{licenseBadge.label}</span>
         </div>
-        <p className="text-xs text-muted">{planDescriptions[currentEmpresa.plano]}</p>
+        <p className={`text-xs ${isDark ? 'text-muted' : 'text-muted-light'}`}>{planDescriptions[currentEmpresa.plano]}</p>
         <div className="flex items-center justify-between">
           <p className="text-lg font-semibold">R$ {planPricing[currentEmpresa.plano]}/mês</p>
-          <p className="text-xs text-muted">Renovação: {currentEmpresa.licenseStatus}</p>
+          <p className={`text-xs ${isDark ? 'text-muted' : 'text-muted-light'}`}>Renovação: {currentEmpresa.licenseStatus}</p>
         </div>
-        <div className="border-t border-[var(--color-border)] pt-4 space-y-2">
-          <p className="text-xs text-muted">Módulos incluídos</p>
+        <div className={`border-t pt-4 space-y-2 ${isDark ? 'border-border' : 'border-border-light'}`}>
+          <p className={`text-xs ${isDark ? 'text-muted' : 'text-muted-light'}`}>Módulos incluídos</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
             {getPlanModules(currentEmpresa.plano).map(moduleId => (
-              <div key={moduleId} className="px-2.5 py-1.5 text-[11px] rounded-control border border-[var(--color-border)] flex items-center gap-2">
+              <div key={moduleId} className={`px-2.5 py-1.5 text-[11px] rounded-control border flex items-center gap-2 ${
+                isDark 
+                  ? 'border-border bg-white/5 text-text' 
+                  : 'border-border-light bg-gray-50 text-text-light'
+              }`}>
                 <Check className="w-3 h-3 text-success" />
                 <span>{moduleNames[moduleId]}</span>
               </div>
@@ -141,29 +169,37 @@ export const Settings: React.FC = () => {
           </div>
         </div>
         {availableAddons.length > 0 && (
-          <div className="border-t border-[var(--color-border)] pt-4 space-y-2">
-            <p className="text-xs text-muted">Add-ons disponíveis</p>
+          <div className={`border-t pt-4 space-y-2 ${isDark ? 'border-border' : 'border-border-light'}`}>
+            <p className={`text-xs ${isDark ? 'text-muted' : 'text-muted-light'}`}>Add-ons disponíveis</p>
             <div className="space-y-2">
               {availableAddons.map(moduleId => (
-                <div key={moduleId} className="p-2.5 rounded-control border border-[var(--color-border)] flex items-center justify-between gap-2">
+                <div key={moduleId} className={`p-2.5 rounded-control border flex items-center justify-between gap-2 ${
+                  isDark 
+                    ? 'border-border bg-white/5 text-text' 
+                    : 'border-border-light bg-gray-50 text-text-light'
+                }`}>
                   <span className="text-xs">{addonLabels[moduleId]} +R$ {addonPricing[moduleId]}/mês</span>
-                  <button className="h-7 px-3 rounded-control border border-[var(--color-border)] text-xs font-medium">Adicionar</button>
+                  <button className={`h-7 px-3 rounded-control border text-xs font-medium ${
+                    isDark 
+                      ? 'border-border text-text hover:bg-white/5' 
+                      : 'border-border-light text-text-light hover:bg-gray-100'
+                  }`}>Adicionar</button>
                 </div>
               ))}
             </div>
           </div>
         )}
         {currentEmpresa.plano !== 'gestao' && (
-          <div className="border-t border-[var(--color-border)] pt-4 space-y-2">
+          <div className={`border-t pt-4 space-y-2 ${isDark ? 'border-border' : 'border-border-light'}`}>
             <a
               href={`https://wa.me/${PLENA_WHATSAPP}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex h-10 px-4 rounded-control bg-accent text-white text-xs font-medium items-center justify-center hover:bg-[var(--color-accent-hover)]"
+              className="inline-flex h-10 px-4 rounded-control bg-accent text-white text-xs font-medium items-center justify-center hover:bg-accent-hover"
             >
               Fazer upgrade
             </a>
-            <p className="text-xs text-muted">Falar com especialista</p>
+            <p className={`text-xs ${isDark ? 'text-muted' : 'text-muted-light'}`}>Falar com especialista</p>
           </div>
         )}
       </section>
@@ -190,11 +226,15 @@ export const Settings: React.FC = () => {
             )}
           </div>
           <div className="space-y-2 min-w-0">
-            <p className="text-xs text-muted break-all">{waiterAppUrl}</p>
+            <p className={`text-xs break-all ${isDark ? 'text-muted' : 'text-muted-light'}`}>{waiterAppUrl}</p>
             <div className="flex gap-2">
               <button
                 onClick={copyWaiterUrl}
-                className="h-9 px-3 rounded-control border border-[var(--color-border)] text-xs font-medium inline-flex items-center gap-2"
+                className={`h-9 px-3 rounded-control border text-xs font-medium inline-flex items-center gap-2 ${
+                  isDark 
+                    ? 'border-border text-text hover:bg-white/5' 
+                    : 'border-border-light text-text-light hover:bg-gray-50'
+                }`}
               >
                 <Copy className="w-3.5 h-3.5" />
                 {copiedWaiterUrl ? 'Copiado' : 'Copiar URL'}
@@ -203,7 +243,7 @@ export const Settings: React.FC = () => {
                 href={waiterAppUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="h-9 px-3 rounded-control bg-accent text-white text-xs font-medium inline-flex items-center"
+                className="h-9 px-3 rounded-control bg-accent hover:bg-accent-hover text-white text-xs font-medium inline-flex items-center"
               >
                 Abrir Comanda
               </a>
@@ -399,6 +439,8 @@ export const Settings: React.FC = () => {
             </div>
           )}
 
+
+
           {activeTab === 'kitchen' && (
             <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
               <div className="flex items-center gap-3 border-b border-dashed border-current/10 pb-4">
@@ -443,6 +485,104 @@ export const Settings: React.FC = () => {
                     <p className="text-sm font-semibold">Modo Interativo</p>
                     <p className="text-xs text-muted mt-1">Cozinheiro altera o status dos itens direto no KDS.</p>
                   </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'nfce' && (
+            <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-300">
+              <div className="flex items-center gap-3 border-b border-dashed border-current/10 pb-4">
+                <div className="w-9 h-9 rounded-control bg-purple-500/10 flex items-center justify-center">
+                  <Receipt className="w-4 h-4 text-purple-500" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold">Emissor Fiscal NFC-e</h3>
+                  <p className="text-xs text-muted">Configurações de integração com a Focus NF-e</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className={`px-4 py-3 rounded-panel flex items-center justify-between ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-control flex items-center justify-center ${nfceConfig.enabled ? 'bg-emerald-500/10 text-emerald-500' : 'bg-gray-500/10 text-gray-500'}`}>
+                      <Check className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-medium">Habilitar Emissão NFC-e</h4>
+                      <p className="text-xs text-muted">Exibe o botão de emitir NFC-e ao fechar vendas</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setNfceConfig({ ...nfceConfig, enabled: !nfceConfig.enabled })}
+                    className={`w-12 h-6 rounded-full transition-all relative ${nfceConfig.enabled ? 'bg-emerald-500' : 'bg-gray-300'}`}
+                  >
+                    <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all ${nfceConfig.enabled ? 'left-6' : 'left-0.5'}`} />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted ml-1">CNPJ Emitente</label>
+                    <input
+                      value={nfceConfig.cnpj || ''}
+                      onChange={e => setNfceConfig({ ...nfceConfig, cnpj: e.target.value })}
+                      placeholder="Somente números"
+                      className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted ml-1">Ambiente</label>
+                    <select
+                      value={nfceConfig.ambiente || 'homologacao'}
+                      onChange={e => setNfceConfig({ ...nfceConfig, ambiente: e.target.value as any })}
+                      className={`w-full h-10 px-3 rounded-control border outline-none text-sm appearance-none ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+                    >
+                      <option value="homologacao">Homologação (Testes)</option>
+                      <option value="producao">Produção</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted ml-1">Token Focus NF-e (Produção)</label>
+                    <input
+                      type="password"
+                      value={nfceConfig.tokenProducao || ''}
+                      onChange={e => setNfceConfig({ ...nfceConfig, tokenProducao: e.target.value })}
+                      className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted ml-1">Token Focus NF-e (Homologação)</label>
+                    <input
+                      type="password"
+                      value={nfceConfig.tokenHomologacao || ''}
+                      onChange={e => setNfceConfig({ ...nfceConfig, tokenHomologacao: e.target.value })}
+                      className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted ml-1">CSC ID (Id do Código de Segurança)</label>
+                    <input
+                      value={nfceConfig.cscId || ''}
+                      onChange={e => setNfceConfig({ ...nfceConfig, cscId: e.target.value })}
+                      placeholder="Ex: 000001"
+                      className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-muted ml-1">CSC Token (Código de Segurança)</label>
+                    <input
+                      type="password"
+                      value={nfceConfig.cscToken || ''}
+                      onChange={e => setNfceConfig({ ...nfceConfig, cscToken: e.target.value })}
+                      className={`w-full h-10 px-3 rounded-control border outline-none text-sm focus:ring-2 focus:ring-[var(--color-accent)]/20 ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+                    />
+                  </div>
                 </div>
               </div>
             </div>

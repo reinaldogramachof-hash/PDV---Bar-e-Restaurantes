@@ -549,3 +549,78 @@ export interface AppSettings {
   };
 }
 
+// ─── NFC-e Config & Focus NFE ────────────────────────────────────────────────
+
+export interface NfceConfig {
+  id: string;
+  empresaId: string;
+  enabled: boolean;
+  cnpj: string;
+  tokenHomologacao: string;
+  tokenProducao: string;
+  cscId: string;
+  cscToken: string;
+  ambiente: 'homologacao' | 'producao';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface NfceItem {
+  numero_item: string;
+  codigo_produto: string;
+  descricao: string;
+  cfop: string;
+  unidade_comercial: string;
+  quantidade_comercial: string;
+  valor_unitario_comercial: string;
+  valor_bruto: string;
+  icms_origem: string;
+  icms_situacao_tributaria: string;
+  ncm: string;
+  pis_situacao_tributaria?: string;
+  cofins_situacao_tributaria?: string;
+}
+
+export interface NfcePagamento {
+  forma_pagamento: string;
+  valor_pagamento: string;
+}
+
+export interface NfceEmissaoParams {
+  natureza_operacao: string;
+  data_emissao: string;
+  local_destino: '1' | '2';
+  presenca_comprador: '1' | '4'; // 1: Operação presencial, 4: NFC-e em operação com entrega a domicílio
+  cnpj_emitente: string;
+  itens: NfceItem[];
+  pagamentos: NfcePagamento[];
+  modalidade_frete: '9'; // 9: Sem frete
+}
+
+export interface NfceResult {
+  status: string; // ex: "autorizado", "erro_autorizacao", "processando"
+  mensagem?: string;
+  caminho_xml_nota_fiscal?: string;
+  caminho_danfe?: string;
+  qrcode_url?: string;
+  numero?: string;
+  serie?: string;
+  chave_nfe?: string;
+  protocolo?: string;
+  erros?: Array<{codigo: string; mensagem: string}>;
+}
+
+export interface NfceLog extends BaseEntity {
+  orderId?: string;
+  ref: string;
+  status: 'autorizado' | 'erro' | 'cancelado' | 'processando';
+  ambiente: 'homologacao' | 'producao';
+  numero?: string;
+  serie?: string;
+  chave?: string;
+  xmlUrl?: string;
+  danfeUrl?: string;
+  errorMessage?: string;
+  timestamp: string;
+}
+
