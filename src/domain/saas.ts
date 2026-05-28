@@ -1,13 +1,14 @@
-import { Expense, Permission, Plano, UserRole } from '../types';
+﻿import { Expense, Permission, Plano, UserRole } from '../types';
 
 const viteEnv = (import.meta as unknown as { env?: Record<string, string> }).env || {};
 
-export const APP_NAME = viteEnv.VITE_APP_NAME || 'Gestão Gastro';
+export const APP_NAME = viteEnv.VITE_APP_NAME || 'Plena Gastro Manager';
 export const DEFAULT_EMPRESA_ID = viteEnv.VITE_DEFAULT_EMPRESA_ID || 'demo-empresa';
 export const PLENA_EMPRESA_ID = viteEnv.VITE_PLENA_EMPRESA_ID || 'demo-empresa';
 export const LICENSE_STATUS_URL = viteEnv.VITE_LICENSE_STATUS_URL || '';
 export const STORAGE_PREFIX = 'gestao-gastro';
-export const PLENA_WHATSAPP = '5511999999999';
+export const PLENA_WHATSAPP = '5512992191018';
+export const PLENA_CNPJ = '59.779.242/0001-78';
 
 export type ModuleId =
   | 'dashboard'
@@ -51,14 +52,14 @@ export const packLabels: Record<PackId, string> = {
   delivery: 'Pack Delivery',
   lanchonete: 'Pack Lanchonete',
   bar: 'Pack Bar & Mesas',
-  autonomo: 'Pack Autônomo',
+  autonomo: 'Pack AutÃ´nomo',
 };
 
 export const packDescriptions: Record<PackId, string> = {
-  delivery: 'PDV, Cardápio Digital, Pedidos Online, Delivery e Dashboard',
-  lanchonete: 'PDV, KDS Cozinha, Cardápio e Financeiro',
-  bar: 'Mesas, PDV, Clientes e Promoções',
-  autonomo: 'PDV solo, Caixa e Cardápio básico',
+  delivery: 'PDV, CardÃ¡pio Digital, Pedidos Online, Delivery e Dashboard',
+  lanchonete: 'PDV, KDS Cozinha, CardÃ¡pio e Financeiro',
+  bar: 'Mesas, PDV, Clientes e PromoÃ§Ãµes',
+  autonomo: 'PDV solo, Caixa e CardÃ¡pio bÃ¡sico',
 };
 
 export type AddonModuleId = 'cardapio-digital' | 'delivery' | 'intelligence' | 'dashboard' | 'estoque';
@@ -72,9 +73,9 @@ export const planPricing: Record<Plano, number> = {
 };
 
 export const planDescriptions: Record<Plano, string> = {
-  essencial: 'Começa a organizar sua operação hoje',
-  profissional: 'Controle total da operação',
-  gestao: 'Inteligência para escalar',
+  essencial: 'ComeÃ§a a organizar sua operaÃ§Ã£o hoje',
+  profissional: 'Controle total da operaÃ§Ã£o',
+  gestao: 'InteligÃªncia para escalar',
 };
 
 export const packPricing: Record<PackId, number> = {
@@ -93,11 +94,11 @@ export const addonPricing: Record<AddonModuleId, number> = {
 };
 
 export const addonLabels: Record<AddonModuleId, string> = {
-  'cardapio-digital': 'Cardápio Digital QR',
+  'cardapio-digital': 'CardÃ¡pio Digital QR',
   delivery: 'Delivery + Motoboys',
-  intelligence: 'Inteligência IA',
+  intelligence: 'InteligÃªncia IA',
   dashboard: 'Dashboard Analytics',
-  estoque: 'Estoque Avançado',
+  estoque: 'Estoque AvanÃ§ado',
 };
 
 export const rolePermissions: Record<UserRole, Permission[]> = {

@@ -26,7 +26,6 @@ import {
   Truck,
   UserCog,
   Users,
-  Utensils,
   UtensilsCrossed,
   Wallet,
   Warehouse,
@@ -66,12 +65,12 @@ const DateTimeDisplay = () => {
 };
 
 const moduleMeta: Record<ModuleId, { icon: React.ComponentType<{ className?: string }>; label: string }> = {
-  pdv: { icon: ShoppingCart, label: 'PDV (Balcao)' },
+  pdv: { icon: ShoppingCart, label: 'PDV (Balcão)' },
   mesas: { icon: LayoutGrid, label: 'Mesas' },
   cozinha: { icon: ChefHat, label: 'Cozinha' },
   delivery: { icon: Bike, label: 'Delivery' },
   'pedidos-online': { icon: Smartphone, label: 'Pedidos Online' },
-  'cardapio-digital': { icon: UtensilsCrossed, label: 'Cardapio Digital' },
+  'cardapio-digital': { icon: UtensilsCrossed, label: 'Cardápio Digital' },
   clientes: { icon: Users, label: 'Clientes' },
   vendas: { icon: TrendingUp, label: 'Vendas' },
   produtos: { icon: Package, label: 'Produtos' },
@@ -81,10 +80,10 @@ const moduleMeta: Record<ModuleId, { icon: React.ComponentType<{ className?: str
   caixa: { icon: Wallet, label: 'Caixa' },
   relatorios: { icon: BarChart2, label: 'Financeiro' },
   dashboard: { icon: LayoutDashboard, label: 'Dashboard' },
-  intelligence: { icon: BrainCircuit, label: 'Inteligencia' },
-  diario: { icon: NotebookPen, label: 'Diario' },
-  configuracoes: { icon: Settings, label: 'Configuracoes' },
-  seguranca: { icon: ShieldCheck, label: 'Seguranca' },
+  intelligence: { icon: BrainCircuit, label: 'Inteligência' },
+  diario: { icon: NotebookPen, label: 'Diário' },
+  configuracoes: { icon: Settings, label: 'Configurações' },
+  seguranca: { icon: ShieldCheck, label: 'Segurança' },
   suporte: { icon: HeadphonesIcon, label: 'Suporte' },
   manual: { icon: BookMarked, label: 'Manual de Uso' },
 };
@@ -93,7 +92,7 @@ const SIDEBAR_GROUPS = [
   { label: 'Operacional', modules: ['pdv', 'mesas', 'cozinha', 'delivery', 'pedidos-online'] },
   { label: 'Comercial', modules: ['cardapio-digital', 'clientes', 'vendas'] },
   { label: 'Administrativo', modules: ['produtos', 'estoque', 'fornecedores', 'colaboradores', 'caixa', 'relatorios'] },
-  { label: 'Gestao', modules: ['dashboard', 'intelligence', 'diario'] },
+  { label: 'Gestão', modules: ['dashboard', 'intelligence', 'diario'] },
   { label: 'Sistema', modules: ['configuracoes', 'seguranca', 'suporte', 'manual'] },
 ] as const;;
 
@@ -111,7 +110,7 @@ const viewLabels: Record<View, string> = {
   estoque: 'Estoque',
   caixa: 'Caixa',
   relatorios: 'Financeiro',
-  diario: 'Diario',
+  diario: 'Diário',
   configuracoes: 'Configurações',
   manual: 'Manual de Uso',
   clientes: 'Clientes',
@@ -192,9 +191,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
         >
           <div className={`flex items-center border-b min-h-16 ${isDark ? 'border-border' : 'border-border-light'} ${isCollapsed ? 'justify-center p-0' : 'px-5 justify-between'}`}>
             <div className={`flex items-center gap-3 overflow-hidden ${isCollapsed ? 'justify-center' : ''}`}>
-              <div className="w-8 h-8 bg-accent rounded-panel flex-shrink-0 flex items-center justify-center text-white">
-                <Utensils className="w-4 h-4" />
-              </div>
+              <img src="/favicon.png" alt="PGM" className="w-8 h-8 rounded-lg flex-shrink-0 object-cover" />
               {!isCollapsed && (
                 <motion.span
                   initial={{ opacity: 0, x: -10 }}
