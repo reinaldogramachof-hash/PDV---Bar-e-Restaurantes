@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { AnimatePresence, motion } from 'motion/react';
-import { APP_NAME, canAccessModule, canAccessViaPackOrAddon, ModuleId } from '../domain/saas';
+import { APP_NAME, canAccessModule, canAccessViaPackOrAddon, ModuleId, PLENA_EMPRESA_ID } from '../domain/saas';
 import { LicenseCheckResult } from '../services/licenseService';
 import { fetchFeed } from '../services/notificationService';
 import { LicenseBanner } from './LicenseBanner';
@@ -217,7 +217,7 @@ export const Layout: React.FC<LayoutProps> = ({ currentView, setCurrentView, lic
           </div>
 
           <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4 scrollbar-none">
-            {currentUser.role === 'master' && (
+            {currentUser.role === 'master' && currentEmpresa.id === PLENA_EMPRESA_ID && (
               <div className="space-y-1 pb-1">
                 {!isCollapsed && (
                   <div className="px-3 pt-2 pb-1">

@@ -565,6 +565,7 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
   panelClass,
 }) => {
   const { currentUser } = useApp();
+  const profileRoleOptions = ['master', 'gerente', 'caixa', 'garcom', 'cozinha', 'estoque', 'suporte'] as const;
   const [detailTab, setDetailTab] = useState<DetailTab>('dados');
   const [detail, setDetail] = useState<EmpresaDetail | null>(null);
   const [profiles, setProfiles] = useState<ProfileSummary[]>([]);
@@ -704,6 +705,22 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
       updated_at: new Date().toISOString(),
     }, { onConflict: 'empresa_id,module_id' });
     await refreshModules();
+  };
+
+  const handleUpdateProfileRole = async (profileId: string, newRole: string) => {
+    await supabase
+      .from('profiles')
+      .update({ role: newRole, updated_at: new Date().toISOString() })
+      .eq('id', profileId);
+    setProfiles(prev => prev.map(profile => (profile.id === profileId ? { ...profile, role: newRole } : profile)));
+  };
+
+  const handleToggleProfileActive = async (profileId: string, currentActive: boolean) => {
+    await supabase
+      .from('profiles')
+      .update({ active: !currentActive, updated_at: new Date().toISOString() })
+      .eq('id', profileId);
+    setProfiles(prev => prev.map(profile => (profile.id === profileId ? { ...profile, active: !currentActive } : profile)));
   };
 
   const handleSaveDados = async () => {
@@ -972,7 +989,43 @@ const EmpresaDetailModal: React.FC<EmpresaDetailModalProps> = ({
 
               <div className="space-y-3 border-t pt-4">
                 <h5 className="text-xs font-semibold text-muted">Usuários desta empresa</h5>
-                {loadingProfiles ? <div className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} /> : profiles.length === 0 ? <p className="text-xs text-muted">Nenhum usuário cadastrado</p> : <div className="space-y-2">{profiles.map(profile => <div key={profile.id} className={`p-2 rounded-control border text-xs flex justify-between ${elevatedClass}`}><span>{profile.name} ({profile.role})</span><span className="text-muted">{profile.active ? 'ativo' : 'inativo'}</span></div>)}</div>}
+                {loadingProfiles ? (
+                  <div className={`h-10 rounded-panel border animate-pulse ${elevatedClass}`} />
+                ) : profiles.length === 0 ? (
+                  <p className="text-xs text-muted">Nenhum usuário cadastrado</p>
+                ) : (
+                  <div className="space-y-2">
+                    {profiles.map(profile => (
+                      <div key={profile.id} className={`p-3 rounded-control border flex items-center justify-between gap-3 ${elevatedClass}`}>
+                        <div className="text-xs">
+                          <span className="font-medium">{profile.name}</span>
+                          <span className="text-muted ml-1">({profile.role})</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={profile.role}
+                            onChange={event => void handleUpdateProfileRole(profile.id, event.target.value)}
+                            className={`h-8 px-2 rounded-control border text-xs ${elevatedClass}`}
+                          >
+                            {profileRoleOptions.map(roleOption => (
+                              <option key={roleOption} value={roleOption}>
+                                {roleOption}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => void handleToggleProfileActive(profile.id, profile.active)}
+                            className={`h-8 px-3 rounded-control border text-xs font-medium ${
+                              profile.active ? 'text-success border-success/30' : 'text-muted'
+                            }`}
+                          >
+                            {profile.active ? 'ativo' : 'inativo'}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end pt-2">

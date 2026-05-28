@@ -4,6 +4,7 @@ const viteEnv = (import.meta as unknown as { env?: Record<string, string> }).env
 
 export const APP_NAME = viteEnv.VITE_APP_NAME || 'Gestão Gastro';
 export const DEFAULT_EMPRESA_ID = viteEnv.VITE_DEFAULT_EMPRESA_ID || 'demo-empresa';
+export const PLENA_EMPRESA_ID = viteEnv.VITE_PLENA_EMPRESA_ID || 'demo-empresa';
 export const LICENSE_STATUS_URL = viteEnv.VITE_LICENSE_STATUS_URL || '';
 export const STORAGE_PREFIX = 'gestao-gastro';
 export const PLENA_WHATSAPP = '5511999999999';
