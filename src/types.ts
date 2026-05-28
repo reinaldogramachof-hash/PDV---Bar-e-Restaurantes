@@ -381,6 +381,10 @@ export interface DeliveryOrder {
   createdAt: string;
   dispatchedAt?: string;
   deliveredAt?: string;
+  sourcePlatform?: 'ifood' | 'rappi' | '99food' | 'aiqfome' | 'manual';
+  externalId?: string;
+  externalReference?: string;
+  isTest?: boolean;
 }
 
 export interface Insight {

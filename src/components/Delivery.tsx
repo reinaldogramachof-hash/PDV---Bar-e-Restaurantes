@@ -18,8 +18,9 @@ import { DeliveryOrder, Entregador, PaymentMethod } from '../types';
 import { useApp } from '../store/AppContext';
 import { calcDeliveryFinancials, calcEntregadorRepasseRows, syncToReports } from '../services/deliveryService';
 import { SecurityGate } from './SecurityGate';
+import { useIFoodOrders } from '../hooks/useIFoodOrders';
 
-type Tab = 'fila' | 'novo' | 'entregadores' | 'financeiro';
+type Tab = 'fila' | 'novo' | 'entregadores' | 'financeiro' | 'ifood';
 type Period = 'hoje' | 'semana' | 'mes';
 type DeliveryItemDraft = { name: string; qty: number; price: number };
 
@@ -116,9 +117,17 @@ const isOrderDelayed = (order: DeliveryOrder, nowMs: number) => {
   return false;
 };
 
+const getIFoodCountdownLabel = (createdAt: string, nowMs: number) => {
+  const remainingMs = 8 * 60 * 1000 - (nowMs - new Date(createdAt).getTime());
+  if (remainingMs <= 0) return { label: 'Expirado', expired: true };
+  const minutes = Math.floor(remainingMs / 60000);
+  const seconds = Math.floor((remainingMs % 60000) / 1000);
+  return { label: `${minutes}:${String(seconds).padStart(2, '0')}`, expired: false };
+};
+
 const repasseModelLabel = (repasseType?: Entregador['repasseType']) => {
   if (repasseType === 'por_entrega') return 'Por entrega';
-  if (repasseType === 'fixo_diario') return 'Diaria fixa';
+  if (repasseType === 'fixo_diario') return 'Diária fixa';
   return '—';
 };
 
@@ -145,6 +154,16 @@ export const Delivery: React.FC = () => {
     addEntregador,
     updateEntregador,
   } = useApp();
+  const {
+    orders: ifoodOrders,
+    loading: ifoodLoading,
+    error: ifoodError,
+    config: ifoodConfig,
+    confirm: confirmIFood,
+    reject: rejectIFood,
+    dispatch: dispatchIFood,
+    refresh: refreshIFood,
+  } = useIFoodOrders();
   const isDark = theme === 'dark';
   const panelClass = isDark ? 'bg-surface border-border' : 'bg-surface-light border-border-light';
   const mutedPanelClass = isDark ? 'bg-elevated border-border' : 'bg-elevated-light border-border-light';
@@ -158,6 +177,7 @@ export const Delivery: React.FC = () => {
   const [cancelSecurityOpen, setCancelSecurityOpen] = useState(false);
   const [entregadorModalOpen, setEntregadorModalOpen] = useState(false);
   const [editingEntregador, setEditingEntregador] = useState<Entregador>(() => emptyEntregador(currentEmpresa.id));
+  const [showOnlyIFoodTests, setShowOnlyIFoodTests] = useState(false);
 
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
@@ -174,6 +194,24 @@ export const Delivery: React.FC = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+  const mergedDeliveryOrders = useMemo(() => {
+    const manualOrders = deliveryOrders.map(order => ({
+      ...order,
+      sourcePlatform: order.sourcePlatform || 'manual',
+    }));
+
+    const byId = new Map<string, DeliveryOrder>();
+    manualOrders.forEach(order => byId.set(order.id, order));
+    ifoodOrders.forEach(order => byId.set(order.id, order));
+
+    return Array.from(byId.values()).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [deliveryOrders, ifoodOrders]);
+
+  const queueOrders = useMemo(() => {
+    if (!showOnlyIFoodTests) return mergedDeliveryOrders;
+    return mergedDeliveryOrders.filter(order => order.sourcePlatform === 'ifood' && order.isTest);
+  }, [mergedDeliveryOrders, showOnlyIFoodTests]);
+
   const subtotal = useMemo(
     () => items.reduce((total, item) => total + Number(item.qty || 0) * Number(item.price || 0), 0),
     [items],
@@ -181,20 +219,20 @@ export const Delivery: React.FC = () => {
   const total = Math.max(0, subtotal + Number(deliveryFee || 0) - Number(discount || 0));
 
   const availableEntregadores = entregadores.filter(entregador => entregador.status === 'disponivel');
-  const deliveredOrders = useMemo(() => syncToReports(deliveryOrders), [deliveryOrders]);
+  const deliveredOrders = useMemo(() => syncToReports(mergedDeliveryOrders), [mergedDeliveryOrders]);
   const filteredDeliveredOrders = useMemo(
     () => deliveredOrders.filter(order => isInPeriod(order.deliveredAt || order.createdAt, period)),
     [deliveredOrders, period],
   );
   const deliveryFinancials = useMemo(() => calcDeliveryFinancials(
-    deliveryOrders.filter(order => isInPeriod(order.deliveredAt || order.createdAt, period)),
-  ), [deliveryOrders, period]);
+    mergedDeliveryOrders.filter(order => isInPeriod(order.deliveredAt || order.createdAt, period)),
+  ), [mergedDeliveryOrders, period]);
   const entregadorRepasse = useMemo(
     () => calcEntregadorRepasseRows(
-      deliveryOrders.filter(order => isInPeriod(order.deliveredAt || order.createdAt, period)),
+      mergedDeliveryOrders.filter(order => isInPeriod(order.deliveredAt || order.createdAt, period)),
       entregadores,
     ),
-    [deliveryOrders, entregadores, period],
+    [mergedDeliveryOrders, entregadores, period],
   );
 
   const createOrder = (event: React.FormEvent) => {
@@ -270,9 +308,17 @@ export const Delivery: React.FC = () => {
 
   const confirmCancel = () => {
     if (!cancelTargetId) return;
-    const order = deliveryOrders.find(item => item.id === cancelTargetId);
+    const order = mergedDeliveryOrders.find(item => item.id === cancelTargetId);
     const resolvedReason = cancelReason === 'Outro' ? customCancelReason.trim() : cancelReason;
     if (!order || !resolvedReason) return;
+    if (order.sourcePlatform === 'ifood') {
+      void rejectIFood(order.id, resolvedReason);
+      setCancelSecurityOpen(false);
+      setCancelTargetId(null);
+      setCancelReason('');
+      setCustomCancelReason('');
+      return;
+    }
     if (order?.entregadorId) {
       const entregador = entregadores.find(item => item.id === order.entregadorId);
       if (entregador) updateEntregador({ ...entregador, status: 'disponivel' });
@@ -378,6 +424,7 @@ export const Delivery: React.FC = () => {
             ['novo', 'Novo Pedido'],
             ['entregadores', 'Entregadores'],
             ['financeiro', 'Financeiro Delivery'],
+            ['ifood', 'iFood'],
           ] as Array<[Tab, string]>).map(([id, label]) => (
             <button
               key={id}
@@ -390,10 +437,83 @@ export const Delivery: React.FC = () => {
         </div>
       </div>
 
+      {activeTab === 'ifood' && (
+        <section className={`rounded-panel border p-5 space-y-4 ${panelClass}`}>
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-control bg-[#EA1D2C] text-white flex items-center justify-center text-sm font-semibold">
+              iF
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold">Integração iFood</h3>
+              <p className="text-xs text-muted">Configuração operacional do hub de delivery.</p>
+            </div>
+            <span className={`ml-auto px-2 py-1 rounded-full border text-[11px] font-semibold ${
+              ifoodConfig.status === 'connected'
+                ? 'bg-success/10 text-success border-success/30'
+                : ifoodConfig.status === 'error'
+                  ? 'bg-danger/10 text-danger border-danger/30'
+                  : 'bg-warning/10 text-warning border-warning/30'
+            }`}>
+              {ifoodConfig.status === 'connected' ? 'Conectado' : ifoodConfig.status === 'error' ? 'Erro' : 'Em desenvolvimento'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label className="space-y-1.5">
+              <span className="text-xs text-muted">Merchant ID</span>
+              <input value={ifoodConfig.merchantId} readOnly className={`w-full h-10 px-3 rounded-control border bg-transparent text-sm ${isDark ? 'border-border' : 'border-border-light'}`} />
+            </label>
+            <label className="space-y-1.5">
+              <span className="text-xs text-muted">Merchant UUID</span>
+              <input value={ifoodConfig.merchantUuid} readOnly className={`w-full h-10 px-3 rounded-control border bg-transparent text-sm ${isDark ? 'border-border' : 'border-border-light'}`} />
+            </label>
+          </div>
+
+          <div className={`rounded-panel border p-3 text-xs ${mutedPanelClass}`}>
+            Credenciais de produção serão liberadas após homologação iFood. Pedidos de teste já estão sendo simulados.
+          </div>
+
+          {ifoodError && (
+            <p className="text-xs text-danger">Falha na sincronização iFood: {ifoodError}</p>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                setShowOnlyIFoodTests(true);
+                setActiveTab('fila');
+              }}
+              className="h-9 px-3 rounded-control bg-accent text-white text-xs font-medium"
+            >
+              Ver pedidos de teste
+            </button>
+            <button
+              onClick={() => void refreshIFood()}
+              className={`h-9 px-3 rounded-control border text-xs font-medium ${isDark ? 'border-border' : 'border-border-light'}`}
+            >
+              {ifoodLoading ? 'Sincronizando...' : 'Sincronizar agora'}
+            </button>
+          </div>
+        </section>
+      )}
+
       {activeTab === 'fila' && (
-        <section className="grid grid-cols-1 xl:grid-cols-4 gap-4">
+        <section className="space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-xs text-muted">
+              {showOnlyIFoodTests ? 'Mostrando somente pedidos iFood de teste.' : 'Mostrando todos os pedidos de delivery.'}
+            </div>
+            <button
+              onClick={() => setShowOnlyIFoodTests(prev => !prev)}
+              className={`h-8 px-3 rounded-control border text-xs font-medium ${isDark ? 'border-border' : 'border-border-light'}`}
+            >
+              {showOnlyIFoodTests ? 'Ver todos os pedidos' : 'Filtrar pedidos de teste iFood'}
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
           {statusColumns.map(column => {
-            const columnOrders = deliveryOrders.filter(order => order.status === column.id);
+            const columnOrders = queueOrders.filter(order => order.status === column.id);
             return (
               <div key={column.id} className={`rounded-panel border border-t-2 min-h-[420px] ${panelClass}`} style={{ borderTopColor: columnAccent[column.id] }}>
                 <div className="flex items-center justify-between px-4 py-3 border-b border-current/10">
@@ -412,6 +532,10 @@ export const Delivery: React.FC = () => {
                     const assignable = [...availableEntregadores, ...(assigned ? [assigned] : [])]
                       .filter((item, index, array) => array.findIndex(current => current.id === item.id) === index);
                     const delayed = isOrderDelayed(order, nowMs);
+                    const isIFood = order.sourcePlatform === 'ifood';
+                    const ifoodCountdown = isIFood && order.status === 'recebido'
+                      ? getIFoodCountdownLabel(order.createdAt, nowMs)
+                      : null;
                     const canMutateOrder = order.status !== 'entregue' && order.status !== 'cancelado';
                     return (
                       <article key={order.id} className={`rounded-panel border p-3 space-y-3 ${mutedPanelClass} ${delayed ? 'border-[var(--color-danger)]' : ''}`}>
@@ -422,9 +546,23 @@ export const Delivery: React.FC = () => {
                           </div>
                           <div className="flex flex-col items-end gap-1">
                             <span className="text-sm font-semibold text-accent">{money(order.total)}</span>
+                            {isIFood && (
+                              <span className="px-2 py-0.5 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/30 text-[10px] font-semibold">
+                                iFood
+                              </span>
+                            )}
                             {delayed && (
                               <span className="px-2 py-0.5 rounded-full bg-danger/10 text-danger border border-danger/20 text-[10px] font-semibold">
                                 Atrasado
+                              </span>
+                            )}
+                            {ifoodCountdown && (
+                              <span className={`px-2 py-0.5 rounded-full border text-[10px] font-semibold ${
+                                ifoodCountdown.expired
+                                  ? 'bg-danger/10 text-danger border-danger/20'
+                                  : 'bg-warning/10 text-warning border-warning/20'
+                              }`}>
+                                Confirmar em {ifoodCountdown.label}
                               </span>
                             )}
                           </div>
@@ -440,7 +578,7 @@ export const Delivery: React.FC = () => {
                           <select
                             value={order.entregadorId || ''}
                             onChange={event => assignEntregador(order, event.target.value)}
-                            disabled={!canMutateOrder}
+                            disabled={!canMutateOrder || isIFood}
                             className={`w-full h-9 px-2 rounded-control border bg-transparent text-xs ${isDark ? 'border-border' : 'border-border-light'}`}
                           >
                             <option value="">Atribuir entregador</option>
@@ -449,21 +587,49 @@ export const Delivery: React.FC = () => {
                             ))}
                           </select>
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => advanceOrder(order)}
-                              disabled={!canMutateOrder}
-                              className="flex-1 h-9 rounded-control bg-accent text-white text-xs font-medium disabled:opacity-40"
-                            >
-                              {order.status === 'entregue' ? 'Concluido' : order.status === 'cancelado' ? 'Cancelado' : 'Avancar'}
-                            </button>
-                            <button
-                              onClick={() => openCancelFlow(order.id)}
-                              disabled={order.status === 'cancelado'}
-                              className="w-9 h-9 rounded-control bg-danger/10 text-danger flex items-center justify-center"
-                              aria-label="Cancelar pedido"
-                            >
-                              <ShieldAlert className="w-4 h-4" />
-                            </button>
+                            {isIFood ? (
+                              <>
+                                <button
+                                  onClick={() => void confirmIFood(order.id)}
+                                  disabled={!canMutateOrder || order.status !== 'recebido'}
+                                  className="flex-1 h-9 rounded-control bg-success text-white text-xs font-medium disabled:opacity-40"
+                                >
+                                  Confirmar
+                                </button>
+                                <button
+                                  onClick={() => void rejectIFood(order.id, 'Rejeitado pelo operador')}
+                                  disabled={order.status === 'cancelado' || order.status === 'entregue'}
+                                  className="flex-1 h-9 rounded-control bg-danger/10 text-danger text-xs font-medium disabled:opacity-40"
+                                >
+                                  Rejeitar
+                                </button>
+                                <button
+                                  onClick={() => void dispatchIFood(order.id)}
+                                  disabled={!canMutateOrder || (order.status !== 'preparo' && order.status !== 'recebido')}
+                                  className="flex-1 h-9 rounded-control bg-accent text-white text-xs font-medium disabled:opacity-40"
+                                >
+                                  Despachar
+                                </button>
+                              </>
+                            ) : (
+                              <>
+                                <button
+                                  onClick={() => advanceOrder(order)}
+                                  disabled={!canMutateOrder}
+                                  className="flex-1 h-9 rounded-control bg-accent text-white text-xs font-medium disabled:opacity-40"
+                                >
+                                  {order.status === 'entregue' ? 'Concluido' : order.status === 'cancelado' ? 'Cancelado' : 'Avancar'}
+                                </button>
+                                <button
+                                  onClick={() => openCancelFlow(order.id)}
+                                  disabled={order.status === 'cancelado'}
+                                  className="w-9 h-9 rounded-control bg-danger/10 text-danger flex items-center justify-center"
+                                  aria-label="Cancelar pedido"
+                                >
+                                  <ShieldAlert className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       </article>
@@ -473,6 +639,7 @@ export const Delivery: React.FC = () => {
               </div>
             );
           })}
+          </div>
         </section>
       )}
 
@@ -632,7 +799,7 @@ export const Delivery: React.FC = () => {
           <div className={`rounded-panel border overflow-hidden ${panelClass}`}>
             <div className="px-5 py-4 border-b border-current/10">
               <h3 className="text-sm font-semibold">Repasse por Entregador</h3>
-              <p className="text-xs text-muted mt-1">Apuracao operacional do valor devido aos entregadores no periodo.</p>
+              <p className="text-xs text-muted mt-1">Apuração operacional do valor devido aos entregadores no período.</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -674,7 +841,7 @@ export const Delivery: React.FC = () => {
           <div className={`rounded-panel border overflow-hidden ${panelClass}`}>
             <div className="px-5 py-4 border-b border-current/10">
               <h3 className="text-sm font-semibold">Pedidos concluidos</h3>
-              <p className="text-xs text-muted mt-1">Esta receita e consolidada em Relatorios automaticamente</p>
+              <p className="text-xs text-muted mt-1">Esta receita é consolidada em Relatórios automaticamente</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -688,7 +855,7 @@ export const Delivery: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-current/5">
-                  {filteredDeliveredOrders.length === 0 && <tr><td colSpan={5} className="py-16 text-center text-xs text-muted">Nenhum pedido entregue no periodo</td></tr>}
+                  {filteredDeliveredOrders.length === 0 && <tr><td colSpan={5} className="py-16 text-center text-xs text-muted">Nenhum pedido entregue no período</td></tr>}
                   {filteredDeliveredOrders.map(order => {
                     const entregador = entregadores.find(item => item.id === order.entregadorId);
                     return (
@@ -788,7 +955,7 @@ export const Delivery: React.FC = () => {
                     <select value={editingEntregador.repasseType || ''} onChange={event => setEditingEntregador(prev => ({ ...prev, repasseType: event.target.value ? event.target.value as Entregador['repasseType'] : undefined }))} className={`w-full h-10 px-3 rounded-control border bg-transparent text-sm ${isDark ? 'border-border' : 'border-border-light'}`}>
                       <option value="">Nao configurar</option>
                       <option value="por_entrega">Por entrega</option>
-                      <option value="fixo_diario">Diaria fixa</option>
+                      <option value="fixo_diario">Diária fixa</option>
                     </select>
                   </label>
                   <label className="space-y-1.5">
