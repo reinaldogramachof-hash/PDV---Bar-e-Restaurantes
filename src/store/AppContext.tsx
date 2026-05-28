@@ -460,10 +460,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
                 empresaId: currentEmpresa.id,
                 stockItemId: recipeItem.stockItemId,
-                type: 'out',
+                type: 'saida',
                 quantity: quantityToAbate,
                 unitCost: nextStock[idx].costPrice,
-                reason: `Venda - ${item.product.name} (Ficha Técnica)`,
+                reason: 'venda',
+                referenceId: order.id,
                 timestamp: new Date().toISOString()
               });
             }

@@ -1,140 +1,152 @@
-import { Product, Table, Waiter, StockItem, Supplier, Collaborator, Customer, AppSettings } from '../types';
+﻿import { Product, Table, Waiter, StockItem, Supplier, Collaborator, Customer, AppSettings, RecipeItem } from '../types';
 import { DEFAULT_EMPRESA_ID } from '../domain/saas';
 
 const withEmpresa = <T extends object>(items: T[]) =>
   items.map(item => ({ empresaId: DEFAULT_EMPRESA_ID, ...item }));
 
 export const mockStockItems: StockItem[] = withEmpresa([
-  // Proteínas
-  { id: 'si1', name: 'Carne Moída (Blend)', category: 'Proteínas', unit: 'kg', currentStock: 45, minStock: 10, costPrice: 38.50, supplierId: '3' },
-  { id: 'si2', name: 'Filé de Frango', category: 'Proteínas', unit: 'kg', currentStock: 30, minStock: 5, costPrice: 22.00, supplierId: '3' },
-  { id: 'si3', name: 'Costelinha Suína', category: 'Proteínas', unit: 'kg', currentStock: 15, minStock: 5, costPrice: 28.00, supplierId: '3' },
-  { id: 'si4', name: 'Bacon Defumado', category: 'Proteínas', unit: 'kg', currentStock: 12, minStock: 3, costPrice: 42.00, supplierId: '3' },
+  // ProteÃ­nas
+  { id: 'si1', name: 'Carne MoÃ­da (Blend)', category: 'ProteÃ­nas', unit: 'kg', currentStock: 45, minStock: 10, costPrice: 38.50, supplierId: '3' },
+  { id: 'si2', name: 'FilÃ© de Frango', category: 'ProteÃ­nas', unit: 'kg', currentStock: 30, minStock: 5, costPrice: 22.00, supplierId: '3' },
+  { id: 'si3', name: 'Costelinha SuÃ­na', category: 'ProteÃ­nas', unit: 'kg', currentStock: 15, minStock: 5, costPrice: 28.00, supplierId: '3' },
+  { id: 'si4', name: 'Bacon Defumado', category: 'ProteÃ­nas', unit: 'kg', currentStock: 12, minStock: 3, costPrice: 42.00, supplierId: '3' },
   
   // Padaria e Secos
-  { id: 'si5', name: 'Pão de Brioche', category: 'Padaria', unit: 'un', currentStock: 200, minStock: 40, costPrice: 1.65, supplierId: '2' },
-  { id: 'si6', name: 'Pão Australiano', category: 'Padaria', unit: 'un', currentStock: 80, minStock: 20, costPrice: 1.80, supplierId: '2' },
-  { id: 'si7', name: 'Arroz Arbóreo', category: 'Secos', unit: 'kg', currentStock: 10, minStock: 2, costPrice: 18.00, supplierId: '2' },
-  { id: 'si8', name: 'Açúcar Refinado', category: 'Secos', unit: 'kg', currentStock: 25, minStock: 5, costPrice: 4.80, supplierId: '2' },
+  { id: 'si5', name: 'PÃ£o de Brioche', category: 'Padaria', unit: 'un', currentStock: 200, minStock: 40, costPrice: 1.65, supplierId: '2' },
+  { id: 'si6', name: 'PÃ£o Australiano', category: 'Padaria', unit: 'un', currentStock: 80, minStock: 20, costPrice: 1.80, supplierId: '2' },
+  { id: 'si7', name: 'Arroz ArbÃ³reo', category: 'Secos', unit: 'kg', currentStock: 10, minStock: 2, costPrice: 18.00, supplierId: '2' },
+  { id: 'si8', name: 'AÃ§Ãºcar Refinado', category: 'Secos', unit: 'kg', currentStock: 25, minStock: 5, costPrice: 4.80, supplierId: '2' },
   
-  // Laticínios
-  { id: 'si9', name: 'Queijo Cheddar', category: 'Laticínios', unit: 'kg', currentStock: 12, minStock: 3, costPrice: 48.00, supplierId: '3' },
-  { id: 'si10', name: 'Queijo Muçarela', category: 'Laticínios', unit: 'kg', currentStock: 15, minStock: 5, costPrice: 38.00, supplierId: '3' },
-  { id: 'si11', name: 'Creme de Leite', category: 'Laticínios', unit: 'L', currentStock: 10, minStock: 2, costPrice: 14.00, supplierId: '2' },
+  // LaticÃ­nios
+  { id: 'si9', name: 'Queijo Cheddar', category: 'LaticÃ­nios', unit: 'kg', currentStock: 12, minStock: 3, costPrice: 48.00, supplierId: '3' },
+  { id: 'si10', name: 'Queijo MuÃ§arela', category: 'LaticÃ­nios', unit: 'kg', currentStock: 15, minStock: 5, costPrice: 38.00, supplierId: '3' },
+  { id: 'si11', name: 'Creme de Leite', category: 'LaticÃ­nios', unit: 'L', currentStock: 10, minStock: 2, costPrice: 14.00, supplierId: '2' },
   
   // Hortifruti
-  { id: 'si12', name: 'Limão Taiti', category: 'Hortifruti', unit: 'kg', currentStock: 20, minStock: 5, costPrice: 7.50, supplierId: '2' },
+  { id: 'si12', name: 'LimÃ£o Taiti', category: 'Hortifruti', unit: 'kg', currentStock: 20, minStock: 5, costPrice: 7.50, supplierId: '2' },
   { id: 'si13', name: 'Batata Asterix', category: 'Hortifruti', unit: 'kg', currentStock: 100, minStock: 20, costPrice: 5.50, supplierId: '2' },
   { id: 'si14', name: 'Tomate Cereja', category: 'Hortifruti', unit: 'kg', currentStock: 8, minStock: 2, costPrice: 12.00, supplierId: '2' },
   
   // Bebidas Brutas
-  { id: 'si15', name: 'Cachaça Prata', category: 'Bebidas Brutas', unit: 'L', currentStock: 15, minStock: 4, costPrice: 32.00, supplierId: '1' },
+  { id: 'si15', name: 'CachaÃ§a Prata', category: 'Bebidas Brutas', unit: 'L', currentStock: 15, minStock: 4, costPrice: 32.00, supplierId: '1' },
   { id: 'si16', name: 'Gin Tanqueray', category: 'Bebidas Brutas', unit: 'L', currentStock: 8, minStock: 2, costPrice: 125.00, supplierId: '1' },
   { id: 'si17', name: 'Vodka Absolut', category: 'Bebidas Brutas', unit: 'L', currentStock: 10, minStock: 2, costPrice: 95.00, supplierId: '1' },
   { id: 'si18', name: 'Xarope de Frutas', category: 'Bebidas Brutas', unit: 'L', currentStock: 5, minStock: 1, costPrice: 45.00, supplierId: '1' },
   
   // Bebidas Prontas
-  { id: 'si19', name: 'Água Tônica (Lata)', category: 'Bebidas Prontas', unit: 'un', currentStock: 72, minStock: 24, costPrice: 3.40, supplierId: '1' },
+  { id: 'si19', name: 'Ãgua TÃ´nica (Lata)', category: 'Bebidas Prontas', unit: 'un', currentStock: 72, minStock: 24, costPrice: 3.40, supplierId: '1' },
   { id: 'si20', name: 'Coca-Cola (Lata)', category: 'Bebidas Prontas', unit: 'un', currentStock: 120, minStock: 48, costPrice: 2.80, supplierId: '1' },
   { id: 'si21', name: 'Heineken Long Neck', category: 'Bebidas Prontas', unit: 'un', currentStock: 144, minStock: 72, costPrice: 5.50, supplierId: '1' },
 ]);
 
+const stockMap = new Map(mockStockItems.map(item => [item.id, item]));
+const recipeItem = (stockItemId: string, quantity: number): RecipeItem => {
+  const stockItem = stockMap.get(stockItemId);
+  return {
+    stockItemId,
+    stockItemName: stockItem?.name || 'Insumo',
+    quantity,
+    unit: stockItem?.unit || 'un',
+    costPerUnit: stockItem?.costPrice ?? 0,
+  };
+};
+
 export const mockSuppliers: Supplier[] = withEmpresa([
   { id: '1', companyName: 'Bebidas Prime Distribuidora', category: 'Bebidas', contactName: 'Ricardo L.', phone: '(11) 4004-9000', email: 'vendas@prime.com.br', lastDelivery: '2026-05-02', deliveryPerformance: 98, rating: 5, paymentTerms: '30 dias', document: '12.345.678/0001-90', address: 'Av. Industrial, 1500 - SP' },
-  { id: '2', companyName: 'Hortifruti da Fazenda', category: 'Perecíveis', contactName: 'Dona Maria', phone: '(11) 91234-5678', email: 'fazenda@email.com', lastDelivery: '2026-05-04', deliveryPerformance: 100, rating: 5, paymentTerms: 'À vista', document: '98.765.432/0001-10', address: 'Rua das Flores, 45 - Cotia/SP' },
-  { id: '3', companyName: 'Atacadão Carnes & Cia', category: 'Proteínas', contactName: 'Carlos M.', phone: '(11) 3322-1100', email: 'comercial@atacadao.com', lastDelivery: '2026-04-30', deliveryPerformance: 85, rating: 3, paymentTerms: '15 dias', document: '45.678.901/0001-22', address: 'Marginal Tietê, KM 12 - SP' },
+  { id: '2', companyName: 'Hortifruti da Fazenda', category: 'PerecÃ­veis', contactName: 'Dona Maria', phone: '(11) 91234-5678', email: 'fazenda@email.com', lastDelivery: '2026-05-04', deliveryPerformance: 100, rating: 5, paymentTerms: 'Ã€ vista', document: '98.765.432/0001-10', address: 'Rua das Flores, 45 - Cotia/SP' },
+  { id: '3', companyName: 'AtacadÃ£o Carnes & Cia', category: 'ProteÃ­nas', contactName: 'Carlos M.', phone: '(11) 3322-1100', email: 'comercial@atacadao.com', lastDelivery: '2026-04-30', deliveryPerformance: 85, rating: 3, paymentTerms: '15 dias', document: '45.678.901/0001-22', address: 'Marginal TietÃª, KM 12 - SP' },
   { id: '4', companyName: 'Limpeza Express S/A', category: 'Limpeza', contactName: 'Felipe G.', phone: '(11) 2211-4433', email: 'contato@limpezaexpress.com', lastDelivery: '2026-04-15', deliveryPerformance: 92, rating: 4, paymentTerms: 'Boleto 21 dias', document: '33.221.100/0001-55', address: 'Rua Limpa, 100 - Barueri/SP' },
 ]);
 
 export const mockProducts: Product[] = withEmpresa([
   // --- DRINKS ---
   { 
-    id: 'p1', name: 'Caipirinha Tradicional', description: 'Cachaça prata, limão e açúcar', price: 24, category: 'Drinks',
+    id: 'p1', name: 'Caipirinha Tradicional', description: 'CachaÃ§a prata, limÃ£o e aÃ§Ãºcar', price: 24, category: 'Drinks',
     recipe: [
-      { stockItemId: 'si15', quantity: 0.05 }, { stockItemId: 'si12', quantity: 0.12 }, { stockItemId: 'si8', quantity: 0.02 }
+      recipeItem('si15', 0.05), recipeItem('si12', 0.12), recipeItem('si8', 0.02)
     ]
   },
   { 
-    id: 'p2', name: 'Gin Tônica Botânico', description: 'Gin Tanqueray, tônica e especiarias', price: 36, category: 'Drinks',
+    id: 'p2', name: 'Gin TÃ´nica BotÃ¢nico', description: 'Gin Tanqueray, tÃ´nica e especiarias', price: 36, category: 'Drinks',
     recipe: [
-      { stockItemId: 'si16', quantity: 0.05 }, { stockItemId: 'si19', quantity: 1.0 }, { stockItemId: 'si12', quantity: 0.02 }
+      recipeItem('si16', 0.05), recipeItem('si19', 1.0), recipeItem('si12', 0.02)
     ]
   },
   { 
-    id: 'p3', name: 'Moscow Mule', description: 'Vodka, limão e espuma de gengibre', price: 34, category: 'Drinks',
+    id: 'p3', name: 'Moscow Mule', description: 'Vodka, limÃ£o e espuma de gengibre', price: 34, category: 'Drinks',
     recipe: [
-      { stockItemId: 'si17', quantity: 0.05 }, { stockItemId: 'si12', quantity: 0.03 }, { stockItemId: 'si11', quantity: 0.05 }
+      recipeItem('si17', 0.05), recipeItem('si12', 0.03), recipeItem('si11', 0.05)
     ]
   },
-  { id: 'p4', name: 'Heineken Long Neck', description: 'Cerveja Premium 330ml', price: 14, category: 'Drinks', recipe: [{ stockItemId: 'si21', quantity: 1 }] },
-  { id: 'p5', name: 'Coca-Cola Lata', description: 'Original ou Zero 350ml', price: 8, category: 'Drinks', recipe: [{ stockItemId: 'si20', quantity: 1 }] },
-  { id: 'p6', name: 'Suco de Limão Natural', description: '400ml feito na hora', price: 12, category: 'Drinks', recipe: [{ stockItemId: 'si12', quantity: 0.15 }, { stockItemId: 'si8', quantity: 0.03 }] },
+  { id: 'p4', name: 'Heineken Long Neck', description: 'Cerveja Premium 330ml', price: 14, category: 'Drinks', recipe: [recipeItem('si21', 1)] },
+  { id: 'p5', name: 'Coca-Cola Lata', description: 'Original ou Zero 350ml', price: 8, category: 'Drinks', recipe: [recipeItem('si20', 1)] },
+  { id: 'p6', name: 'Suco de LimÃ£o Natural', description: '400ml feito na hora', price: 12, category: 'Drinks', recipe: [recipeItem('si12', 0.15), recipeItem('si8', 0.03)] },
   
-  // --- HAMBÚRGUERES ---
+  // --- HAMBÃšRGUERES ---
   { 
-    id: 'p7', name: 'X-Burger Clássico', description: 'Pão brioche, blend 150g e cheddar', price: 38, category: 'Hambúrgueres',
+    id: 'p7', name: 'X-Burger ClÃ¡ssico', description: 'PÃ£o brioche, blend 150g e cheddar', price: 38, category: 'HambÃºrgueres',
     recipe: [
-      { stockItemId: 'si1', quantity: 0.15 }, { stockItemId: 'si5', quantity: 1 }, { stockItemId: 'si9', quantity: 0.03 }
+      recipeItem('si1', 0.15), recipeItem('si5', 1), recipeItem('si9', 0.03)
     ]
   },
   { 
-    id: 'p8', name: 'Bacon Monster', description: 'Duplo blend, muito bacon e cheddar', price: 48, category: 'Hambúrgueres',
+    id: 'p8', name: 'Bacon Monster', description: 'Duplo blend, muito bacon e cheddar', price: 48, category: 'HambÃºrgueres',
     recipe: [
-      { stockItemId: 'si1', quantity: 0.30 }, { stockItemId: 'si5', quantity: 1 }, { stockItemId: 'si9', quantity: 0.05 }, { stockItemId: 'si4', quantity: 0.04 }
+      recipeItem('si1', 0.30), recipeItem('si5', 1), recipeItem('si9', 0.05), recipeItem('si4', 0.04)
     ]
   },
   { 
-    id: 'p9', name: 'Australiano Steak', description: 'Pão australiano, blend e muçarela', price: 42, category: 'Hambúrgueres',
+    id: 'p9', name: 'Australiano Steak', description: 'PÃ£o australiano, blend e muÃ§arela', price: 42, category: 'HambÃºrgueres',
     recipe: [
-      { stockItemId: 'si1', quantity: 0.15 }, { stockItemId: 'si6', quantity: 1 }, { stockItemId: 'si10', quantity: 0.03 }
+      recipeItem('si1', 0.15), recipeItem('si6', 1), recipeItem('si10', 0.03)
     ]
   },
   { 
-    id: 'p10', name: 'Chicken Crispy', description: 'Frango empanado, maionese e brioche', price: 36, category: 'Hambúrgueres',
+    id: 'p10', name: 'Chicken Crispy', description: 'Frango empanado, maionese e brioche', price: 36, category: 'HambÃºrgueres',
     recipe: [
-      { stockItemId: 'si2', quantity: 0.18 }, { stockItemId: 'si5', quantity: 1 }, { stockItemId: 'si10', quantity: 0.02 }
+      recipeItem('si2', 0.18), recipeItem('si5', 1), recipeItem('si10', 0.02)
     ]
   },
 
   // --- PETISCOS ---
   { 
-    id: 'p11', name: 'Batata Rústica', description: 'Crocante com alecrim e alho', price: 32, category: 'Petiscos',
-    recipe: [{ stockItemId: 'si13', quantity: 0.40 }]
+    id: 'p11', name: 'Batata RÃºstica', description: 'Crocante com alecrim e alho', price: 32, category: 'Petiscos',
+    recipe: [recipeItem('si13', 0.40)]
   },
   { 
     id: 'p12', name: 'Cheddar & Bacon Fries', description: 'Batata com cheddar e bacon', price: 42, category: 'Petiscos',
-    recipe: [{ stockItemId: 'si13', quantity: 0.40 }, { stockItemId: 'si9', quantity: 0.08 }, { stockItemId: 'si4', quantity: 0.05 }]
+    recipe: [recipeItem('si13', 0.40), recipeItem('si9', 0.08), recipeItem('si4', 0.05)]
   },
   { 
     id: 'p13', name: 'Coxinha da Asa (6 un)', description: 'Frango crocante com barbecue', price: 45, category: 'Petiscos',
-    recipe: [{ stockItemId: 'si2', quantity: 0.50 }]
+    recipe: [recipeItem('si2', 0.50)]
   },
   { 
-    id: 'p14', name: 'Costelinha BBQ', description: 'Meia costela suína ao molho BBQ', price: 68, category: 'Petiscos',
-    recipe: [{ stockItemId: 'si3', quantity: 0.60 }]
+    id: 'p14', name: 'Costelinha BBQ', description: 'Meia costela suÃ­na ao molho BBQ', price: 68, category: 'Petiscos',
+    recipe: [recipeItem('si3', 0.60)]
   },
   { 
     id: 'p15', name: 'Dadinho de Tapioca', description: 'Com geleia de pimenta', price: 34, category: 'Petiscos',
-    recipe: [{ stockItemId: 'si10', quantity: 0.20 }]
+    recipe: [recipeItem('si10', 0.20)]
   },
 
   // --- PRATOS ---
   { 
-    id: 'p16', name: 'Risoto de Alho Poró', description: 'Arroz arbóreo e alho poró', price: 58, category: 'Pratos',
-    recipe: [{ stockItemId: 'si7', quantity: 0.12 }, { stockItemId: 'si10', quantity: 0.05 }, { stockItemId: 'si11', quantity: 0.05 }]
+    id: 'p16', name: 'Risoto de Alho PorÃ³', description: 'Arroz arbÃ³reo e alho porÃ³', price: 58, category: 'Pratos',
+    recipe: [recipeItem('si7', 0.12), recipeItem('si10', 0.05), recipeItem('si11', 0.05)]
   },
   { 
-    id: 'p17', name: 'Filé de Frango Grelhado', description: 'Com legumes e arroz', price: 45, category: 'Pratos',
-    recipe: [{ stockItemId: 'si2', quantity: 0.20 }, { stockItemId: 'si7', quantity: 0.10 }]
+    id: 'p17', name: 'FilÃ© de Frango Grelhado', description: 'Com legumes e arroz', price: 45, category: 'Pratos',
+    recipe: [recipeItem('si2', 0.20), recipeItem('si7', 0.10)]
   },
 
   // --- SOBREMESAS ---
   { 
-    id: 'p18', name: 'Petit Gâteau', description: 'Com sorvete de baunilha', price: 28, category: 'Sobremesas',
-    recipe: [{ stockItemId: 'si11', quantity: 0.05 }, { stockItemId: 'si8', quantity: 0.04 }]
+    id: 'p18', name: 'Petit GÃ¢teau', description: 'Com sorvete de baunilha', price: 28, category: 'Sobremesas',
+    recipe: [recipeItem('si11', 0.05), recipeItem('si8', 0.04)]
   },
   { id: 'p19', name: 'Brownie de Chocolate', description: 'Nacional com nozes', price: 22, category: 'Sobremesas', recipe: [] },
-  { id: 'p20', name: 'Água Mineral 500ml', description: 'Sem gás', price: 6, category: 'Drinks', recipe: [] },
+  { id: 'p20', name: 'Ãgua Mineral 500ml', description: 'Sem gÃ¡s', price: 6, category: 'Drinks', recipe: [] },
 ]);
 
 export const mockTables: Table[] = withEmpresa(Array.from({ length: 20 }, (_, i) => ({
@@ -157,7 +169,7 @@ export const mockCustomers: Customer[] = withEmpresa([
 
 export const mockCollaborators: Collaborator[] = withEmpresa([
   { id: '1', name: 'Administrador Demo', role: 'Administrador', email: 'admin@gestaogastro.com', status: 'active', joinedAt: '2025-01-15', permissions: 'admin', totalSales: 15400 },
-  { id: '2', name: 'Maria Souza', role: 'Garçom Lead', email: 'maria.s@email.com', status: 'active', joinedAt: '2025-03-10', permissions: 'waiter', totalSales: 9200 },
+  { id: '2', name: 'Maria Souza', role: 'GarÃ§om Lead', email: 'maria.s@email.com', status: 'active', joinedAt: '2025-03-10', permissions: 'waiter', totalSales: 9200 },
 ]);
 
 export const mockSettings: AppSettings = {
@@ -165,7 +177,7 @@ export const mockSettings: AppSettings = {
   kitchenMode: 'display',
   establishment: {
     name: 'Restaurante Demo',
-    address: 'Rua Gastronômica, 123 - Centro, São Paulo/SP',
+    address: 'Rua GastronÃ´mica, 123 - Centro, SÃ£o Paulo/SP',
     phone: '(11) 98765-4321',
     document: '12.345.678/0001-90',
     website: 'www.gestaogastro.com.br'
@@ -177,3 +189,4 @@ export const mockSettings: AppSettings = {
     paperWidth: '80mm'
   }
 };
+

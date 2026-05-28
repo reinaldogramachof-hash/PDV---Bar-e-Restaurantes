@@ -75,7 +75,10 @@ export interface StockItem extends BaseEntity {
 
 export interface RecipeItem {
   stockItemId: string;
+  stockItemName: string;
   quantity: number; // quantidade do insumo consumida
+  unit: string;
+  costPerUnit: number; // calculado do StockItem
 }
 
 export interface MenuDigitalConfig {
@@ -405,10 +408,11 @@ export interface AppNotification {
 
 export interface StockMovement extends BaseEntity {
   stockItemId: string; // Aponta para o insumo
-  type: 'in' | 'out' | 'loss';
+  type: 'in' | 'out' | 'saida' | 'loss';
   quantity: number;
   unitCost?: number;
   reason?: string;
+  referenceId?: string;
   timestamp: string;
   collaboratorId?: string;
 }

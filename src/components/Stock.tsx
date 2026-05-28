@@ -12,7 +12,7 @@ import { StockMovement, StockItem } from '../types';
 type TabType = 'overview' | 'movements' | 'losses';
 
 export const Stock: React.FC = () => {
-  const { currentEmpresa, stockItems, updateStockItem, addStockItem, deleteStockItem, suppliers, stockMovements, addStockMovement, theme } = useApp();
+  const { currentEmpresa, products, stockItems, updateStockItem, addStockItem, deleteStockItem, suppliers, stockMovements, addStockMovement, theme } = useApp();
   const isDark = theme === 'dark';
 
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -154,6 +154,53 @@ export const Stock: React.FC = () => {
 
   const alertCount = stockItems.filter(i => i.currentStock <= i.minStock).length;
 
+  const productCmvList = useMemo(() => {
+    return products
+      .filter(product => (product.recipe?.length || 0) > 0 && product.price > 0)
+      .map(product => {
+        const cost = (product.recipe || []).reduce((sum, recipeItem) => {
+          const stockItem = stockItems.find(item => item.id === recipeItem.stockItemId);
+          const unitCost = stockItem?.costPrice ?? recipeItem.costPerUnit ?? 0;
+          return sum + (recipeItem.quantity * unitCost);
+        }, 0);
+
+        const cmv = product.price > 0 ? (cost / product.price) * 100 : 0;
+
+        return {
+          productId: product.id,
+          productName: product.name,
+          cost,
+          price: product.price,
+          cmv,
+        };
+      });
+  }, [products, stockItems]);
+
+  const averageMenuCmv = useMemo(() => {
+    if (productCmvList.length === 0) return 0;
+    const totalCost = productCmvList.reduce((sum, item) => sum + item.cost, 0);
+    const totalPrice = productCmvList.reduce((sum, item) => sum + item.price, 0);
+    return totalPrice > 0 ? (totalCost / totalPrice) * 100 : 0;
+  }, [productCmvList]);
+
+  const highestCmvProducts = useMemo(() =>
+    [...productCmvList]
+      .sort((a, b) => b.cmv - a.cmv)
+      .slice(0, 5),
+  [productCmvList]);
+
+  const productsWithoutRecipe = useMemo(() =>
+    products
+      .filter(product => !product.recipe || product.recipe.length === 0)
+      .slice(0, 5),
+  [products]);
+
+  const getCmvClass = (cmv: number) => {
+    if (cmv < 30) return 'text-success';
+    if (cmv <= 45) return 'text-warning';
+    return 'text-danger';
+  };
+
   const fieldClass = `w-full h-11 px-3 rounded-control border transition-all outline-none text-sm font-medium
     focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)]
     ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)] text-white' : 'bg-surface-light border-border-light text-gray-900'}
@@ -192,6 +239,40 @@ export const Stock: React.FC = () => {
 
       {activeTab === 'overview' && (
         <div className="space-y-4">
+          <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className={`rounded-panel border p-4 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light'}`}>
+              <p className="text-xs text-muted">CMV Médio do Cardápio</p>
+              <p className={`text-2xl font-semibold mt-2 ${getCmvClass(averageMenuCmv)}`}>{averageMenuCmv.toFixed(1)}%</p>
+              <p className="text-xs text-muted mt-1">{productCmvList.length} produtos com ficha técnica</p>
+            </div>
+
+            <div className={`rounded-panel border p-4 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light'}`}>
+              <p className="text-xs text-muted mb-2">Top 5 maior CMV (risco de margem)</p>
+              <div className="space-y-1.5">
+                {highestCmvProducts.length === 0 && <p className="text-xs text-muted">Nenhum produto com CMV calculável.</p>}
+                {highestCmvProducts.map(product => (
+                  <div key={product.productId} className="flex items-center justify-between text-xs">
+                    <span className="truncate pr-2">{product.productName}</span>
+                    <span className={`font-semibold ${getCmvClass(product.cmv)}`}>{product.cmv.toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={`rounded-panel border p-4 ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-surface-light border-border-light'}`}>
+              <p className="text-xs text-muted mb-2">Top 5 sem ficha técnica</p>
+              <div className="space-y-1.5">
+                {productsWithoutRecipe.length === 0 && <p className="text-xs text-muted">Todos os produtos têm ficha técnica.</p>}
+                {productsWithoutRecipe.map(product => (
+                  <div key={product.id} className="flex items-center justify-between text-xs">
+                    <span className="truncate pr-2">{product.name}</span>
+                    <span className="text-warning font-semibold">Sem ficha</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* Controls */}
           <div className="flex flex-col lg:flex-row gap-3">
             <div className="relative flex-1 group">
@@ -335,7 +416,7 @@ export const Stock: React.FC = () => {
                         <td className="px-5 py-4 text-sm font-bold">{item?.name || 'Insumo Removido'}</td>
                         <td className="px-5 py-4">
                           {m.type === 'in' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-success/10 text-success text-[10px] font-bold uppercase tracking-wider"><ArrowDownRight className="w-3.5 h-3.5" /> Entrada</span>}
-                          {m.type === 'out' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-[10px] font-bold uppercase tracking-wider"><ArrowUpRight className="w-3.5 h-3.5" /> Consumo PDV</span>}
+                          {(m.type === 'out' || m.type === 'saida') && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--color-accent)]/10 text-[var(--color-accent)] text-[10px] font-bold uppercase tracking-wider"><ArrowUpRight className="w-3.5 h-3.5" /> Consumo PDV</span>}
                           {m.type === 'loss' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-danger/10 text-danger text-[10px] font-bold uppercase tracking-wider"><AlertTriangle className="w-3.5 h-3.5" /> Quebra</span>}
                         </td>
                         <td className="px-5 py-4 font-mono text-sm font-semibold">{m.quantity} <span className="text-xs text-muted font-medium">{item?.unit}</span></td>

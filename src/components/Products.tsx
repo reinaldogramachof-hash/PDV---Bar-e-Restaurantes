@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { useApp } from '../store/AppContext';
 import { 
   Search, Plus, Edit2, Trash2, X, Filter, LayoutGrid, List, 
@@ -8,6 +8,14 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Product, RecipeItem } from '../types';
 import { useAudit } from '../hooks/useAudit';
+
+const FALLBACK_RECIPE_ITEM: RecipeItem = {
+  stockItemId: '',
+  stockItemName: '',
+  quantity: 0,
+  unit: 'un',
+  costPerUnit: 0,
+};
 
 export const Products: React.FC = () => {
   const { currentEmpresa, products, stockItems, updateProduct, addProduct, deleteProduct, theme } = useApp();
@@ -22,6 +30,8 @@ export const Products: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [recipeItems, setRecipeItems] = useState<RecipeItem[]>([]);
+  const [formPrice, setFormPrice] = useState(0);
+  const [recipeSearchTerm, setRecipeSearchTerm] = useState('');
 
   const categories = ['Todas', ...Array.from(new Set(products.map(p => p.category)))];
 
@@ -39,13 +49,27 @@ export const Products: React.FC = () => {
   };
 
   const openModal = (product?: Product) => {
+    const normalizeRecipeItem = (item: RecipeItem): RecipeItem => {
+      const stockItem = stockItems.find(si => si.id === item.stockItemId);
+      return {
+        stockItemId: item.stockItemId,
+        stockItemName: item.stockItemName || stockItem?.name || '',
+        quantity: item.quantity || 0,
+        unit: item.unit || stockItem?.unit || '',
+        costPerUnit: item.costPerUnit || stockItem?.costPrice || 0,
+      };
+    };
+
     if (product) {
       setEditingProduct(product);
-      setRecipeItems(product.recipe || []);
+      setRecipeItems((product.recipe || []).map(normalizeRecipeItem));
+      setFormPrice(product.price);
     } else {
       setEditingProduct(null);
       setRecipeItems([]);
+      setFormPrice(0);
     }
+    setRecipeSearchTerm('');
     setIsModalOpen(true);
   };
 
@@ -60,6 +84,17 @@ export const Products: React.FC = () => {
       price: parseFloat(formData.get('price') as string),
       category: formData.get('category') as string,
       recipe: recipeItems
+        .filter(item => item.stockItemId && item.quantity > 0)
+        .map(item => {
+          const stockItem = stockItems.find(si => si.id === item.stockItemId);
+          return {
+            stockItemId: item.stockItemId,
+            stockItemName: stockItem?.name || item.stockItemName,
+            quantity: item.quantity,
+            unit: stockItem?.unit || item.unit || 'un',
+            costPerUnit: stockItem?.costPrice ?? item.costPerUnit,
+          };
+        }),
     };
 
     if (editingProduct) updateProduct(product);
@@ -70,16 +105,29 @@ export const Products: React.FC = () => {
 
   const handleDeleteProduct = (p: Product) => {
     deleteProduct(p.id);
-    log('product_delete', `Produto excluído: ${p.name}`, { productId: p.id, category: p.category });
+    log('product_delete', `Produto excluÃ­do: ${p.name}`, { productId: p.id, category: p.category });
   };
 
   const addRecipeItem = () => {
-    setRecipeItems([...recipeItems, { stockItemId: '', quantity: 0 }]);
+    setRecipeItems([...recipeItems, { ...FALLBACK_RECIPE_ITEM }]);
   };
 
-  const updateRecipeItem = (index: number, field: keyof RecipeItem, value: any) => {
+  const updateRecipeStockItem = (index: number, stockItemId: string) => {
+    const stockItem = stockItems.find(si => si.id === stockItemId);
     const next = [...recipeItems];
-    next[index] = { ...next[index], [field]: field === 'quantity' ? parseFloat(value) : value };
+    next[index] = {
+      ...next[index],
+      stockItemId,
+      stockItemName: stockItem?.name || '',
+      unit: stockItem?.unit || '',
+      costPerUnit: stockItem?.costPrice || 0,
+    };
+    setRecipeItems(next);
+  };
+
+  const updateRecipeQuantity = (index: number, quantity: number) => {
+    const next = [...recipeItems];
+    next[index] = { ...next[index], quantity: Number.isFinite(quantity) ? quantity : 0 };
     setRecipeItems(next);
   };
 
@@ -91,28 +139,50 @@ export const Products: React.FC = () => {
     if (!recipe) return 0;
     return recipe.reduce((acc, item) => {
       const stockItem = stockItems.find(si => si.id === item.stockItemId);
-      return acc + (stockItem ? stockItem.costPrice * item.quantity : 0);
+      const unitCost = stockItem?.costPrice ?? item.costPerUnit ?? 0;
+      return acc + (unitCost * item.quantity);
     }, 0);
   };
+
+  const getCmvPercent = (price: number, recipe?: RecipeItem[]) => {
+    if (!price || price <= 0) return 0;
+    const totalCost = calculateProductionCost(recipe);
+    return (totalCost / price) * 100;
+  };
+
+  const getCmvBadgeClass = (cmv: number) => {
+    if (cmv < 30) return 'text-success bg-success/10 border-success/30';
+    if (cmv <= 45) return 'text-warning bg-warning/10 border-warning/30';
+    return 'text-danger bg-danger/10 border-danger/30';
+  };
+
+  const filteredStockItems = useMemo(() => {
+    const normalized = recipeSearchTerm.trim().toLowerCase();
+    if (!normalized) return stockItems;
+    return stockItems.filter(item => item.name.toLowerCase().includes(normalized));
+  }, [recipeSearchTerm, stockItems]);
 
   const getIcon = (cat: string) => {
     switch (cat.toLowerCase()) {
       case 'drinks': return <GlassWater className="w-5 h-5" />;
       case 'pratos': return <Utensils className="w-5 h-5" />;
-      case 'hambúrgueres': return <Pizza className="w-5 h-5" />;
+      case 'hambÃºrgueres': return <Pizza className="w-5 h-5" />;
       case 'petiscos': return <Pizza className="w-5 h-5" />;
       case 'sobremesas': return <IceCream className="w-5 h-5" />;
       default: return <Coffee className="w-5 h-5" />;
     }
   };
 
+  const modalRecipeCost = calculateProductionCost(recipeItems);
+  const modalCmv = getCmvPercent(formPrice, recipeItems);
+
   return (
     <div className="space-y-5 animate-in fade-in duration-700 pb-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold">Cardápio & Vendas</h2>
-          <p className="text-xs text-muted">Gestão de catálogo e fichas técnicas</p>
+          <h2 className="text-xl font-semibold">CardÃ¡pio & Vendas</h2>
+          <p className="text-xs text-muted">GestÃ£o de catÃ¡logo e fichas tÃ©cnicas</p>
         </div>
 
         <div className="flex gap-3">
@@ -135,7 +205,7 @@ export const Products: React.FC = () => {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 opacity-30" />
           <input
             type="text"
-            placeholder="Buscar no cardápio..."
+            placeholder="Buscar no cardÃ¡pio..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full h-11 pl-10 pr-4 rounded-panel border outline-none text-sm transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-[var(--color-surface)] border-[var(--color-border)]' : 'bg-white border-gray-200'}`}
@@ -163,7 +233,7 @@ export const Products: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredProducts.map(p => {
             const cost = calculateProductionCost(p.recipe);
-            const margin = ((p.price - cost) / p.price) * 100;
+            const cmv = getCmvPercent(p.price, p.recipe);
 
             return (
               <motion.div
@@ -191,23 +261,23 @@ export const Products: React.FC = () => {
 
                   <div className="space-y-1">
                     <div className="flex justify-between items-end">
-                      <span className="text-xs font-semibold  opacity-20">Preço de Venda</span>
+                      <span className="text-xs font-semibold  opacity-20">PreÃ§o de Venda</span>
                       <span className="text-xl font-semibold ">R$ {p.price.toFixed(2)}</span>
                     </div>
                     {p.recipe && p.recipe.length > 0 ? (
-                      <div className="flex justify-between items-center text-xs font-semibold ">
-                        <span className="opacity-20">Margem Estimada</span>
-                        <span className={margin > 60 ? 'text-emerald-500' : 'text-amber-500'}>{margin.toFixed(0)}%</span>
+                      <div className="flex justify-between items-center text-xs font-semibold">
+                        <span className="opacity-20">CMV</span>
+                        <span className={`px-2 py-0.5 rounded-full border ${getCmvBadgeClass(cmv)}`}>{cmv.toFixed(1)}%</span>
                       </div>
                     ) : (
-                      <div className="text-xs font-bold text-red-500  bg-red-500/5 px-2 py-1 rounded-lg w-fit">Sem Ficha Técnica</div>
+                      <div className="text-xs font-bold text-red-500  bg-red-500/5 px-2 py-1 rounded-lg w-fit">Sem Ficha TÃ©cnica</div>
                     )}
                   </div>
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-dashed border-current/5">
                    <button onClick={() => openModal(p)} className="w-full flex items-center justify-between text-xs font-semibold  opacity-30 group-hover:opacity-100 transition-all">
-                     <span className="flex items-center gap-2"><BookOpen className="w-3.5 h-3.5" /> Ficha Técnica</span>
+                     <span className="flex items-center gap-2"><BookOpen className="w-3.5 h-3.5" /> Ficha TÃ©cnica</span>
                      <ArrowRight className="w-3 h-3 translate-x-0 group-hover:translate-x-1 transition-transform" />
                    </button>
                 </div>
@@ -223,15 +293,17 @@ export const Products: React.FC = () => {
                 <tr>
                 <th className="px-4 py-3">Produto</th>
                 <th className="px-4 py-3">Categoria</th>
-                <th className="px-4 py-3">Ficha Técnica</th>
+                <th className="px-4 py-3">Ficha TÃ©cnica</th>
                 <th className="px-4 py-3">Custo Prod.</th>
-                <th className="px-4 py-3">Preço Venda</th>
-                <th className="px-4 py-3 text-right">Ações</th>
+                <th className="px-4 py-3">CMV</th>
+                <th className="px-4 py-3">PreÃ§o Venda</th>
+                <th className="px-4 py-3 text-right">AÃ§Ãµes</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-current/[0.03]">
               {filteredProducts.map(p => {
                 const cost = calculateProductionCost(p.recipe);
+                const cmv = getCmvPercent(p.price, p.recipe);
                 return (
                   <tr key={p.id} className="group hover:bg-current/[0.01] transition-all">
                     <td className="px-4 py-3">
@@ -248,6 +320,13 @@ export const Products: React.FC = () => {
                     </td>
                     <td className="px-4 py-3">
                        <span className="font-mono text-xs font-bold opacity-60">R$ {cost.toFixed(2)}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {p.recipe && p.recipe.length > 0 ? (
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${getCmvBadgeClass(cmv)}`}>{cmv.toFixed(1)}%</span>
+                      ) : (
+                        <span className="text-xs text-muted">â€”</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                        <span className="font-semibold text-[var(--color-accent)]">R$ {p.price.toFixed(2)}</span>
@@ -281,7 +360,7 @@ export const Products: React.FC = () => {
               <div className="px-5 py-4 border-b flex justify-between items-center">
                 <div>
                   <h3 className="text-base font-semibold">{editingProduct ? 'Editar Produto' : 'Novo Produto'}</h3>
-                  <p className="text-xs text-muted">Configuração de Venda e Produção</p>
+                  <p className="text-xs text-muted">ConfiguraÃ§Ã£o de Venda e ProduÃ§Ã£o</p>
                 </div>
                 <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-control hover:bg-black/5 dark:hover:bg-white/5 opacity-40"><X className="w-4 h-4" /></button>
               </div>
@@ -289,7 +368,7 @@ export const Products: React.FC = () => {
               <form onSubmit={handleProductSubmit} className="flex-1 overflow-y-auto p-5 space-y-5 custom-scrollbar">
                 {/* Basic Info */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-medium text-[var(--color-accent)]">Informações Básicas</h4>
+                  <h4 className="text-xs font-medium text-[var(--color-accent)]">InformaÃ§Ãµes BÃ¡sicas</h4>
                   <div className="space-y-3">
                     <div className="space-y-1.5">
                       <label className="text-xs text-muted ml-1">Nome do Produto</label>
@@ -301,12 +380,12 @@ export const Products: React.FC = () => {
                         <input required name="category" defaultValue={editingProduct?.category} className={`w-full h-11 px-3 rounded-control border outline-none text-sm transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-xs text-muted ml-1">Preço de Venda (R$)</label>
-                        <input required type="number" step="0.01" name="price" defaultValue={editingProduct?.price} className={`w-full h-11 px-3 rounded-control border outline-none text-sm transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
+                        <label className="text-xs text-muted ml-1">PreÃ§o de Venda (R$)</label>
+                        <input required type="number" step="0.01" name="price" value={formPrice || ''} onChange={e => setFormPrice(parseFloat(e.target.value) || 0)} className={`w-full h-11 px-3 rounded-control border outline-none text-sm transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                       </div>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs text-muted ml-1">Descrição (opcional)</label>
+                      <label className="text-xs text-muted ml-1">DescriÃ§Ã£o (opcional)</label>
                       <textarea name="description" defaultValue={editingProduct?.description} rows={2} className={`w-full px-3 py-2 rounded-control border outline-none text-sm resize-none transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`} />
                     </div>
                   </div>
@@ -315,11 +394,18 @@ export const Products: React.FC = () => {
                 {/* Technical Sheet */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-xs font-medium text-[var(--color-accent)]">Ficha Técnica (Ingredientes)</h4>
+                    <h4 className="text-xs font-medium text-[var(--color-accent)]">Ficha TÃ©cnica (Ingredientes)</h4>
                     <button type="button" onClick={addRecipeItem} className="flex items-center gap-1.5 text-xs font-medium opacity-40 hover:opacity-100 transition-all">
                       <PlusCircle className="w-3.5 h-3.5" /> Adicionar Insumo
                     </button>
                   </div>
+
+                  <input
+                    value={recipeSearchTerm}
+                    onChange={e => setRecipeSearchTerm(e.target.value)}
+                    placeholder="Buscar insumo por nome..."
+                    className={`w-full h-10 px-3 rounded-control border outline-none text-xs transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
+                  />
 
                   <div className="space-y-2">
                     {recipeItems.length === 0 && (
@@ -336,11 +422,11 @@ export const Products: React.FC = () => {
                           <select
                             required
                             value={item.stockItemId}
-                            onChange={e => updateRecipeItem(idx, 'stockItemId', e.target.value)}
+                            onChange={e => updateRecipeStockItem(idx, e.target.value)}
                             className={`w-full h-11 px-3 rounded-control border outline-none text-xs appearance-none transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)] text-white' : 'bg-gray-50 border-gray-200'}`}
                           >
                             <option value="">Selecione...</option>
-                            {stockItems.map(si => <option key={si.id} value={si.id}>{si.name} ({si.unit})</option>)}
+                            {filteredStockItems.map(si => <option key={si.id} value={si.id}>{si.name} ({si.unit})</option>)}
                           </select>
                         </div>
                         <div className="flex-1 space-y-1.5">
@@ -350,9 +436,13 @@ export const Products: React.FC = () => {
                             type="number"
                             step="0.001"
                             value={item.quantity}
-                            onChange={e => updateRecipeItem(idx, 'quantity', e.target.value)}
+                            onChange={e => updateRecipeQuantity(idx, parseFloat(e.target.value))}
                             className={`w-full h-11 px-3 rounded-control border outline-none text-xs transition-all focus:border-[var(--color-accent)] focus:ring-1 focus:ring-[var(--color-accent)] ${isDark ? 'bg-transparent border-[var(--color-border)]' : 'bg-gray-50 border-gray-200'}`}
                           />
+                        </div>
+                        <div className={`min-w-[170px] h-11 px-3 rounded-control border flex flex-col justify-center ${isDark ? 'border-[var(--color-border)] bg-white/5' : 'border-gray-200 bg-gray-50'}`}>
+                          <span className="text-[10px] text-muted">Unidade: {item.unit || '-'}</span>
+                          <span className="text-[10px] text-muted">Custo un.: R$ {(item.costPerUnit || 0).toFixed(2)}</span>
                         </div>
                         <button type="button" onClick={() => removeRecipeItem(idx)} className="h-11 w-11 rounded-control flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-all"><MinusCircle className="w-3.5 h-3.5" /></button>
                       </div>
@@ -360,9 +450,17 @@ export const Products: React.FC = () => {
                   </div>
 
                   {recipeItems.length > 0 && (
-                    <div className={`px-4 py-3 rounded-control flex justify-between items-center ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
-                      <span className="text-xs text-muted">Custo Total de Produção</span>
-                      <span className="font-mono font-semibold text-sm">R$ {calculateProductionCost(recipeItems).toFixed(2)}</span>
+                    <div className={`px-4 py-3 rounded-control flex flex-col gap-2 ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-muted">Custo total</span>
+                        <span className="font-mono font-semibold text-sm">R$ {modalRecipeCost.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-muted">CMV (%)</span>
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${getCmvBadgeClass(modalCmv)}`}>
+                          {modalCmv.toFixed(1)}%
+                        </span>
+                      </div>
                     </div>
                   )}
                 </div>
